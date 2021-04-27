@@ -50,7 +50,7 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
 
     //Create a new clock domain named 'core'
     val coreClockDomain = ClockDomain.internal(
-        name = "cpu",
+        name = "core",
         frequency = FixedFrequency(50 MHz),
         config = ClockDomainConfig(
             clockEdge        = RISING,

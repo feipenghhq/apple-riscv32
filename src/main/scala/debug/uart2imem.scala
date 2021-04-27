@@ -119,7 +119,7 @@ case class uart2imem(sibConfig: SibConfig, buardrate: Int) extends Component {
         .whenIsActive {
           io.imem_dbg_sib.wdata  := readData
           io.imem_dbg_sib.sel    := io.load_imem
-          addr := addr + 1
+          addr := addr + 4
           goto(idle)
        }
     }
