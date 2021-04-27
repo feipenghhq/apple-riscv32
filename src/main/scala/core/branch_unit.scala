@@ -38,6 +38,9 @@ case class branch_unit_io(param: CPU_PARAM) extends Bundle {
 }
 
 case class branch_unit(param: CPU_PARAM) extends Component {
+
+  noIoPrefix()
+
   val io = branch_unit_io(param)
 
   io.branch_taken := io.jal_op | io.jalr_op | (io.br_op & io.branch_result)

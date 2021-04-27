@@ -30,6 +30,9 @@ case class pc_io(param: CPU_PARAM) extends Bundle{
 }
 
 case class program_counter(param: CPU_PARAM) extends Component {
+
+    noIoPrefix()
+
     val io    = pc_io(param)
 
     val pc = Reg(UInt(param.PC_WIDTH bits)) init 0

@@ -31,11 +31,14 @@ import spinal.lib.fsm.{EntryPoint, State, StateMachine}
  * Used to download instruction from uart to instruction mem
  */
 case class uart2imem(sibConfig: SibConfig, buardrate: Int) extends Component {
+
+  noIoPrefix()
+
   val io = new Bundle {
     val uart         = master(Uart())
     val imem_dbg_sib = master(Sib(sibConfig))
     val load_imem    = in Bool
-    val done         = out Bool   // FIXME
+    val downloading  = out Bool
   }
 
   val uartCfg = UartCtrlGenerics(
@@ -64,64 +67,84 @@ case class uart2imem(sibConfig: SibConfig, buardrate: Int) extends Component {
     uart.io.write.payload := 0
   }
 
-  val readCtrl = new Area {
+  val download = new Area {
 
-    val readFsm = new StateMachine {
+    val read4ByteFsm = new StateMachine {
       val readData = Reg(Bits(32 bits))
-      val addr = Reg(UInt(sibConfig.addressWidth bits)) init 0
-
-      io.imem_dbg_sib.sel    := False
-      io.imem_dbg_sib.enable := True
-      io.imem_dbg_sib.write  := True
-      io.imem_dbg_sib.wdata  := 0
-      io.imem_dbg_sib.mask   := B"1111"
-      io.imem_dbg_sib.addr   := addr
-
+      val captured = False
       val idle = new State with EntryPoint
       val getByte0 = new State
       val getByte1 = new State
       val getByte2 = new State
-      val send     = new State
+      val getByte3 = new State
 
-      idle
-        .whenIsActive {
+      idle.whenIsActive {
           when(uart.io.read.valid) {
             readData(7 downto 0) := uart.io.read.payload
             goto(getByte0)
           }
         }
 
-      getByte0
-        .whenIsActive {
+      getByte0.whenIsActive {
           when(uart.io.read.valid) {
             readData(15 downto 8) := uart.io.read.payload
             goto(getByte1)
           }
         }
-
-      getByte1
-        .whenIsActive {
+      getByte1.whenIsActive {
           when(uart.io.read.valid) {
             readData(23 downto 16) := uart.io.read.payload
             goto(getByte2)
           }
         }
 
-      getByte2
-        .whenIsActive {
+      getByte2.whenIsActive {
           when(uart.io.read.valid) {
             readData(31 downto 24) := uart.io.read.payload
-            goto(send)
+            goto(getByte3)
           }
         }
 
-      send
-        .whenIsActive {
-          io.imem_dbg_sib.wdata  := readData
-          io.imem_dbg_sib.sel    := io.load_imem
-          addr := addr + 4
+      getByte3.whenIsActive {
           goto(idle)
+          captured := True
        }
+    }
+
+    val startSignal = read4ByteFsm.readData === B"32'hFFFFFFFF"
+    val stopSignal  = read4ByteFsm.readData === B"32'hFFFFFFFE"
+
+    val downloadCtrlFsm = new StateMachine {
+
+      val addr = Reg(UInt(sibConfig.addressWidth bits)) init 0
+      io.imem_dbg_sib.sel    := False
+      io.imem_dbg_sib.enable := True
+      io.imem_dbg_sib.write  := True
+      io.imem_dbg_sib.wdata  := read4ByteFsm.readData
+      io.imem_dbg_sib.mask   := B"1111"
+      io.imem_dbg_sib.addr   := addr
+      io.downloading         := False
+
+      val idle        = new State with EntryPoint
+      val downloading = new State
+
+      idle.whenIsActive {
+        addr := 0
+        when(read4ByteFsm.captured & startSignal & io.load_imem) {
+          goto(downloading)
+        }
+      }
+
+      downloading.whenIsActive {
+        io.downloading := True
+        when(read4ByteFsm.captured && !stopSignal) {
+          io.imem_dbg_sib.sel := True
+          addr := addr + 4
+        }
+        when(read4ByteFsm.captured && stopSignal) {
+          goto(idle)
+        }
+      }
     }
   }
 }

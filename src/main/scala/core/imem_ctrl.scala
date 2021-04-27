@@ -30,6 +30,9 @@ case class imem_ctrl_io(param: CPU_PARAM) extends Bundle {
 }
 
 case class imem_ctrl(param: CPU_PARAM) extends Component {
+
+  noIoPrefix()
+
   val io = imem_ctrl_io(param)
   val imem_sib = master(Sib(param.sibCfg))
 

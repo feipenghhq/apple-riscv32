@@ -2,6 +2,11 @@
 
 ## Milestone 0.2
 
+- 04/27/2021
+  - Added a reset controller to soc
+  - Added clock domain in order to control the reset of the cpu.
+  - Cleaned up the scala codes
+
 - 04/26/2021
   - Changed soc architecture. Added a new gpio port to control led/switch/button
   - Designed an uart2imem module which can fill the instruction rom from uart rx module

@@ -69,6 +69,9 @@ case class trap_ctrl_io(param: CPU_PARAM) extends Bundle {
 }
 
 case class trap_ctrl(param: CPU_PARAM) extends Component {
+
+  noIoPrefix()
+
   val io = trap_ctrl_io(param)
 
   // == exception control == //

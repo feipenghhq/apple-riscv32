@@ -50,8 +50,8 @@ initial begin
 end
 `endif
 
-  wire     [31:0]   gpio0_port_gpio;
-  wire     [31:0]   gpio1_port_gpio;
+  wire     [31:0]   gpio0_port;
+  wire     [31:0]   gpio1_port;
   wire              uart_port_txd;
   reg               uart_port_rxd;
   reg               load_imem = 'b0;

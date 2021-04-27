@@ -32,12 +32,15 @@ case class UartCfg(
 
 case class SibUart(cfg: UartCfg, sibCfg: SibConfig) extends Component {
 
+  noIoPrefix()
+
   val io = new Bundle{
     val uart_interrupt = out Bool
+    val uart_sib = slave(Sib(sibCfg))
   }
   val uart = master(Uart())
-  val uart_sib = slave(Sib(sibCfg))
-  val busCtrl = SibSlaveFactory(uart_sib)
+
+  val busCtrl = SibSlaveFactory(io.uart_sib)
 
   // Instantiate an simple uart controller
   val uartCtrl = new UartCtrl(cfg.uartCfg)

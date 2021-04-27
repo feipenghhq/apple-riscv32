@@ -36,6 +36,8 @@ case class fu_io(param: CPU_PARAM) extends Bundle {
 
 case class fu(param: CPU_PARAM) extends Component {
 
+  noIoPrefix()
+
   val io = fu_io(param)
 
   // Note:

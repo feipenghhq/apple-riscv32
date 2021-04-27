@@ -40,6 +40,16 @@ async def reset(dut, time=20):
     await FallingEdge(dut.clk)
     dut.reset = 0
 
+async def sentStart(uart):
+    """ Send the start downloading signal """
+    word = [0xFF, 0xFF, 0xFF, 0xFF]
+    await uart.write(bytes(word))
+
+async def sentStop(uart):
+    """ Send the start downloading signal """
+    word = [0xFE, 0xFF, 0xFF, 0xFF]
+    await uart.write(bytes(word))
+
 async def sentRandom4byte(dut, uart, refQue):
     """ Send random data to instruction rom"""
     word = []
@@ -77,11 +87,21 @@ async def uart2imem_random(dut):
     # Uart TX env
     uart_source = UartSource(dut.uart_port_rxd, baud=115200, bits=8)
 
+    # Send start signal and check if downloading is asserted
+    await sentStart(uart_source)
+    await uart_source.wait()
+    assert dut.DUT_apple_riscv_soc.soc_uart2imem_inst.downloading.value.integer == 1
+
     # Sent Push data into instruction rom
     refQue = []
-    for i in range(10):
+    for i in range(2):
         await sentRandom4byte(dut, uart_source, refQue)
     await uart_source.wait()
+
+    # Send start signal and check if downloading is de-asserted
+    await sentStop(uart_source)
+    await uart_source.wait()
+    assert dut.DUT_apple_riscv_soc.soc_uart2imem_inst.downloading.value.integer == 0
 
     # Check result
     checkImem(dut, refQue)

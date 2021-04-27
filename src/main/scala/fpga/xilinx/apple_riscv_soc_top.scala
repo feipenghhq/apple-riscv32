@@ -19,17 +19,17 @@ package fpga.xilinx
 
 import ip._
 import soc._
-
 import spinal.core._
 import spinal.lib._
 import spinal.lib.com.uart.Uart
+import spinal.lib.io.TriStateArray
 
 case class apple_riscv_soc_top(cfg: soc_cfg) extends Component {
 
   val io = new Bundle {
     val clk = in Bool
-    val gpio0_port = gpio_io(cfg.gpioCfg, useInt = false)
-    val gpio1_port = gpio_io(cfg.gpioCfg, useInt = false)
+    val gpio0_port = master(TriStateArray(cfg.gpioCfg.GPIO_WIDTH bits))
+    val gpio1_port = master(TriStateArray(cfg.gpioCfg.GPIO_WIDTH bits))
     val uart_port = master(Uart())
     val load_imem = in Bool
   }

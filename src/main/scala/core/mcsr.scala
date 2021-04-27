@@ -56,6 +56,9 @@ case class mcsr_io(param: CPU_PARAM) extends Bundle {
 }
 
 case class mcsr(param: CPU_PARAM) extends Component {
+
+  noIoPrefix()
+
   val io = mcsr_io(param)
 
   // ============================================
