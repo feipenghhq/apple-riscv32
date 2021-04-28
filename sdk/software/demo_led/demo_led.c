@@ -2,8 +2,8 @@
 #include <gpio.h>
 #include <soc.h>
 
-#define GPIO_REG_WRITEENABLE_ADDR   GPIO_BASE + GPIO_REG_WRITEENABLE
-#define GPIO_REG_WRITE_ADDR         GPIO_BASE + GPIO_REG_WRITE
+#define GPIO_REG_WRITEENABLE_ADDR   GPIO0_BASE + GPIO_REG_WRITEENABLE
+#define GPIO_REG_WRITE_ADDR         GPIO0_BASE + GPIO_REG_WRITE
 
 int main(int argc, char **argv)
 {
@@ -21,7 +21,7 @@ int main(int argc, char **argv)
     while(1) {
         *gpio_ptr = value;
         value = value + 1;
-        for (i = 0; i < 100; i++);
+        for (i = 0; i < 10000000; i++);
     }
     return 0;
 }

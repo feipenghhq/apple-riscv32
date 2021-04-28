@@ -34,8 +34,8 @@ RISCV_SIZE    := riscv-none-embed-size
 #############################################################
 # This Section is for Software Compilation
 #############################################################
-PROGRAM_DIR = software/$(PROGRAM)
-PROGRAM_ELF = software/$(PROGRAM)/$(PROGRAM)
+PROGRAM_DIR = $(PROGRAM)
+PROGRAM_ELF = $(PROGRAM)/$(PROGRAM)
 
 .PHONY: software_clean
 software_clean:

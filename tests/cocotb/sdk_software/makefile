@@ -12,7 +12,7 @@ TOPLEVEL_LANG = verilog
 # -----------------------------------------
 REPO_ROOT     	= $(shell git rev-parse --show-toplevel)
 TB_PATH       	= $(REPO_ROOT)/tests/verilog
-RTL_SOC_PATH  	= $(REPO_ROOT)/rtl/soc
+RTL_SOC_PATH  	= $(REPO_ROOT)/gen/rtl
 RISCV_TEST_PATH = $(REPO_ROOT)/tests/riscv-tests-simple
 IMEM_ROM_PATH 	= $(RISCV_TEST_PATH)/generated
 
