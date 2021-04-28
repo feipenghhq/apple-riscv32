@@ -7,11 +7,11 @@
 # ========================================
 
 set PRJ_NAME $::env(PRJ_NAME)
-set TOP $::env(TOP)
-set DEVICE $::env(DEVICE)
+set TOP      $::env(TOP)
+set RTL_SRC  $::env(RTL_SRC)
+set XDC      $::env(XDC)
+set DEVICE   $::env(DEVICE)
 
-set SOC_RTL_PATH rtl/soc
-set REPO_ROOT [exec git rev-parse --show-toplevel]
 set OUTPUT $PRJ_NAME/output
 #exec mkdir -p $OUTPUT
 
@@ -20,9 +20,7 @@ create_project $PRJ_NAME -dir $PRJ_NAME -part $DEVICE
 # ========================================
 # Step 2: Read in source files
 # ========================================
-set SOC_RTL  $REPO_ROOT/$SOC_RTL_PATH/apple_riscv_soc.v
-read_verilog $SOC_RTL
-set XDC      "constraints.xdc timing.xdc"
+read_verilog $RTL_SRC
 read_xdc     $XDC
 
 # ========================================

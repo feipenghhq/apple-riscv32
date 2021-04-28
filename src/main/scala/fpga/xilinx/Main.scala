@@ -15,10 +15,11 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package soc
+package fpga.xilinx
 
 import spinal.core._
 import core._
+import soc._
 import ip._
 import spinal.lib.io.InOutWrapper
 import spinal.lib.com.uart.UartCtrlGenerics
@@ -35,7 +36,7 @@ object Main{
       uartCfg   = new UartCfg(UartCtrlGenerics(), 8, 8)
     )
     val spinalCfg = SpinalConfig(
-      targetDirectory = "gen/rtl"
-    ).generateVerilog(InOutWrapper(apple_riscv_soc(cfg)))
+      targetDirectory = "gen/rtl/xilinx"
+    ).generateVerilog(InOutWrapper(apple_riscv_soc_top(cfg)))
   }
 }

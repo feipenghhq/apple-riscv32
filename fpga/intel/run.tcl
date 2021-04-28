@@ -11,7 +11,7 @@ set TOP         $::env(TOP)
 set DEVICE      $::env(DEVICE)
 set FAMILY      $::env(FAMILY)
 
-set SOC_RTL_PATH rtl/soc
+set SOC_RTL_PATH gen/rtl
 set REPO_ROOT [exec git rev-parse --show-toplevel]
 set OUTPUT output
 #exec mkdir -p $OUTPUT

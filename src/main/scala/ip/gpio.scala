@@ -17,7 +17,7 @@
 
 package ip
 
-import sib._
+import bus.sib._
 import spinal.core._
 import spinal.lib._
 import spinal.lib.io.TriStateArray
@@ -31,8 +31,9 @@ class GpioCfg(
   val GPIO_WIDTH : Int  = 32
 )
 
-case class gpio_io(cfg: GpioCfg, useInt: Boolean = true) extends Bundle {
+case class gpio_io(cfg: GpioCfg, sibCfg: SibConfig, useInt: Boolean = true) extends Bundle {
   val gpio         = master(TriStateArray(cfg.GPIO_WIDTH bits))
+  val gpio_sib     = slave(Sib(sibCfg))
   val gpio_int_pe  = if (useInt) out Bool else null
 }
 
@@ -51,9 +52,10 @@ case class gpio_interrupt_gen(busCtrl: SibSlaveFactory, width: Int, enable: Bool
 
 case class gpio(cfg: GpioCfg, sibCfg: SibConfig) extends Component {
 
-  val io        = gpio_io(cfg)
-  val gpio_sib  = slave(Sib(sibCfg))
-  val busCtrl   = SibSlaveFactory(gpio_sib)
+  noIoPrefix()
+
+  val io        = gpio_io(cfg, sibCfg)
+  val busCtrl   = SibSlaveFactory(io.gpio_sib)
 
   val gpio_value = io.gpio.read.asBools
 

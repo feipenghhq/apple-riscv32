@@ -41,6 +41,9 @@ case class regfile_io(param: CPU_PARAM) extends Bundle{
 }
 
 case class regfile(param: CPU_PARAM) extends Component {
+
+    noIoPrefix()
+
     val SIZE = param.RF_SIZE
     val io = regfile_io(param)
 

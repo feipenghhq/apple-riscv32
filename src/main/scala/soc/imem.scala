@@ -1,6 +1,6 @@
 package soc
 
-import sib._
+import bus.sib._
 import spinal.core._
 import spinal.lib.slave
 
@@ -31,13 +31,14 @@ case class imem(soc_param: SOC_PARAM) extends Component {
 
   // == DBG side Port == //
   val dbg_word_addr = imem_dbg_sib.addr(soc_param.INSTR_RAM_ADDR_WIDTH - 1 downto 2)
-  val dbg_read_en = imem_dbg_sib.sel // Here we use sel to indicate we want to stall the data
+  val enable = imem_dbg_sib.sel & imem_dbg_sib.enable
+  val dbg_read_en = enable
   imem_dbg_sib.ready := True
   imem_dbg_sib.resp := True
   ram.write(
     address = dbg_word_addr,
     data = imem_dbg_sib.wdata,
-    enable = imem_dbg_sib.write
+    enable = imem_dbg_sib.write & enable
   )
   imem_dbg_sib.rdata := ram.readSync(
     address = dbg_word_addr,

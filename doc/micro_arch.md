@@ -15,8 +15,10 @@ The address range for each component is as follows:
 | CLIC            | 0x02000000 - 0x02000FFF | 4KB  |
 | PLIC            | 0x02001000 - 0x02001FFF | 4KB  |
 | Timer           | 0x02002000 - 0x02002FFF | 4KB  |
-| GPIO            | 0x02003000 - 0x02003FFF | 4KB  |
-| Uart            | 0x02004000 - 0x02004FFF | 4KB  |
+| Uart            | 0x02003000 - 0x02003FFF | 4KB  |
+| GPIO0           | 0x02004000 - 0x02004FFF | 4KB  |
+| GPIO1           | 0x02005000 - 0x02005FFF | 4KB  |
+
 
 ## SIB (Simple Internal Bus)
 

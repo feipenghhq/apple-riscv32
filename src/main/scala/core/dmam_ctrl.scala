@@ -23,7 +23,7 @@
 
 package core
 
-import sib._
+import bus.sib._
 import spinal.core._
 import spinal.lib.master
 
@@ -45,6 +45,8 @@ case class dmem_ctrl_io(param: CPU_PARAM) extends Bundle {
 }
 
 case class dmem_ctrl(param: CPU_PARAM) extends Component {
+
+  noIoPrefix()
 
   val io = dmem_ctrl_io(param)
   val dmem_sib = master(Sib(param.sibCfg))

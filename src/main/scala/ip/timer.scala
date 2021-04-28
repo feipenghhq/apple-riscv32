@@ -18,21 +18,22 @@
 package ip
 
 import soc._
-import sib._
+import bus.sib._
 import spinal.core._
 import spinal.lib._
 
-case class timer_io() extends Bundle {
+case class timer_io(sibCfg: SibConfig) extends Bundle {
+  val timer_sib = slave(Sib(sibCfg))
   val timer_interrupt = out Bool
 }
 
 case class timer(sibCfg: SibConfig) extends Component {
 
-  val TimerWidth    = 64
+  noIoPrefix()
 
-  val io = timer_io()
-  val timer_sib = slave(Sib(sibCfg))
-  val busCtrl  = SibSlaveFactory(timer_sib)
+  val TimerWidth    = 64
+  val io = timer_io(sibCfg)
+  val busCtrl  = SibSlaveFactory(io.timer_sib)
 
   val en       = busCtrl.createReadAndWrite(Bool, 0, 0, "Timer enable") init False
   val int_en   = busCtrl.createReadAndWrite(Bool, 0, 1, "Timer interrupt enable") init False

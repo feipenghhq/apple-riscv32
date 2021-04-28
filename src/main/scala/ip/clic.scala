@@ -17,21 +17,22 @@
 
 package ip
 
-import soc._
-import sib._
+import bus.sib._
 import spinal.core._
 import spinal.lib._
 
-case class clic_io() extends Bundle {
+case class clic_io(sibCfg: SibConfig) extends Bundle {
+  val clic_sib           = slave(Sib(sibCfg))
   val software_interrupt = out Bool
-  val timer_interrupt = out Bool
+  val timer_interrupt    = out Bool
 }
 
 case class clic(sibCfg: SibConfig, timerWidth: Int) extends Component {
 
-  val io = clic_io()
-  val clic_sib = slave(Sib(sibCfg))
-  val busCtrl  = SibSlaveFactory(clic_sib)
+  noIoPrefix()
+
+  val io = clic_io(sibCfg)
+  val busCtrl  = SibSlaveFactory(io.clic_sib)
 
 
   val msip        = busCtrl.createReadAndWrite(Bool, 0, 0,

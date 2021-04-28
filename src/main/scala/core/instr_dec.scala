@@ -80,6 +80,9 @@ case class instr_dec_io(param: CPU_PARAM) extends Bundle{
 }
 
 case class instr_dec(param: CPU_PARAM) extends Component {
+
+    noIoPrefix()
+
     val io = instr_dec_io(param)
 
     // ============================================

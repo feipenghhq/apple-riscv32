@@ -32,7 +32,7 @@ def clear_imem(dut, imem_size_to_clear):
     """ Clean the instruction ram """
     print("[TB-INFO]: Cleaning Instruction Memory")
     for i in range(imem_size_to_clear):
-        dut.DUT_apple_riscv_soc.imem_inst.ram[i] = 0
+        dut.DUT_apple_riscv_soc.soc_imem_inst.ram[i] = 0
     print(f"[TB-INFO]: Cleaning the Instruction Memory done")
 
 def load_imem(dut, imem):
@@ -40,19 +40,19 @@ def load_imem(dut, imem):
     print("[TB-INFO]: Loading Instruction Memory")
     size = len(imem)
     for i in range(size):
-        dut.DUT_apple_riscv_soc.imem_inst.ram[i] = imem[i]
+        dut.DUT_apple_riscv_soc.soc_imem_inst.ram[i] = imem[i]
     print(f"[TB-INFO]: Loading Instruction Memory done. Memory size is {size}")
 
 def print_register(dut, size=32):
     """ Print the register value """
     for i in range(size):
-        val = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.ram[i].value.integer
+        val = dut.DUT_apple_riscv_soc.soc_cpu_core.core_regfile_inst.ram[i].value.integer
         print(f"Register {i}, {val}")
 
 def check_register(dut, expected):
     """ Check the register file with the expected data """
     for key, value in expected.items():
-        val = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.ram[key].value.integer
+        val = dut.DUT_apple_riscv_soc.soc_cpu_core.core_regfile_inst.ram[key].value.integer
         assert value == val, f"RAM1: Register {key}, Expected: {value}, Actual: {val}"
         print(f"RAM1: Register {key}, Expected: {value}, Actual: {val}")
 

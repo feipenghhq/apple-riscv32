@@ -10,5 +10,7 @@
 #set_property DONT_TOUCH "yes" [get_cells cpu_core/imem_ctrl_inst]
 #set_property DONT_TOUCH "yes" [get_cells cpu_core/fu_inst]
 #set_property DONT_TOUCH "yes" [get_cells cpu_core/hdu_inst]
-#set_property DONT_TOUCH "yes" [get_cells dmem_inst]
-#set_property DONT_TOUCH "yes" [get_cells imem_inst]
+#set_property DONT_TOUCH true [get_cells cpu_apple_riscv_soc_inst/dmem_inst]
+#set_property DONT_TOUCH true [get_cells cpu_apple_riscv_soc_inst/imem_inst]
+
+

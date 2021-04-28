@@ -8,38 +8,43 @@
 TOPLEVEL_LANG = verilog
 
 # -----------------------------------------
-# Path
+# Path Variable
 # -----------------------------------------
-REPO_ROOT     = $(shell git rev-parse --show-toplevel)
-TB_PATH       = $(REPO_ROOT)/tests/verilog
-RTL_SOC_PATH  = $(REPO_ROOT)/gen/rtl
+REPO_ROOT     	= $(shell git rev-parse --show-toplevel)
+RTL_SOC_PATH  	= $(REPO_ROOT)/gen/rtl
+TB_PATH       	= $(REPO_ROOT)/tests/verilog
 
 # -----------------------------------------
 # Source files
 # -----------------------------------------
-TB_FILES      = $(TB_PATH)/apple_riscv_soc_tb.v
-RTL_FILES     = $(RTL_SOC_PATH)/apple_riscv_soc.v
+TB_FILES      	= $(TB_PATH)/apple_riscv_soc_tb.v
+RTL_FILES     	= $(RTL_SOC_PATH)/apple_riscv_soc.v
 
 VERILOG_SOURCES += $(TB_FILES)
 VERILOG_SOURCES += $(RTL_FILES)
 
-TOPLEVEL = apple_riscv_soc_tb
-MODULE   = sanity_check
-TESTCASE ?=
+TOPLEVEL 	= apple_riscv_soc_tb
+
 
 # -----------------------------------------
-# Simulator
+# Simulator config
 # -----------------------------------------
 SIM 		 ?=icarus
-COMPILE_ARGS = -DDUMP_WAVE
+
+# -----------------------------------------
+# Test config
+# -----------------------------------------
+MODULE   	= uart2imem_random
+
+export RUN_TIME    = 1000
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
-clean_all: clean
-	rm -rf *vcd results.xml __pycache__ *.pyc */__pycache__ */*.pyc
+.PONY: clean_all
 
-# -----------------------------------------
-# Verilator Lint
-# -----------------------------------------
-lint:
-	verilator --lint-only -Wall $(RTL_FILES)
+clean_rom:
+	rm -rf *.rom
+
+clean_all: clean clean_rom
+	rm -rf *vcd results.xml __pycache__ *.pyc */__pycache__ */*.pyc sim_build
+

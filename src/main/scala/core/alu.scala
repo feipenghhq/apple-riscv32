@@ -43,6 +43,8 @@ case class alu_io(param: CPU_PARAM) extends Bundle {
 
 case class alu(param: CPU_PARAM) extends Component {
 
+    noIoPrefix()
+
     val io = new alu_io(param)
 
     // Preprocess some value

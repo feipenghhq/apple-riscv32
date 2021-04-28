@@ -17,7 +17,7 @@
 
 package core
 
-import sib._
+import bus.sib._
 import spinal.core._
 import spinal.lib.bus.amba3.ahblite._
 

@@ -65,6 +65,9 @@ case class hdu_io(param: CPU_PARAM) extends Bundle {
 }
 
 case class hdu(param: CPU_PARAM) extends Component {
+
+  noIoPrefix()
+
   val io = hdu_io(param)
 
   // ======================================

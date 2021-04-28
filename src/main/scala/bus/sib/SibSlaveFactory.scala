@@ -13,7 +13,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package sib
+package bus.sib
 
 import spinal.core._
 import spinal.lib.bus.misc.{BusSlaveFactoryDelayed, BusSlaveFactoryElement, SingleMapping}

@@ -14,10 +14,22 @@ help:
 # Variable
 _DEVICE = xc7a35ticsg324-1L
 
+REPO_ROOT     = $(shell git rev-parse --show-toplevel)
+XILINX_RTL_PATH = $(REPO_ROOT)/src/main/scala/fpga/xilinx/rtl
+
+_RTL_SRC      += $(REPO_ROOT)/gen/rtl/xilinx/apple_riscv_soc_top.v
+_RTL_SRC      += $(XILINX_RTL_PATH)/mmcm.v
+_RTL_SRC      += $(XILINX_RTL_PATH)/mmcm_clk_wiz.v
+
+_XDC          += constraints/constraints.xdc
+_XDC          += constraints/io.xdc
+_XDC          += constraints/timing.xdc
 
 # run vivado at SOC level
 soc: export PRJ_NAME 	= soc
-soc: export TOP 		= apple_riscv_soc
+soc: export TOP 		= apple_riscv_soc_top
+soc: export RTL_SRC     = $(_RTL_SRC)
+soc: export XDC         = $(_XDC)
 soc: export DEVICE 	    = $(_DEVICE)
 soc: clean_soc
 	vivado -mode tcl -source run.tcl

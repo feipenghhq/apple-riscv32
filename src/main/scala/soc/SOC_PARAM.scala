@@ -18,7 +18,7 @@
 
 package soc
 
-import sib._
+import bus.sib._
 
 class SOC_PARAM {
   val NAME = "apple-riscv-soc"
@@ -65,14 +65,16 @@ class SOC_PARAM {
   val SIB_TIMER_HI  = Integer.parseInt("2FFF", 16)
   val TIMER_ADDR_WIDTH = 12
 
-  val SIB_GPIO_LO = Integer.parseInt("3000", 16)
-  val SIB_GPIO_HI = Integer.parseInt("3FFF", 16)
+  val SIB_UART_LO = Integer.parseInt("3000", 16)
+  val SIB_UART_HI = Integer.parseInt("3FFF", 16)
+  val UART_ADDR_WIDTH = 12
+
   val GPIO_ADDR_WIDTH = 12
   val GPIO_WIDTH      = 32
-
-  val SIB_UART_LO = Integer.parseInt("4000", 16)
-  val SIB_UART_HI = Integer.parseInt("4FFF", 16)
-  val UART_ADDR_WIDTH = 12
+  val SIB_GPIO0_LO = Integer.parseInt("4000", 16)
+  val SIB_GPIO0_HI = Integer.parseInt("4FFF", 16)
+  val SIB_GPIO1_LO = Integer.parseInt("5000", 16)
+  val SIB_GPIO1_HI = Integer.parseInt("5FFF", 16)
 
 
   // ========================== //
@@ -127,18 +129,25 @@ class SOC_PARAM {
     addr_hi      = SIB_TIMER_HI
   )
 
-  val gpioSibCfg = SibConfig(
-    addressWidth = GPIO_ADDR_WIDTH,
-    dataWidth    = XLEN,
-    addr_lo      = SIB_GPIO_LO,
-    addr_hi      = SIB_GPIO_HI
-  )
-
   val uartSibCfg = SibConfig(
     addressWidth = UART_ADDR_WIDTH,
     dataWidth    = XLEN,
     addr_lo      = SIB_UART_LO,
     addr_hi      = SIB_UART_HI
+  )
+
+  val gpio0SibCfg = SibConfig(
+    addressWidth = GPIO_ADDR_WIDTH,
+    dataWidth    = XLEN,
+    addr_lo      = SIB_GPIO0_LO,
+    addr_hi      = SIB_GPIO0_HI
+  )
+
+  val gpio1SibCfg = SibConfig(
+    addressWidth = GPIO_ADDR_WIDTH,
+    dataWidth    = XLEN,
+    addr_lo      = SIB_GPIO1_LO,
+    addr_hi      = SIB_GPIO1_HI
   )
 }
 
