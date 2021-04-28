@@ -97,11 +97,3 @@ async def run_test(dut):
     cocotb.fork(clock.start())  # Start the clock
     await reset(dut)
     await Timer(runtime, units="ns")
-    # This pattern is defined in the TEST_PASS macro
-    expected_register = {
-        1 : 1,
-        2 : 2,
-        3 : 3,
-    }
-    print_register(dut, 32)
-    check_register(dut, expected_register)

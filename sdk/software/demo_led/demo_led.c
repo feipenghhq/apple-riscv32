@@ -7,13 +7,15 @@
 
 int main(int argc, char **argv)
 {
-    int i;
-    uint32_t* gpio_ptr;
-    volatile uint32_t value;
+    int                 i;
+    uint32_t*           gpio_ptr;
+    volatile uint32_t   value;
 
     // setup the enable register
     gpio_ptr = GPIO_REG_WRITEENABLE_ADDR;
     *gpio_ptr = 15;
+
+    // write to enable led
     value = 0;
     gpio_ptr = GPIO_REG_WRITE_ADDR;
     while(1) {
