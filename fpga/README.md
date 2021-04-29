@@ -1,8 +1,11 @@
 # FPGA
 
-## How to run FPGA build
+- [FPGA](#fpga)
+  - [How to build FPGA bitstream](#how-to-build-fpga-bitstream)
 
-Command to run quartus/vivado
+## How to build FPGA bitstream
+
+Command to run Quartus or Vivado
 
 ```bash
 cd <intel>/<xilinx>

@@ -1,14 +1,21 @@
 # RISC-V Test Simple
 
+- [RISC-V Test Simple](#risc-v-test-simple)
+  - [Introduction](#introduction)
+  - [How to Build the Instruction RAM file used for simulation](#how-to-build-the-instruction-ram-file-used-for-simulation)
+  - [Modifications on the original contents](#modifications-on-the-original-contents)
+
+## Introduction
+
 The tests code use used here are copied from the [riscv-tests](https://github.com/riscv/riscv-tests) repo from riscv organization. See LICENSE for the original license requirement.
 
 I modified the code for my CPU design verification.
 
-## Build the IMEM dump file
+## How to Build the Instruction RAM file used for simulation
 
-Just run `make` in the linux shell and it will generate the asm dump and the instruction memory content verilog file for each tests
+Just run `make` in the linux shell and it will generate the asm dump (\*.dump) and the instruction memory content file (\*.verilog) for each tests.
 
-## Modifications
+## Modifications on the original contents
 
 This section lists all the modification I made on the original riscv-tests repo.
 

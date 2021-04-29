@@ -1,8 +1,13 @@
-# Test
+# Tests
 
-This directory contains tests for the cpu core and cpu soc
+- [Tests](#tests)
+  - [Introduction](#introduction)
+  - [Directory Structures](#directory-structures)
+  - [How to run tests](#how-to-run-tests)
 
-Here is the main structure
+## Introduction
+
+This directory contains tests suites for the cpu core and cpu soc
 
 ## Directory Structures
 
@@ -23,13 +28,12 @@ Here is the main structure
 
 ### riscv-tests-simple
 
-The modified source code from the riscv-test repo. See `README.md` in it for more details
+The modified source code from the riscv-test repo. See [README.md](./riscv-tests-simple/README.md) in it for more details.
 
 ### verilog
 
 Testbench related verilog files
 
-## How to run tests in cocotb framework
+## How to run tests
 
 See README.md under cocotb folder
-
