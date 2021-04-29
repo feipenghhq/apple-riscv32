@@ -30,7 +30,8 @@ import spinal.lib.io.TriStateArray
 case class soc_cfg(
     soc_param: SOC_PARAM  = null,
     cpu_param: CPU_PARAM  = null,
-    gpioCfg: GpioCfg      = null,
+    gpio0Cfg: GpioCfg     = null,
+    gpio1Cfg: GpioCfg     = null,
     uartCfg: UartCfg      = null,
     uartDbgBuardRate: Int = 115200
 )
@@ -41,8 +42,8 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
         val clk        = in Bool
         val reset      = in Bool
         val load_imem  = in Bool
-        val gpio0_port = master(TriStateArray(cfg.gpioCfg.GPIO_WIDTH bits))
-        val gpio1_port = master(TriStateArray(cfg.gpioCfg.GPIO_WIDTH bits))
+        val gpio0_port = master(TriStateArray(cfg.gpio0Cfg.GPIO_WIDTH bits))
+        val gpio1_port = master(TriStateArray(cfg.gpio1Cfg.GPIO_WIDTH bits))
         val uart_port  = master(Uart())
     }
 
@@ -72,8 +73,8 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
         val plic_inst = plic(cfg.soc_param.plicSibCfg)
         val timer_inst = timer(cfg.soc_param.timerSibCfg)
         val uart_inst  = SibUart(cfg.uartCfg, cfg.soc_param.uartSibCfg)
-        val gpio0_inst = gpio(cfg.gpioCfg, cfg.soc_param.gpio0SibCfg)
-        val gpio1_inst = gpio(cfg.gpioCfg, cfg.soc_param.gpio1SibCfg)
+        val gpio0_inst = gpio(cfg.gpio0Cfg, cfg.soc_param.gpio0SibCfg)
+        val gpio1_inst = gpio(cfg.gpio1Cfg, cfg.soc_param.gpio1SibCfg)
         val uart2imem_inst = uart2imem(cfg.soc_param.imemSibCfg, cfg.uartDbgBuardRate)
 
 

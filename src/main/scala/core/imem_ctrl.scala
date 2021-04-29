@@ -36,13 +36,13 @@ case class imem_ctrl(param: CPU_PARAM) extends Component {
   val io = imem_ctrl_io(param)
   val imem_sib = master(Sib(param.sibCfg))
 
-  // FIXME: Need to cycle to complete the xfer
   // Master signals
   imem_sib.sel       := True     // We always want to read instruction memory
   imem_sib.enable    := io.cpu2mc_en
   imem_sib.addr      := io.cpu2mc_addr
   imem_sib.wdata     := 0        // Fixed to zero, We are not writing to I-mem through this port
   imem_sib.write     := False    // Fixed to zero, We are not writing to I-mem through this port
+  imem_sib.mask      := 0
 
   // Slave signals
   io.mc2cpu_data      := imem_sib.rdata

@@ -15,7 +15,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package fpga.xilinx
+package fpga.arty_a7
 
 import ip._
 import soc._
@@ -28,8 +28,8 @@ case class apple_riscv_soc_top(cfg: soc_cfg) extends Component {
 
   val io = new Bundle {
     val clk = in Bool
-    val gpio0_port = master(TriStateArray(cfg.gpioCfg.GPIO_WIDTH bits))
-    val gpio1_port = master(TriStateArray(cfg.gpioCfg.GPIO_WIDTH bits))
+    val gpio0_port = master(TriStateArray(cfg.gpio0Cfg.GPIO_WIDTH bits))
+    val gpio1_port = master(TriStateArray(cfg.gpio1Cfg.GPIO_WIDTH bits))
     val uart_port = master(Uart())
     val load_imem = in Bool
   }

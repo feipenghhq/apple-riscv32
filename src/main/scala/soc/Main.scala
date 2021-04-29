@@ -31,11 +31,12 @@ object Main{
     val cfg = soc_cfg (
       cpu_param = new CPU_PARAM(),
       soc_param = new SOC_PARAM(),
-      gpioCfg   = new GpioCfg(false, false, false, false),
+      gpio0Cfg   = new GpioCfg(false, false, false, false),
+      gpio1Cfg   = new GpioCfg(false, false, false, false),
       uartCfg   = new UartCfg(UartCtrlGenerics(), 8, 8)
     )
     val spinalCfg = SpinalConfig(
-      targetDirectory = "gen/rtl"
+      targetDirectory = "src/rtl/gen/generic"
     ).generateVerilog(InOutWrapper(apple_riscv_soc(cfg)))
   }
 }

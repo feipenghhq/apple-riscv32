@@ -72,6 +72,7 @@ case class uart2imem(sibConfig: SibConfig, buardrate: Int) extends Component {
     val read4ByteFsm = new StateMachine {
       val readData = Reg(Bits(32 bits))
       val captured = False
+
       val idle = new State with EntryPoint
       val getByte0 = new State
       val getByte1 = new State

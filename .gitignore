@@ -42,7 +42,7 @@ tmp/
 null
 
 # generated files
-gen/*
+src/rtl/gen/*/*.v
 
 # tests
 *__pycache__

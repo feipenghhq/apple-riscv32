@@ -25,7 +25,7 @@ object Main{
   def main(args: Array[String]) {
     val param = new CPU_PARAM()
     SpinalConfig(
-      targetDirectory = "rtl/core"
+      targetDirectory = "src/rtl/gen/generic"
     ).generateVerilog(new apple_riscv(param)).printPruned()
   }
 }

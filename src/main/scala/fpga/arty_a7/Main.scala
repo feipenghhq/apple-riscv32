@@ -15,7 +15,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package fpga.xilinx
+package fpga.arty_a7
 
 import spinal.core._
 import core._
@@ -32,11 +32,12 @@ object Main{
     val cfg = soc_cfg (
       cpu_param = new CPU_PARAM(),
       soc_param = new SOC_PARAM(),
-      gpioCfg   = new GpioCfg(false, false, false, false),
+      gpio0Cfg   = new GpioCfg(false, false, false, false, 8),
+      gpio1Cfg   = new GpioCfg(false, false, false, false, 0),
       uartCfg   = new UartCfg(UartCtrlGenerics(), 8, 8)
     )
     val spinalCfg = SpinalConfig(
-      targetDirectory = "gen/rtl/xilinx"
+      targetDirectory = "src/rtl/gen/arty_a7"
     ).generateVerilog(InOutWrapper(apple_riscv_soc_top(cfg)))
   }
 }
