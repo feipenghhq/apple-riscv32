@@ -31,6 +31,7 @@ case class branch_unit_io(param: CPU_PARAM) extends Bundle {
   val br_op         = in Bool                         // We get branch instruction
   val jal_op        = in Bool                         // We get jump instruction
   val jalr_op       = in Bool
+  val ex_stage_valid = in Bool
   val target_pc     = out UInt(param.PC_WIDTH bits)
   val branch_taken  = out Bool
   val instr_addr_misalign_exception = out Bool
@@ -43,7 +44,7 @@ case class branch_unit(param: CPU_PARAM) extends Component {
 
   val io = branch_unit_io(param)
 
-  io.branch_taken := io.jal_op | io.jalr_op | (io.br_op & io.branch_result)
+  io.branch_taken := io.ex_stage_valid & (io.jal_op | io.jalr_op | (io.br_op & io.branch_result))
   // Note: JALR instruction needs to set the target address lsb to zero.
   // Here we just blindly set the lsb to zero for the following reason:
   // 1. We only support RV32 so our PC should be aligned to word boundary.
