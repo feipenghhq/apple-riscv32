@@ -8,13 +8,10 @@
 Command to run Quartus or Vivado
 
 ```bash
-cd <intel>/<xilinx>
+cd <board>
 
 # to run fpga build on soc level
 make soc
-
-# to run fpga build on core level
-make core
 
 # see help command
 make help
