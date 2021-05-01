@@ -22,10 +22,10 @@ import spinal.core._
 import spinal.lib._
 
 case class If2IdBD() extends Bundle with IMasterSlave {
-  val instr = master(ImemInstrStage())
-  val pc = master(PcStage())
+  val instr = out Bits(AppleRISCVCfg.xlen bits)
+  val pc = out UInt(AppleRISCVCfg.xlen bits)
   override def asMaster(): Unit = {
-    master(instr, pc)
+    out(instr, pc)
   }
 }
 
@@ -43,20 +43,24 @@ case class IF() extends Component {
   }
   noIoPrefix()
 
+  //=================================
+  // PC & Instruction RAM controller
+  //=================================
   val pc = PC()
   val imemCtrl = ImemCtrl()
   imemCtrl.io.imemSib <> io.imemSib
-  imemCtrl.io.pc2imemCtrl <> pc.io.pc2imemCtrl
+  imemCtrl.io.pc2imemAddr <> pc.io.pc2imemAddr
   imemCtrl.io.ifStageCtrl <> io.ifStageCtrl
 
   pc.io.bu2pc <> io.bu2pc
   pc.io.trapCtrl2pc <> io.trapCtrl2pc
   pc.io.ifStageCtrl <> io.ifStageCtrl
 
+  //==========================
   // Pipeline stage
-  ccPipeStage(pc.io.pcOut, io.if2id.pc)
-  ccPipeStage(imemCtrl.io.imemInstr, io.if2id.instr)
-
+  //==========================
+  ccPipeStage(pc.io.pcOut, io.if2id.pc)(io.ifStageCtrl)
+  ccPipeStage(imemCtrl.io.imemInstr, io.if2id.instr)(io.ifStageCtrl)
 }
 
 object IFMain {

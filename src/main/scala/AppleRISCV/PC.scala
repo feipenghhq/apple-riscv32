@@ -50,8 +50,8 @@ case class PC() extends Component {
     val bu2pc        = slave(Bu2pcBD())
     val ifStageCtrl  = slave(StageCtrlBD())
     // output interface
-    val pc2imemCtrl  = master(Pc2imemCtrlBD())
-    val pcOut        = master(PcStage())
+    val pc2imemAddr  = out UInt(AppleRISCVCfg.xlen bits)
+    val pcOut        = out UInt(AppleRISCVCfg.xlen bits)
   }
   noIoPrefix()
 
@@ -66,6 +66,6 @@ case class PC() extends Component {
       pcValue := pcValue + 4
     }
   }
-  io.pc2imemCtrl.addr := pcValue
-  io.pcOut.va         := pcValue
+  io.pc2imemAddr := pcValue
+  io.pcOut       := pcValue
 }
