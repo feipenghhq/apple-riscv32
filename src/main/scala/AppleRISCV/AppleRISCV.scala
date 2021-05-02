@@ -25,55 +25,78 @@ import spinal.lib._
 case class AppleRISCV() extends Component {
 
   val io = new Bundle {
+    // clock and reset
+    val clk = in Bool
+    val reset = in Bool
+    // bus
     val imemSib = master(Sib(AppleRISCVCfg.ImemSibCfg))
     val dmemSib = master(Sib(AppleRISCVCfg.ImemSibCfg))
+    // interrupt
+    val external_interrupt = in Bool
+    val timer_interrupt = in Bool
+    val software_interrupt = in Bool
+    val debug_interrupt = in Bool
   }
 
-  // ====================================
-  // Instantiate all the modules
-  // ====================================
+  // clock domain
+  val coreClockDomain = ClockDomain.internal(
+    name = "core",
+    frequency = FixedFrequency(50 MHz),
+    config = ClockDomainConfig(
+      clockEdge = RISING,
+      resetKind = SYNC,
+      resetActiveLevel = HIGH
+    )
+  )
 
-  val ifStage = IF()
-  val idStage = ID()
-  val exStage = EX()
-  val memWbStage = MEMWB()
+  coreClockDomain.clock := io.clk
+  coreClockDomain.reset := io.reset
 
-  val hdu = HDU()
-  val trapCtrl = TrapCtrl()
+  val core = new ClockingArea(coreClockDomain) {
 
-  // To Top Level IO
-  ifStage.io.imemSib <> io.imemSib
-  memWbStage.io.dmemSib <> io.dmemSib
+    // ====================================
+    // Instantiate all the modules
+    // ====================================
 
-  // IF
-  ifStage.io.if2id <> idStage.io.if2id
-  ifStage.io.bu2pc <> exStage.io.bu2pc
-  ifStage.io.trapCtrl2pc <> trapCtrl.io.trapCtrl2pc
-  ifStage.io.ifStageCtrl <> hdu.io.ifStageCtrl
+    val ifStage = IF()
+    val idStage = ID()
+    val exStage = EX()
+    val memWbStage = MEMWB()
 
+    val hdu = HDU()
+    val trapCtrl = TrapCtrl()
 
-  // ID
-  idStage.io.id2ex <> exStage.io.id2ex
-  idStage.io.exRdWrCtrl := exStage.io.id2ex.rdWrCtrl
-  idStage.io.memRdWrCtrl := memWbStage.io.ex2mem.rdWrCtrl
-  idStage.io.rdWdata  <> memWbStage.io.rdWdata
-  idStage.io.rdWrCtrl <> memWbStage.io.wb_rdWrCtrl
-  idStage.io.idStageCtrl <> hdu.io.idStageCtrl
+    // To Top Level IO
+    ifStage.io.imemSib <> io.imemSib
+    memWbStage.io.dmemSib <> io.dmemSib
 
-  // EX
-  exStage.io.ex2mem <> memWbStage.io.ex2mem
-  exStage.io.rs1DataMem := memWbStage.io.ex2mem.aluOut
-  exStage.io.rs2DataMem := memWbStage.io.ex2mem.aluOut
-  exStage.io.rs1DataWb := memWbStage.io.rdWdata
-  exStage.io.rs2DataWb := memWbStage.io.rdWdata
-  exStage.io.exStageCtrl <> hdu.io.exStageCtrl
-
-  // MEM
-  memWbStage.io.memStageCtrl <> hdu.io.memStageCtrl
+    // IF
+    ifStage.io.if2id <> idStage.io.if2id
+    ifStage.io.bu2pc <> exStage.io.bu2pc
+    ifStage.io.trapCtrl2pc <> trapCtrl.io.trapCtrl2pc
+    ifStage.io.ifStageCtrl <> hdu.io.ifStageCtrl
 
 
+    // ID
+    idStage.io.id2ex <> exStage.io.id2ex
+    idStage.io.exRdWrCtrl := exStage.io.id2ex.rdWrCtrl
+    idStage.io.memRdWrCtrl := memWbStage.io.ex2mem.rdWrCtrl
+    idStage.io.rdWdata <> memWbStage.io.rdWdata
+    idStage.io.rdWrCtrl <> memWbStage.io.wb_rdWrCtrl
+    idStage.io.idStageCtrl <> hdu.io.idStageCtrl
+
+    // EX
+    exStage.io.ex2mem <> memWbStage.io.ex2mem
+    exStage.io.rs1DataMem := memWbStage.io.ex2mem.aluOut
+    exStage.io.rs2DataMem := memWbStage.io.ex2mem.aluOut
+    exStage.io.rs1DataWb := memWbStage.io.rdWdata
+    exStage.io.rs2DataWb := memWbStage.io.rdWdata
+    exStage.io.exStageCtrl <> hdu.io.exStageCtrl
+
+    // MEM
+    memWbStage.io.memStageCtrl <> hdu.io.memStageCtrl
+  }
 }
-
 
 object AppleRISCVMain {
   def main(args: Array[String]) {
