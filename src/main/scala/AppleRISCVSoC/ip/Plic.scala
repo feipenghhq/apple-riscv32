@@ -18,9 +18,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package ip
+package AppleRISCVSoC.ip
 
-import bus.sib._
+import AppleRISCVSoC.bus._
 import spinal.core._
 import spinal.lib._
 
@@ -44,7 +44,7 @@ case class plic_interrupt_gen(busCtrl: SibSlaveFactory, width: Int, addr: Int, i
 
 }
 
-case class plic(sibCfg: SibConfig) extends Component {
+case class Plic(sibCfg: SibConfig) extends Component {
 
   noIoPrefix()
 

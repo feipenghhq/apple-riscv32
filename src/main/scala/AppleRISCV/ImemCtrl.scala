@@ -18,7 +18,7 @@
 package AppleRISCV
 
 import spinal.core._
-import AppleRISCVSoC.Bus._
+import AppleRISCVSoC.bus._
 import spinal.lib.master
 
 case class ImemCtrl() extends Component {

@@ -15,9 +15,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package ip
+package AppleRISCVSoC.ip
 
-import bus.sib._
+import AppleRISCVSoC.bus._
 import spinal.core._
 import spinal.lib._
 import spinal.lib.io.TriStateArray
@@ -50,10 +50,9 @@ case class gpio_interrupt_gen(busCtrl: SibSlaveFactory, width: Int, enable: Bool
   }
 }
 
-case class gpio(cfg: GpioCfg, sibCfg: SibConfig) extends Component {
+case class Gpio(cfg: GpioCfg, sibCfg: SibConfig) extends Component {
 
   noIoPrefix()
-
   val io        = gpio_io(cfg, sibCfg)
   val busCtrl   = SibSlaveFactory(io.gpio_sib)
 

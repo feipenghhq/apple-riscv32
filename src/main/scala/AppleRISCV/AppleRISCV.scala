@@ -21,7 +21,7 @@
 
 package AppleRISCV
 
-import AppleRISCVSoC.Bus._
+import AppleRISCVSoC.bus._
 import spinal.core._
 import spinal.lib.master
 
@@ -359,11 +359,11 @@ case class AppleRISCV() extends Component {
 
         // Bypassing Logic
         val Bypassing = new Area {
+            // FIXME: the logic is wrong here need a pipe stage here.
             rs1_dep_ex  := id2ex.rs1_rd & ex2mem.rd_wr & (id2ex.rs1_idx === ex2mem.rd_idx)
             rs1_dep_mem := id2ex.rs1_rd & ex2mem.rd_wr & (id2ex.rs1_idx === ex2mem.rd_idx)
             rs2_dep_ex  := id2ex.rs2_rd & ex2mem.rd_wr & (id2ex.rs2_idx === ex2mem.rd_idx)
             rs2_dep_mem := id2ex.rs2_rd & ex2mem.rd_wr & (id2ex.rs2_idx === ex2mem.rd_idx)
-            // FIXME: need a pipe stage here
             ex_rs1_value_forwarded := Mux(rs1_dep_ex, ex2mem.alu_out, Mux(rs1_dep_mem, wb_rd_wdata, id2ex.rs1_value))
             ex_rs2_value_forwarded := Mux(rs2_dep_ex, ex2mem.alu_out, Mux(rs2_dep_mem, wb_rd_wdata, id2ex.rs2_value))
         }

@@ -15,10 +15,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package ip
+package AppleRISCVSoC.ip
 
-import soc._
-import bus.sib._
+import AppleRISCVSoC.bus.{Sib, SibConfig, SibSlaveFactory}
 import spinal.core._
 import spinal.lib._
 
@@ -27,7 +26,7 @@ case class timer_io(sibCfg: SibConfig) extends Bundle {
   val timer_interrupt = out Bool
 }
 
-case class timer(sibCfg: SibConfig) extends Component {
+case class Timer(sibCfg: SibConfig) extends Component {
 
   noIoPrefix()
 

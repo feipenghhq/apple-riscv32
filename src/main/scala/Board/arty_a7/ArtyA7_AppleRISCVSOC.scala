@@ -15,16 +15,16 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package fpga.arty_a7
+package Board.arty_a7
 
-import ip._
-import soc._
+import AppleRISCVSoC.ip._
+import AppleRISCVSoC._
 import spinal.core._
 import spinal.lib._
-import spinal.lib.com.uart.Uart
-import spinal.lib.io.TriStateArray
+import spinal.lib.com.uart.{Uart, UartCtrlGenerics}
+import spinal.lib.io.{InOutWrapper, TriStateArray}
 
-case class apple_riscv_soc_top(cfg: soc_cfg) extends Component {
+case class ArtyA7_AppleRISCVSoC(cfg: SoCCfg) extends Component {
 
   val io = new Bundle {
     val clk = in Bool
@@ -38,31 +38,42 @@ case class apple_riscv_soc_top(cfg: soc_cfg) extends Component {
 
   // Clock domain and PLL
   val clkCtrl = new Area {
-    val mmcm_inst = new mmcm
-    mmcm_inst.io.clk_in1 := io.clk
+    val mmcm = new mmcm
+    mmcm.io.clk_in1 := io.clk
 
     //Create a new clock domain named 'core'
-  val coreClockDomain = ClockDomain.internal(
-    name = "core",
-    frequency = FixedFrequency(50 MHz),
-    config = ClockDomainConfig(
-      clockEdge        = RISING,
-      resetKind        = SYNC,
-      resetActiveLevel = HIGH
+    val coreClockDomain = ClockDomain.internal(
+      name = "core",
+      frequency = FixedFrequency(50 MHz),
+      config = ClockDomainConfig(
+        clockEdge        = RISING,
+        resetKind        = SYNC,
+        resetActiveLevel = HIGH
+      )
     )
-  )
 
-    coreClockDomain.clock := mmcm_inst.io.clk_out1
+    coreClockDomain.clock := mmcm.io.clk_out1
     coreClockDomain.reset := False
   }
 
   val top = new ClockingArea(clkCtrl.coreClockDomain) {
-    val apple_riscv_soc_inst = apple_riscv_soc(cfg)
+    val apple_riscv_soc_inst = AppleRISCVSoC(cfg)
     apple_riscv_soc_inst.io.clk   := clkCtrl.coreClockDomain.clock
     apple_riscv_soc_inst.io.reset := clkCtrl.coreClockDomain.reset
     apple_riscv_soc_inst.io.uart_port  <> io.uart_port
     apple_riscv_soc_inst.io.gpio0_port <> io.gpio0_port
     apple_riscv_soc_inst.io.gpio1_port <> io.gpio1_port
     apple_riscv_soc_inst.io.load_imem  :=  io.load_imem
+  }
+}
+
+object ArtyA7_AppleRISCVSoCMain{
+  def main(args: Array[String]) {
+    val cfg = SoCCfg (
+      gpio0Cfg   = new GpioCfg(false, false, false, false, 8),
+      gpio1Cfg   = new GpioCfg(false, false, false, false, 0),
+      uartCfg   = new UartCfg(UartCtrlGenerics(), 8, 8)
+    )
+    SpinalVerilog(InOutWrapper(ArtyA7_AppleRISCVSoC(cfg)))
   }
 }

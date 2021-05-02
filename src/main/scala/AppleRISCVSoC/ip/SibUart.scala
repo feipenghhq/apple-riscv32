@@ -17,9 +17,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package ip
+package AppleRISCVSoC.ip
 
-import bus.sib._
+import AppleRISCVSoC.bus._
 import spinal.core._
 import spinal.lib._
 import spinal.lib.com.uart._
@@ -37,14 +37,15 @@ case class SibUart(cfg: UartCfg, sibCfg: SibConfig) extends Component {
   val io = new Bundle{
     val uart_interrupt = out Bool
     val uart_sib = slave(Sib(sibCfg))
+    val uart = master(Uart())
   }
-  val uart = master(Uart())
+
 
   val busCtrl = SibSlaveFactory(io.uart_sib)
 
   // Instantiate an simple uart controller
   val uartCtrl = new UartCtrl(cfg.uartCfg)
-  uart <> uartCtrl.io.uart
+  io.uart <> uartCtrl.io.uart
   uartCtrl.io.writeBreak := False
 
   val frameDoc = "Uart frame control. [0:2] data length. [3] Stop bits. 0 - one bit, 1 - two bits. " +

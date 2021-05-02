@@ -15,28 +15,25 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package soc
+package AppleRISCVSoC
 
-import core._
+import AppleRISCV._
 import ip._
-import bus.sib._
-import debug._
+import bus._
 import spinal.core._
 import spinal.lib._
-import spinal.lib.com.uart.Uart
-import spinal.lib.io.TriStateArray
+import spinal.lib.com.uart.{Uart, UartCtrlGenerics}
+import spinal.lib.io.{InOutWrapper, TriStateArray}
 
 
-case class soc_cfg(
-    soc_param: SOC_PARAM  = null,
-    cpu_param: CPU_PARAM  = null,
+case class SoCCfg(
     gpio0Cfg: GpioCfg     = null,
     gpio1Cfg: GpioCfg     = null,
     uartCfg: UartCfg      = null,
     uartDbgBuardRate: Int = 115200
 )
 
-case class apple_riscv_soc(cfg: soc_cfg) extends Component {
+case class AppleRISCVSoC(cfg: SoCCfg) extends Component {
 
     val io = new Bundle {
         val clk        = in Bool
@@ -50,7 +47,7 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
     noIoPrefix()
 
     val socClockDomain = ClockDomain.internal(
-        name = "soc",
+        name = "AppleRISCVSoC",
         frequency = FixedFrequency(50 MHz),
         config = ClockDomainConfig(
             clockEdge        = RISING,
@@ -65,17 +62,17 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
     val soc = new ClockingArea(socClockDomain) {
 
         // == soc component instance == //
-        val cpu_core  = apple_riscv(cfg.cpu_param)
+        val cpu_core  = AppleRISCV()
         val rstctrl   = RstCtrl()
-        val imem_inst = imem(cfg.soc_param)
-        val dmem_inst = dmem(cfg.soc_param)
-        val clic_inst = clic(cfg.soc_param.clicSibCfg, cfg.soc_param.CLIC_TIMER_WIDTH)
-        val plic_inst = plic(cfg.soc_param.plicSibCfg)
-        val timer_inst = timer(cfg.soc_param.timerSibCfg)
-        val uart_inst  = SibUart(cfg.uartCfg, cfg.soc_param.uartSibCfg)
-        val gpio0_inst = gpio(cfg.gpio0Cfg, cfg.soc_param.gpio0SibCfg)
-        val gpio1_inst = gpio(cfg.gpio1Cfg, cfg.soc_param.gpio1SibCfg)
-        val uart2imem_inst = uart2imem(cfg.soc_param.imemSibCfg, cfg.uartDbgBuardRate)
+        val imem_inst = Imem()
+        val dmem_inst = Dmem()
+        val clic_inst = Clic(SIBCfg.clicSibCfg)
+        val plic_inst = Plic(SIBCfg.plicSibCfg)
+        val timer_inst = Timer(SIBCfg.timerSibCfg)
+        val uart_inst  = SibUart(cfg.uartCfg, SIBCfg.uartSibCfg)
+        val gpio0_inst = Gpio(cfg.gpio0Cfg, SIBCfg.gpio0SibCfg)
+        val gpio1_inst = Gpio(cfg.gpio1Cfg, SIBCfg.gpio1SibCfg)
+        val uart2imem_inst = ip.Uart2imem(SIBCfg.imemSibCfg, cfg.uartDbgBuardRate)
 
 
         // cpu core signal connection == //
@@ -93,24 +90,24 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
         // == SOC Bus Switch instance == //
 
         // imem switch
-        val imemClientSibCfg = Array(cfg.soc_param.imemSibCfg)
-        val imem_switch = Sib_decoder(cfg.soc_param.cpuSibCfg, imemClientSibCfg)
+        val imemClientSibCfg = Array(SIBCfg.imemSibCfg)
+        val imem_switch = Sib_decoder(SIBCfg.cpuSibCfg, imemClientSibCfg)
 
         // dmem bus switch
         val dmemClientSibCfg = Array(
-            cfg.soc_param.dmemSibCfg,
-            cfg.soc_param.clicSibCfg,
-            cfg.soc_param.plicSibCfg,
-            cfg.soc_param.peripHostSibCfg)
-        val dmem_switch = Sib_decoder(cfg.soc_param.cpuSibCfg, dmemClientSibCfg)
+            SIBCfg.dmemSibCfg,
+            SIBCfg.clicSibCfg,
+            SIBCfg.plicSibCfg,
+            SIBCfg.peripHostSibCfg)
+        val dmem_switch = Sib_decoder(SIBCfg.cpuSibCfg, dmemClientSibCfg)
 
         // peripheral switch
         val peripClientSibCfg = Array(
-            cfg.soc_param.timerSibCfg,
-            cfg.soc_param.uartSibCfg,
-            cfg.soc_param.gpio0SibCfg,
-            cfg.soc_param.gpio1SibCfg)
-        val perip_switch = Sib_decoder(cfg.soc_param.peripHostSibCfg, peripClientSibCfg)
+            SIBCfg.timerSibCfg,
+            SIBCfg.uartSibCfg,
+            SIBCfg.gpio0SibCfg,
+            SIBCfg.gpio1SibCfg)
+        val perip_switch = Sib_decoder(SIBCfg.peripHostSibCfg, peripClientSibCfg)
 
 
         // == SOC bus connection == //
@@ -142,7 +139,7 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
         io.gpio1_port <> gpio1_inst.io.gpio
 
         // Uart port
-        io.uart_port <> uart_inst.uart
+        io.uart_port <> uart_inst.io.uart
         io.uart_port.rxd <> uart2imem_inst.io.uart.rxd
 
         // reset controller
@@ -156,5 +153,16 @@ case class apple_riscv_soc(cfg: soc_cfg) extends Component {
         plic_inst.io.gpio1_int := gpio1_inst.io.gpio_int_pe
         plic_inst.io.timer_int := timer_inst.io.timer_interrupt
         plic_inst.io.uart_int  := uart_inst.io.uart_interrupt
+    }
+}
+
+object AppleRISCVSoCMain{
+    def main(args: Array[String]) {
+        val cfg = SoCCfg(
+            gpio0Cfg = new GpioCfg(false, false, false, false, 8),
+            gpio1Cfg = new GpioCfg(false, false, false, false, 0),
+            uartCfg = UartCfg(UartCtrlGenerics(), 8, 8)
+        )
+        SpinalVerilog(InOutWrapper(AppleRISCVSoC(cfg))).printPruned()
     }
 }
