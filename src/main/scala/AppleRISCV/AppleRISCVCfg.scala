@@ -11,4 +11,9 @@ object AppleRISCVCfg {
     dataWidth    = xlen
   )
 
+  val DmemSibCfg = SibConfig(
+    addressWidth = xlen,
+    dataWidth    = xlen
+  )
+
 }

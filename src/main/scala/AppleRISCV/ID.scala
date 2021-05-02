@@ -23,9 +23,8 @@ import spinal.lib._
 
 case class Id2ExBD() extends Bundle with IMasterSlave {
   val pc        = out UInt(AppleRISCVCfg.xlen bits)
-  val rs1RdCtrl = master(RsCtrlStage())
-  val rs2RdCtrl = master(RsCtrlStage())
-  val rdWrCtrl  = master(RdWrStage(hasData = false))
+  val rdWrCtrl  = master(RdWrStage())
+  val rdSelCtrl = out (RdSelEnum())
   val aluCtrl   = master(AluCtrlStage())
   val buCtrl    = master(BuCtrlStage())
   val dmemCtrl  = master(DmemCtrlStage())
@@ -36,7 +35,7 @@ case class Id2ExBD() extends Bundle with IMasterSlave {
   val rs2BypassCtrl = out (BypassCtrlEnum)
   val excIllegalInstr = out Bool
   override def asMaster(): Unit = {
-    master(rs1RdCtrl, rs2RdCtrl, rdWrCtrl, aluCtrl, buCtrl, dmemCtrl)
+    master(rdWrCtrl, aluCtrl, buCtrl, dmemCtrl)
     out(pc, excIllegalInstr)
   }
 }
@@ -47,9 +46,10 @@ case class ID() extends Component {
     // input
     val if2id = slave(If2IdBD())
     val idStageCtrl = slave(StageCtrlBD())
-    val rdWrCtrl  = slave(RdWrStage(hasData = true))
-    val exRdWrCtrl = slave(RdWrStage(hasData = false))
-    val memRdWrCtrl = slave(RdWrStage(hasData = false))
+    val rdWrCtrl  = slave(RdWrStage())
+    val rdWdata   = in Bits(AppleRISCVCfg.xlen bits)
+    val exRdWrCtrl = slave(RdWrStage())
+    val memRdWrCtrl = slave(RdWrStage())
     // output
     val id2ex = master(Id2ExBD())
   }
@@ -65,6 +65,7 @@ case class ID() extends Component {
   regFile.io.rs1RdCtrl <> instrDec.io.rs1RdCtrl
   regFile.io.rs2RdCtrl <> instrDec.io.rs2RdCtrl
   regFile.io.rdWrCtrl  <> io.rdWrCtrl
+  regFile.io.rdWdata   <> io.rdWdata
 
   //====================
   // Forwarding Unit
@@ -129,9 +130,8 @@ case class ID() extends Component {
   ccPipeStage(op1Mux.rs1Data, io.id2ex.op1Data)(io.idStageCtrl)
   ccPipeStage(op2Mux.rs2Data, io.id2ex.op2Data)(io.idStageCtrl)
   ccPipeStage(instrDec.io.immValue, io.id2ex.immValue)(io.idStageCtrl)
-  ccPipeStage(instrDec.io.rs1RdCtrl, io.id2ex.rs1RdCtrl)(io.idStageCtrl)
-  ccPipeStage(instrDec.io.rs2RdCtrl, io.id2ex.rs2RdCtrl)(io.idStageCtrl)
   ccPipeStage(instrDec.io.rdWrCtrl, io.id2ex.rdWrCtrl)(io.idStageCtrl)
+  ccPipeStage(instrDec.io.rdSelCtrl, io.id2ex.rdSelCtrl)(io.idStageCtrl)
   ccPipeStage(instrDec.io.aluCtrl, io.id2ex.aluCtrl)(io.idStageCtrl)
   ccPipeStage(instrDec.io.buCtrl, io.id2ex.buCtrl)(io.idStageCtrl)
   ccPipeStage(instrDec.io.dmemCtrl, io.id2ex.dmemCtrl)(io.idStageCtrl)

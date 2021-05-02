@@ -106,6 +106,8 @@ trait SDInstr extends Instruction {
   action.act.update(WRITE_DMEM,true)
   override val aluOp = ALUCtrlEnum.ADD // Use ADD to calculate address
   override val immSel = ImmCtrlEnum.S
+  val types = DmemTypeEnum.WD
+  val unsigned = false
 }
 
 /**
@@ -119,6 +121,8 @@ trait LDInstr extends Instruction {
   action.act.update(WRITE_DMEM,true)
   override val aluOp = ALUCtrlEnum.ADD // Use ADD to calculate address
   override val immSel = ImmCtrlEnum.I
+  val types = DmemTypeEnum.WD
+  val unsigned = false
 }
 
 /**
@@ -199,15 +203,15 @@ object BLTU extends BRInstr {override val f3 = 6}
 object BGEU extends BRInstr {override val f3 = 7}
 
 // I Type - Load
-object LB  extends LDInstr {override val f3 = 0}
-object LH  extends LDInstr {override val f3 = 1}
+object LB  extends LDInstr {override val f3 = 0; override val types = DmemTypeEnum.BY}
+object LH  extends LDInstr {override val f3 = 1; override val types = DmemTypeEnum.HW}
 object LW  extends LDInstr {override val f3 = 2}
-object LBU extends LDInstr {override val f3 = 3}
-object LHU extends LDInstr {override val f3 = 4}
+object LBU extends LDInstr {override val f3 = 3; override val types = DmemTypeEnum.BY; override val unsigned = true}
+object LHU extends LDInstr {override val f3 = 4; override val types = DmemTypeEnum.HW; override val unsigned = true}
 
 // S Type
-object SB extends SDInstr {override val f3 = 0}
-object SH extends SDInstr {override val f3 = 1}
+object SB extends SDInstr {override val f3 = 0; override val types = DmemTypeEnum.BY}
+object SH extends SDInstr {override val f3 = 1; override val types = DmemTypeEnum.HW}
 object SW extends SDInstr {override val f3 = 2}
 
 // I Type

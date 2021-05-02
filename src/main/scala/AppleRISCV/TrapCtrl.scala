@@ -24,7 +24,6 @@ import spinal.lib._
 // Port Declaration
 //=============================
 
-
 /**
  * trap unit to PC
  */
@@ -41,5 +40,11 @@ case class TrapCtrl2pcBD() extends Bundle with IMasterSlave {
 //=============================
 
 case class TrapCtrl() extends Component {
+  val io = new Bundle {
+    val trapCtrl2pc = master(TrapCtrl2pcBD())
+  }
+  noIoPrefix()
 
+  io.trapCtrl2pc.trap := False
+  io.trapCtrl2pc.pc := 0
 }

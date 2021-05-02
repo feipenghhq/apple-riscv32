@@ -38,20 +38,6 @@ case class RsCtrlStage() extends Bundle with IMasterSlave{
 }
 
 /**
- * Rd write Stage
- */
-case class RdWrStage(hasData: Boolean) extends Bundle with IMasterSlave{
-  val wr    = in Bool
-  val addr  = in UInt(5 bits)
-  val wdata = if (hasData) in Bits(AppleRISCVCfg.xlen bits) else null
-  override def asMaster(): Unit = {
-    out(wr, addr)
-    if (hasData) {out(wdata)}
-  }
-}
-
-
-/**
  * Register file module
  */
 case class RegFile() extends Component {
@@ -61,7 +47,8 @@ case class RegFile() extends Component {
     val rs2RdCtrl = slave(RsCtrlStage())
     val rs1Data   = out Bits(AppleRISCVCfg.xlen bits)
     val rs2Data   = out Bits(AppleRISCVCfg.xlen bits)
-    val rdWrCtrl  = slave(RdWrStage(true))
+    val rdWrCtrl  = slave(RdWrStage())
+    val rdWdata   = in Bits(AppleRISCVCfg.xlen bits)
   }
   noIoPrefix()
 
@@ -72,7 +59,7 @@ case class RegFile() extends Component {
   regFileRam.write(
     enable  = io.rdWrCtrl.wr,
     address = io.rdWrCtrl.addr,
-    data    = io.rdWrCtrl.wdata
+    data    = io.rdWdata
   )
   rs1Data := regFileRam.readAsync(
     address = io.rs1RdCtrl.addr
@@ -85,7 +72,7 @@ case class RegFile() extends Component {
   when(io.rs1RdCtrl.addr === 0) {
     io.rs1Data:= 0
   }.elsewhen((io.rs1RdCtrl.addr === io.rdWrCtrl.addr) && io.rdWrCtrl.wr && io.rs1RdCtrl.rd) {
-    io.rs1Data := io.rdWrCtrl.wdata
+    io.rs1Data := io.rdWdata
   }.otherwise {
     io.rs1Data := rs1Data
   }
@@ -94,7 +81,7 @@ case class RegFile() extends Component {
   when(io.rs2RdCtrl.addr === 0) {
     io.rs2Data := 0
   }.elsewhen((io.rs2RdCtrl.addr === io.rdWrCtrl.addr) && io.rdWrCtrl.wr && io.rs2RdCtrl.rd) {
-    io.rs2Data := io.rdWrCtrl.wdata
+    io.rs2Data := io.rdWdata
   }.otherwise {
     io.rs2Data := rs2Data
   }

@@ -47,10 +47,25 @@ case class BuCtrlStage() extends Bundle with IMasterSlave {
 case class DmemCtrlStage() extends Bundle with IMasterSlave {
   val read  = out Bool
   val write = out Bool
+  val unsigned = out Bool
+  val types = out (DmemTypeEnum)
   override def asMaster(): Unit = {
-    out(read, write)
+    out(read, write, unsigned, types)
   }
 }
+
+
+/**
+ * Rd write Stage
+ */
+case class RdWrStage() extends Bundle with IMasterSlave{
+  val wr    = Bool
+  val addr  = UInt(5 bits)
+  override def asMaster(): Unit = {
+    out(wr, addr)
+  }
+}
+
 
 case class InstrDec() extends Component {
 
@@ -61,7 +76,8 @@ case class InstrDec() extends Component {
     // output
     val rs1RdCtrl = master(RsCtrlStage())
     val rs2RdCtrl = master(RsCtrlStage())
-    val rdWrCtrl  = master(RdWrStage(false))
+    val rdWrCtrl  = master(RdWrStage())
+    val rdSelCtrl = out (RdSelEnum())
     val aluCtrl   = master(AluCtrlStage())
     val buCtrl    = master(BuCtrlStage())
     val dmemCtrl  = master(DmemCtrlStage())
@@ -86,6 +102,7 @@ case class InstrDec() extends Component {
   //val func12  = io.instr(31 downto 20)
 
   io.rdWrCtrl.wr   := False
+  io.rdSelCtrl     := RdSelEnum.ALU
   io.rs1RdCtrl.rd  := False
   io.rs2RdCtrl.rd  := False
 
@@ -96,12 +113,15 @@ case class InstrDec() extends Component {
   io.aluCtrl.aluOp   := ALUCtrlEnum.NOP
   io.dmemCtrl.write  := False
   io.dmemCtrl.read   := False
+  io.dmemCtrl.types  := DmemTypeEnum.WD
+  io.dmemCtrl.unsigned  := False
   io.op1Ctrl         := Op1CtrlEnum.RS1
   io.immSel          := False
   io.excIllegalInstr := False
 
   val immType = ImmCtrlEnum()
   immType := ImmCtrlEnum.I
+
   val rdIsNotZero = io.rdWrCtrl.addr =/= 0
 
   def doGenericAction(act: ActionMap): Unit = {
@@ -155,7 +175,6 @@ case class InstrDec() extends Component {
           if (!repeatedFunc7.contains(instr.f3)) {
             is(instr.f3) {
               io.aluCtrl.aluOp := instr.aluOp
-              //if (instr.f3 == BEQ.f3) {io.buCtrl.branchOp := instr.branchOp}
               io.buCtrl.branchOp := instr.branchOp
             }
           }
@@ -173,7 +192,6 @@ case class InstrDec() extends Component {
               for (instr <- instrList){
                 is(instr.f7) {
                   io.aluCtrl.aluOp := instr.aluOp
-                  //if (instr.f3 == BEQ.f3) {io.buCtrl.branchOp := instr.branchOp}
                   io.buCtrl.branchOp := instr.branchOp
                 }
               }
@@ -206,8 +224,17 @@ case class InstrDec() extends Component {
           case jal:   JALInstr   => doDec(jal, useF3 = false)
           case jalr:  JALRInstr  => doDec(jalr, useF3 = true)
           case br:    BRInstr    => doDec(br, useF3 = true)
-          case ld:    LDInstr    => doDec(ld, useF3 = true)
-          case sd:    SDInstr    => doDec(sd, useF3 = true)
+          case ld:    LDInstr    => {
+            doDec(ld, useF3 = true)
+            io.dmemCtrl.types := ld.types
+            io.dmemCtrl.unsigned := Bool(ld.unsigned)
+            io.rdSelCtrl := RdSelEnum.MEM
+          }
+          case sd:    SDInstr    => {
+            doDec(sd, useF3 = true)
+            io.dmemCtrl.types := sd.types
+            io.dmemCtrl.unsigned := Bool(sd.unsigned)
+          }
           case lai:   LAIInstr   => doDec(lai, useF3 = true)
           case lar:   LARInstr   => doDec(lar, useF3 = true)
           case _ => ???
