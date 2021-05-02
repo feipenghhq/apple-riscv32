@@ -22,6 +22,7 @@ import spinal.core._
 case class ALUIO() extends Bundle {
     val operand_1 = in Bits(AppleRISCVCfg.XLEN bits)
     val operand_2 = in Bits(AppleRISCVCfg.XLEN bits)
+    val pc        = in UInt(AppleRISCVCfg.XLEN bits)
     val alu_opcode = in(AluOpcodeEnum())
     val alu_out = out Bits(AppleRISCVCfg.XLEN bits)
 
@@ -54,6 +55,9 @@ case class ALU() extends Component {
     val sll_result = io.operand_1 |<< shift_value
     val slt_result = (op1_signed < op2_signed).asBits.resize(AppleRISCVCfg.XLEN bits)
     val sltu_result = (op1_unsigned < op2_unsigned).asBits.resize(AppleRISCVCfg.XLEN bits)
+    val lui_result = io.operand_2(31 downto 12) ## B"12'h0"
+    val auipc_result = io.pc + (io.operand_2(31 downto 12) ## B"12'h0").asUInt
+    val pcplus4_result = io.pc + 4
 
     switch(io.alu_opcode) {
         is(AluOpcodeEnum.ADD) {io.alu_out := add_result.asBits}
@@ -66,6 +70,9 @@ case class ALU() extends Component {
         is(AluOpcodeEnum.SLL) {io.alu_out := sll_result.asBits}
         is(AluOpcodeEnum.SLT) {io.alu_out := slt_result.asBits}
         is(AluOpcodeEnum.SLTU) {io.alu_out := sltu_result.asBits}
+        is(AluOpcodeEnum.LUI)  {io.alu_out := lui_result.asBits}
+        is(AluOpcodeEnum.AUIPC) {io.alu_out := auipc_result.asBits}
+        is(AluOpcodeEnum.PC4) {io.alu_out := pcplus4_result.asBits}
         default {io.alu_out := and_result.asBits}
     }
 }

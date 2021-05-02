@@ -105,7 +105,7 @@ object InstrDefine {
 }
 
 object AluOpcodeEnum extends SpinalEnum(){
-    val NOP, ADD, SUB, AND, OR, XOR, SRA, SRL, SLL, SLT, SLTU, LUI, AUIPC = newElement()
+    val NOP, ADD, SUB, AND, OR, XOR, SRA, SRL, SLL, SLT, SLTU, LUI, AUIPC, PC4 = newElement()
 }
 
 object BranchOpcodeEnum extends SpinalEnum(){

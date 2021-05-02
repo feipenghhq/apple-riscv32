@@ -146,7 +146,7 @@ case class InstrDec() extends Component {
             alu_imm_type   := alu_imm_type_e.UTYPE
         }
         is(InstrDefine.OP_JAL) {
-            io.alu_opcode  := AluOpcodeEnum.ADD
+            io.alu_opcode  := AluOpcodeEnum.PC4
             io.op2_sel_imm := True
             io.rd_wr       := rd_isnot_x0
             io.jal_op      := True
@@ -154,7 +154,7 @@ case class InstrDec() extends Component {
         }
         is(InstrDefine.OP_JALR) {
             io.jalr_op      := True
-            io.alu_opcode   := AluOpcodeEnum.ADD
+            io.alu_opcode   := AluOpcodeEnum.PC4
             io.op2_sel_imm  := True
             io.rd_wr        := rd_isnot_x0
             io.rs1_rd       := True
@@ -184,6 +184,7 @@ case class InstrDec() extends Component {
             io.rs1_rd      := True
             io.rd_wr       := rd_isnot_x0
             io.alu_opcode  := AluOpcodeEnum.ADD
+            io.wb_sel      := WbSelEnum.MEM
             alu_imm_type   := alu_imm_type_e.ITYPE
             switch(func3) {
                 is(InstrDefine.LW_F3_LB) {io.dmem_ld_byte := True}
@@ -294,13 +295,13 @@ case class InstrDec() extends Component {
         // End of R-Type Logic/Arithmetic Instruction
         // SYSTEM Instruction
         is(InstrDefine.OP_SYS) {
+            io.wb_sel := WbSelEnum.CSR
             switch(func3) {
                 is(InstrDefine.CSR_F3_RW) {
                     io.rd_wr  := rd_isnot_x0
                     io.csr_rd := rd_isnot_x0
                     io.csr_wr := True
                     io.rs1_rd := True
-                    io.wb_sel := WbSelEnum.CSR
                     io.csr_sel:= CsrSelEnum.DATA
                 }
                 is(InstrDefine.CSR_F3_RS) {
@@ -308,7 +309,6 @@ case class InstrDec() extends Component {
                     io.csr_rd := True
                     io.csr_wr := rs1_isnot_x0
                     io.rs1_rd := True
-                    io.wb_sel := WbSelEnum.CSR
                     io.csr_sel:= CsrSelEnum.SET
                 }
                 is(InstrDefine.CSR_F3_RC) {
@@ -316,7 +316,6 @@ case class InstrDec() extends Component {
                     io.csr_rd := True
                     io.csr_wr := rs1_isnot_x0
                     io.rs1_rd := True
-                    io.wb_sel := WbSelEnum.CSR
                     io.csr_sel:= CsrSelEnum.CLEAR
                 }
                 // Note on Immediate operand for CSR
@@ -327,7 +326,6 @@ case class InstrDec() extends Component {
                     io.csr_rd := rd_isnot_x0
                     io.csr_wr := True
                     io.csr_sel_imm := True
-                    io.wb_sel := WbSelEnum.CSR
                     io.csr_sel:= CsrSelEnum.DATA
                 }
                 is(InstrDefine.CSR_F3_RSI) {
@@ -335,7 +333,6 @@ case class InstrDec() extends Component {
                     io.csr_rd := True
                     io.csr_wr := rs1_isnot_x0
                     io.csr_sel_imm := True
-                    io.wb_sel := WbSelEnum.CSR
                     io.csr_sel:= CsrSelEnum.SET
                 }
                 is(InstrDefine.CSR_F3_RCI) {
@@ -343,7 +340,6 @@ case class InstrDec() extends Component {
                     io.csr_rd := True
                     io.csr_wr := rs1_isnot_x0
                     io.csr_sel_imm := True
-                    io.wb_sel := WbSelEnum.CSR
                     io.csr_sel:= CsrSelEnum.CLEAR
                 }
                 // SYSTEM Privileged Instruction

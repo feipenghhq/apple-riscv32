@@ -133,10 +133,10 @@ case class AppleRISCV() extends Component {
         regfile_inst.io.rs2_rd_addr := instr_dec_inst.io.rs2_idx
 
         // Place holder for the forwarding detection
-        val rs1_dep_ex = Bool
-        val rs1_dep_mem  = Bool
-        val rs2_dep_ex = Bool
-        val rs2_dep_mem  = Bool
+        val id_rs1_dep_ex_rd   = Bool
+        val id_rs1_dep_mem_rd  = Bool
+        val id_rs2_dep_ex_rd   = Bool
+        val id_rs2_dep_mem_rd  = Bool
 
         // =========================
         // ID/EX Pipeline
@@ -174,6 +174,10 @@ case class AppleRISCV() extends Component {
             val rs1_value      = RegNextWhen(regfile_inst.io.rs1_data_out,      ~id_pipe_stall)
             val rs2_value      = RegNextWhen(regfile_inst.io.rs2_data_out,      ~id_pipe_stall)
             val imm_value      = RegNextWhen(instr_dec_inst.io.imm_value ,      ~id_pipe_stall)
+            val rs1_dep_mem    = RegNextWhen(id_rs1_dep_ex_rd ,                    ~id_pipe_stall)
+            val rs1_dep_wb     = RegNextWhen(id_rs1_dep_mem_rd,                    ~id_pipe_stall)
+            val rs2_dep_mem    = RegNextWhen(id_rs2_dep_ex_rd ,                    ~id_pipe_stall)
+            val rs2_dep_wb     = RegNextWhen(id_rs2_dep_mem_rd,                    ~id_pipe_stall)
             val pc             = RegNextWhen(if2id.pc,                          ~id_pipe_stall)
             val op2_sel_imm    = RegNextWhen(instr_dec_inst.io.op2_sel_imm ,    ~id_pipe_stall)
             val instr          = RegNextWhen(imem_ctrl_inst.io.mc2cpu_data ,    ~id_pipe_stall)
@@ -195,6 +199,7 @@ case class AppleRISCV() extends Component {
         // ALU
         alu_inst.io.operand_1    := ex_rs1_value_forwarded
         alu_inst.io.operand_2    := alu_operand2_muxout
+        alu_inst.io.pc           := id2ex.pc
         alu_inst.io.alu_opcode   := id2ex.alu_opcode
 
         // Branch Unit
@@ -270,9 +275,9 @@ case class AppleRISCV() extends Component {
             val csr_rd  = RegNextWhen(ex2mem.csr_rd     & mem_stage_valid, ~mem_pipe_stall) init False
 
             // payload
-            val csr_idx = RegNextWhen(ex2mem.csr_idx,   ~mem_pipe_stall)
-            val wb_sel   = RegNextWhen(id2ex.wb_sel,    ~mem_pipe_stall)
-            val csr_sel  = RegNextWhen(id2ex.csr_sel,   ~mem_pipe_stall)
+            val csr_idx  = RegNextWhen(ex2mem.csr_idx,   ~mem_pipe_stall)
+            val wb_sel   = RegNextWhen(ex2mem.wb_sel,    ~mem_pipe_stall)
+            val csr_sel  = RegNextWhen(ex2mem.csr_sel,    ~mem_pipe_stall)
             val csr_sel_imm = RegNextWhen(ex2mem.csr_sel_imm, ~mem_pipe_stall)
 
             // data signal
@@ -359,30 +364,34 @@ case class AppleRISCV() extends Component {
 
         // Bypassing Logic
         val Bypassing = new Area {
-            // FIXME: the logic is wrong here need a pipe stage here.
-            rs1_dep_ex  := id2ex.rs1_rd & ex2mem.rd_wr & (id2ex.rs1_idx === ex2mem.rd_idx)
-            rs1_dep_mem := id2ex.rs1_rd & ex2mem.rd_wr & (id2ex.rs1_idx === ex2mem.rd_idx)
-            rs2_dep_ex  := id2ex.rs2_rd & ex2mem.rd_wr & (id2ex.rs2_idx === ex2mem.rd_idx)
-            rs2_dep_mem := id2ex.rs2_rd & ex2mem.rd_wr & (id2ex.rs2_idx === ex2mem.rd_idx)
-            ex_rs1_value_forwarded := Mux(rs1_dep_ex, ex2mem.alu_out, Mux(rs1_dep_mem, wb_rd_wdata, id2ex.rs1_value))
-            ex_rs2_value_forwarded := Mux(rs2_dep_ex, ex2mem.alu_out, Mux(rs2_dep_mem, wb_rd_wdata, id2ex.rs2_value))
+            val id_rs1_match_ex_rd  = instr_dec_inst.io.rs1_rd & (instr_dec_inst.io.rs1_idx === id2ex.rd_idx)
+            val id_rs1_match_mem_rd = instr_dec_inst.io.rs1_rd & (instr_dec_inst.io.rs1_idx === ex2mem.rd_idx)
+            val id_rs2_match_ex_rd  = instr_dec_inst.io.rs2_rd & (instr_dec_inst.io.rs2_idx === id2ex.rd_idx)
+            val id_rs2_match_mem_rd = instr_dec_inst.io.rs2_rd & (instr_dec_inst.io.rs2_idx === ex2mem.rd_idx)
+            id_rs1_dep_ex_rd  := id_rs1_match_ex_rd & id2ex.rd_wr
+            id_rs1_dep_mem_rd := id_rs1_match_mem_rd & ex2mem.rd_wr
+            id_rs2_dep_ex_rd  := id_rs2_match_ex_rd & id2ex.rd_wr
+            id_rs2_dep_mem_rd := id_rs2_match_mem_rd & ex2mem.rd_wr
+            ex_rs1_value_forwarded := Mux(id2ex.rs1_dep_mem, ex2mem.alu_out, Mux(id2ex.rs1_dep_wb, wb_rd_wdata, id2ex.rs1_value))
+            ex_rs2_value_forwarded := Mux(id2ex.rs2_dep_mem, ex2mem.alu_out, Mux(id2ex.rs2_dep_wb, wb_rd_wdata, id2ex.rs2_value))
         }
 
         // HDU - Hazard Detection Unit
         val HDU = new Area {
             // Control Hazard Detection
             // Load dependency on ID
-            val id_stall_on_load_dep = (rs1_dep_ex | rs2_dep_ex) & id2ex.dmem_rd
+            val id_stall_on_load_dep = (id_rs1_dep_ex_rd | id_rs2_dep_ex_rd) & id2ex.dmem_rd
             // csr dependency
-            val id_rs1_depends_on_csr = (rs1_dep_ex & id2ex.csr_rd) | (rs1_dep_mem & ex2mem.csr_rd)
-            val id_rs2_depends_on_csr = (rs2_dep_ex & id2ex.csr_rd) | (rs2_dep_mem & ex2mem.csr_rd)
+            val id_rs1_depends_on_csr = (Bypassing.id_rs1_match_ex_rd & id2ex.csr_rd) | (Bypassing.id_rs1_match_mem_rd & id2ex.csr_rd)
+            val id_rs2_depends_on_csr = (Bypassing.id_rs2_match_ex_rd & id2ex.csr_rd) | (Bypassing.id_rs2_match_mem_rd & id2ex.csr_rd)
             val id_stall_on_csr_dep = id_rs2_depends_on_csr | id_rs1_depends_on_csr
 
             // Flushing/Bubble Insertion
-            if_stage_valid  := ~branch_unit_inst.io.branch_taken
-            id_stage_valid  := if2id.stage_valid  & ~branch_unit_inst.io.branch_taken & ~(id_stall_on_load_dep | id_stall_on_csr_dep)
-            ex_stage_valid  := id2ex.stage_valid
-            mem_stage_valid := ex2mem.stage_valid
+            if_stage_valid  := ~branch_unit_inst.io.branch_taken & ~trap_ctrl_inst.io.mtrap_enter
+            id_stage_valid  := if2id.stage_valid  & ~branch_unit_inst.io.branch_taken & ~(id_stall_on_load_dep | id_stall_on_csr_dep) &
+                                ~trap_ctrl_inst.io.mtrap_enter
+            ex_stage_valid  := id2ex.stage_valid  & ~trap_ctrl_inst.io.mtrap_enter
+            mem_stage_valid := ex2mem.stage_valid & ~trap_ctrl_inst.io.mtrap_enter
             wb_stage_valid  := mem2wb.stage_valid
             // Stall
             if_pipe_stall  := id_stall_on_load_dep | id_stall_on_csr_dep
