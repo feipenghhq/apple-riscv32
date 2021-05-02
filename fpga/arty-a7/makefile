@@ -8,7 +8,6 @@ help:
 	@echo "#############################################"
 	@echo "# make clean    clean all the run result    #"
 	@echo "# make soc      run vivado on soc           #"
-	@echo "# make core     run vivado on core          #"
 	@echo "#############################################"
 
 # Variable
@@ -17,7 +16,7 @@ XILINX_RTL_PATH = $(REPO_ROOT)/src/rtl/arty_a7/
 
 _DEVICE = xc7a35ticsg324-1L
 
-_RTL_SRC      += $(REPO_ROOT)/src/rtl/gen/arty_a7/apple_riscv_soc_top.v
+_RTL_SRC      += $(REPO_ROOT)/ArtyA7_AppleRISCVSoC.v
 _RTL_SRC      += $(XILINX_RTL_PATH)/mmcm.v
 _RTL_SRC      += $(XILINX_RTL_PATH)/mmcm_clk_wiz.v
 
@@ -26,7 +25,7 @@ _XDC          += constraints/io.xdc
 _XDC          += constraints/timing.xdc
 
 export PRJ_NAME 	= soc
-export TOP 			= apple_riscv_soc_top
+export TOP 			= ArtyA7_AppleRISCVSoC
 export RTL_SRC     	= $(_RTL_SRC)
 export XDC         	= $(_XDC)
 export DEVICE 	    = $(_DEVICE)

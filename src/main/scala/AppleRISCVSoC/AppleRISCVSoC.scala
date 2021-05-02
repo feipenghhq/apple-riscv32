@@ -28,7 +28,8 @@ import _root_.AppleRISCVSoC.Bus._
 
 
 case class SoCCfg(
-    gpioCfg: GpioCfg      = null,
+    gpio0Cfg: GpioCfg      = null,
+    gpio1Cfg: GpioCfg      = null,
     uartCfg: UartCfg      = null,
     uartDbgBuardRate: Int = 115200
 )
@@ -39,8 +40,8 @@ case class AppleRISCVSoC(cfg: SoCCfg) extends Component {
         val clk        = in Bool
         val reset      = in Bool
         val load_imem  = in Bool
-        val gpio0_port = master(TriStateArray(cfg.gpioCfg.GPIO_WIDTH bits))
-        val gpio1_port = master(TriStateArray(cfg.gpioCfg.GPIO_WIDTH bits))
+        val gpio0_port = master(TriStateArray(cfg.gpio0Cfg.GPIO_WIDTH bits))
+        val gpio1_port = master(TriStateArray(cfg.gpio1Cfg.GPIO_WIDTH bits))
         val uart_port  = master(Uart())
     }
 
@@ -70,8 +71,8 @@ case class AppleRISCVSoC(cfg: SoCCfg) extends Component {
         val plic_inst = PLIC(AppleRISCVSoCCfg.plicSibCfg)
         val timer_inst = Timer(AppleRISCVSoCCfg.timerSibCfg)
         val uart_inst  = SibUart(cfg.uartCfg, AppleRISCVSoCCfg.uartSibCfg)
-        val gpio0_inst = gpio(cfg.gpioCfg, AppleRISCVSoCCfg.gpio0SibCfg)
-        val gpio1_inst = gpio(cfg.gpioCfg, AppleRISCVSoCCfg.gpio1SibCfg)
+        val gpio0_inst = gpio(cfg.gpio0Cfg, AppleRISCVSoCCfg.gpio0SibCfg)
+        val gpio1_inst = gpio(cfg.gpio1Cfg, AppleRISCVSoCCfg.gpio1SibCfg)
         val uart2imem_inst = Uart2Imem(AppleRISCVSoCCfg.imemSibCfg, cfg.uartDbgBuardRate)
 
 
@@ -159,7 +160,8 @@ case class AppleRISCVSoC(cfg: SoCCfg) extends Component {
 object AppleRISCVSoCMain{
     def main(args: Array[String]) {
         val cfg = SoCCfg(
-            gpioCfg = new GpioCfg(false, false, false, false),
+            gpio0Cfg = new GpioCfg(false, false, false, false, 8),
+            gpio1Cfg = new GpioCfg(false, false, false, false, 0),
             uartCfg = UartCfg(UartCtrlGenerics(), 8, 8)
         )
         SpinalVerilog(InOutWrapper(AppleRISCVSoC(cfg))).printPruned()

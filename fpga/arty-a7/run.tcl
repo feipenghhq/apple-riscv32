@@ -22,6 +22,7 @@ create_project $PRJ_NAME -dir $PRJ_NAME -part $DEVICE
 # ========================================
 read_verilog $RTL_SRC
 read_xdc     $XDC
+set_property generic SYNTHESIS [current_fileset]
 
 # ========================================
 # Step 3: synthesis
