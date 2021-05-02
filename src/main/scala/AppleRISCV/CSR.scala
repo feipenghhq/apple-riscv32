@@ -21,68 +21,67 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package core
+package AppleRISCV
 
 import spinal.core._
 
-case class mcsr_io(param: CPU_PARAM) extends Bundle {
+case class MCSRIO() extends Bundle {
   // mcsr sw access
-  val mcsr_addr = in Bits(param.CSR_ADDR_WIDTH bits)
-  val mcsr_din  = in Bits(param.MXLEN bits)
+  val mcsr_addr = in Bits(AppleRISCVCfg.CSR_ADDR_WIDTH bits)
+  val mcsr_din  = in Bits(AppleRISCVCfg.MXLEN bits)
   val mcsr_wen  = in Bool
-  val mcsr_dout = out Bits(param.MXLEN bits)
+  val mcsr_dout = out Bits(AppleRISCVCfg.MXLEN bits)
 
   // trap related input
   val mtrap_enter  = in Bool
   val mtrap_exit   = in Bool
-  val mtrap_mepc   = in Bits(param.PC_WIDTH bits)
-  val mtrap_mcause = in Bits(param.MXLEN bits)
-  val mtrap_mtval  = in Bits(param.MXLEN bits)
+  val mtrap_mepc   = in Bits(AppleRISCVCfg.XLEN bits)
+  val mtrap_mcause = in Bits(AppleRISCVCfg.MXLEN bits)
+  val mtrap_mtval  = in Bits(AppleRISCVCfg.MXLEN bits)
   val external_interrupt  = in Bool
   val timer_interrupt     = in Bool
   val software_interrupt  = in Bool
 
 
   // trap related output
-  val mtvec        = out Bits(param.PC_WIDTH bits)
+  val mtvec        = out Bits(AppleRISCVCfg.XLEN bits)
   val mie_meie     = out Bool
   val mie_mtie     = out Bool
   val mie_msie     = out Bool
   val mstatus_mie  = out Bool
-  val mepc         = out Bits(param.MXLEN bits)
+  val mepc         = out Bits(AppleRISCVCfg.MXLEN bits)
 
   // other
-  val hartId       = in Bits(param.MXLEN bits)
+  val hartId       = in Bits(AppleRISCVCfg.MXLEN bits)
 }
 
-case class mcsr(param: CPU_PARAM) extends Component {
+case class MCSR() extends Component {
 
+  val io = MCSRIO()
   noIoPrefix()
-
-  val io = mcsr_io(param)
 
   // ============================================
   // Defining Register
   // ============================================
 
   // Machine Information Registers
-  val mvendorid = B(0, param.MXLEN bits) // RO
-  val marchid   = B(0, param.MXLEN bits) // RO
-  val mimpid    = B(0, param.MXLEN bits) // RO
-  val mhartid   = io.hartId                        // RO
+  val mvendorid = B(0, AppleRISCVCfg.MXLEN bits) // RO
+  val marchid   = B(0, AppleRISCVCfg.MXLEN bits) // RO
+  val mimpid    = B(0, AppleRISCVCfg.MXLEN bits) // RO
+  val mhartid   = io.hartId                      // RO
 
   // Machine Trap Setup
-  val mstatus   = Reg(Bits(param.MXLEN bits)) init 0  // RW
-  val misa      = B(0, param.MXLEN bits)  // RW
-  val mie       = Reg(Bits(param.MXLEN bits)) init 0  // RW
-  val mtvec     = Reg(Bits(param.MXLEN bits)) init 0  // RW
+  val mstatus   = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
+  val misa      = B(0, AppleRISCVCfg.MXLEN bits)  // RW
+  val mie       = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
+  val mtvec     = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
 
   // Machine Trap Handling
-  val mscratch  = Reg(Bits(param.MXLEN bits)) init 0  // RW
-  val mepc      = Reg(Bits(param.MXLEN bits)) init 0  // RW
-  val mcause    = Reg(Bits(param.MXLEN bits)) init 0  // RW
-  val mtval     = Reg(Bits(param.MXLEN bits)) init 0  // RW
-  val mip       = Reg(Bits(param.MXLEN bits)) init 0  // RW
+  val mscratch  = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
+  val mepc      = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
+  val mcause    = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
+  val mtval     = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
+  val mip       = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
 
   // ============================================
   // SW access
@@ -142,7 +141,7 @@ case class mcsr(param: CPU_PARAM) extends Component {
   }
 
   // misa register
-  misa(param.MXLEN-1 downto param.MXLEN-2) := 1
+  misa(AppleRISCVCfg.MXLEN-1 downto AppleRISCVCfg.MXLEN-2) := 1
 
   // mie register
   def mie_meie: Bool = mie(11)
@@ -153,7 +152,7 @@ case class mcsr(param: CPU_PARAM) extends Component {
   }
 
   // mtvec register
-  def mtvec_base: Bits = mtvec(param.MXLEN-1 downto 2)
+  def mtvec_base: Bits = mtvec(AppleRISCVCfg.MXLEN-1 downto 2)
   def mtvec_mode: Bits = mtvec(1 downto 0)
   when(mtvec_wen) {
     mtvec := io.mcsr_din
@@ -167,7 +166,7 @@ case class mcsr(param: CPU_PARAM) extends Component {
   }
 
   // mepc
-  def mepc_base: Bits = mepc(param.MXLEN-1 downto 2)
+  def mepc_base: Bits = mepc(AppleRISCVCfg.MXLEN-1 downto 2)
   def mepc_mode: Bits = mepc(1 downto 0)
   when(io.mtrap_enter) {
     mepc  := io.mtrap_mepc
@@ -176,8 +175,8 @@ case class mcsr(param: CPU_PARAM) extends Component {
   }
 
   // mcause
-  def mcause_ec:        Bits = mcause(param.MXLEN-2 downto 0)
-  def mcause_interrupt: Bool = mcause(param.MXLEN-1)
+  def mcause_ec:        Bits = mcause(AppleRISCVCfg.MXLEN-2 downto 0)
+  def mcause_interrupt: Bool = mcause(AppleRISCVCfg.MXLEN-1)
   when(io.mtrap_enter) {
     mcause  := io.mtrap_mcause
   }elsewhen(mcause_wen) {
