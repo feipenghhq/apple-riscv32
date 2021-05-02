@@ -23,26 +23,13 @@ import spinal.lib._
 //========================================================
 
 /**
- * Pipeline stage control enumeration
- */
-object StageCtrlEnum extends SpinalEnum(binaryOneHot){
-  val ENABLE, FLUSH, STALL = newElement()
-}
-
-object joinStageCtrl {
-  def apply(a: => SpinalEnumCraft[BranchCtrlEnum.type], b: => SpinalEnumCraft[BranchCtrlEnum.type]): Unit = {
-    val c = a.asBits | b.asBits
-    c
-  }
-}
-
-/**
  * Pipeline stage control bundle
  */
 case class StageCtrlBD() extends Bundle with IMasterSlave {
-  val status = StageCtrlEnum();
+  val enable = Bool
+  val flush = Bool
   override def asMaster(): Unit = {
-    out(status)
+    out(enable, flush)
   }
 }
 
@@ -114,9 +101,9 @@ object ccPipeStage {
       val a = Reg(cloneOf(i._1._2))
       a.setName(o._1._2.getName() + "_s")
       initOrClear(a)
-      when (ctrl.status === StageCtrlEnum.FLUSH) {
+      when (ctrl.flush) {
         initOrClear(a, clear = true)
-      }.elsewhen(ctrl.status =/= StageCtrlEnum.STALL) {
+      }.elsewhen(ctrl.enable) {
         a := i._1._2
       }
       o._1._2 := a

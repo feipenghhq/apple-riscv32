@@ -57,7 +57,7 @@ case class PC() extends Component {
 
   val pcValue: UInt = Reg(UInt(AppleRISCVCfg.xlen bits)) init 0
 
-  when(io.ifStageCtrl.status =/= StageCtrlEnum.STALL) {
+  when(io.ifStageCtrl.enable) {
     when(io.bu2pc.branch) {   // stall has higher priority then branch
       pcValue := io.bu2pc.pc
     }.elsewhen(io.trapCtrl2pc.trap) {

@@ -160,7 +160,7 @@ object AppleRISCVSoCMain{
     def main(args: Array[String]) {
         val cfg = SoCCfg(
             gpioCfg = new GpioCfg(false, false, false, false),
-            uartCfg = new UartCfg(UartCtrlGenerics(), 8, 8)
+            uartCfg = UartCfg(UartCtrlGenerics(), 8, 8)
         )
         SpinalVerilog(InOutWrapper(AppleRISCVSoC(cfg))).printPruned()
     }

@@ -23,6 +23,11 @@ import spinal.lib._
 
 case class HDU() extends Component {
   val io = new Bundle {
+    // input
+    val loadDependence = in Bool
+    val branch = in Bool
+
+    // stage ctrl output
     val ifStageCtrl = master(StageCtrlBD())
     val idStageCtrl = master(StageCtrlBD())
     val exStageCtrl = master(StageCtrlBD())
@@ -30,8 +35,29 @@ case class HDU() extends Component {
   }
   noIoPrefix()
 
-  io.ifStageCtrl.status := StageCtrlEnum.ENABLE
-  io.idStageCtrl.status := StageCtrlEnum.ENABLE
-  io.exStageCtrl.status := StageCtrlEnum.ENABLE
-  io.memStageCtrl.status := StageCtrlEnum.ENABLE
+  // Flushing decision
+  val ifFlush = io.branch
+  val idFlush = io.branch | io.loadDependence
+  val exFlush = False
+  val memFlush = False
+
+  // stall decision
+  val ifStall = io.loadDependence
+  val idStall = False
+  val exStall = False
+  val memStall = False
+
+
+  // decision logic
+  io.ifStageCtrl.flush := ifFlush
+  io.ifStageCtrl.enable := !ifStall
+
+  io.idStageCtrl.flush := idFlush
+  io.idStageCtrl.enable := !idStall
+
+  io.exStageCtrl.flush := exFlush
+  io.exStageCtrl.enable := !exStall
+
+  io.memStageCtrl.flush := memFlush
+  io.memStageCtrl.enable := !memStall
 }

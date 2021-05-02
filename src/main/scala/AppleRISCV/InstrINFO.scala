@@ -30,7 +30,7 @@ trait Action
 object READ_RS1   extends Action
 object READ_RS2   extends Action
 object WRITE_RD   extends Action
-object SELECT_IMM extends Action
+object OP2_IMM extends Action
 object WRITE_DMEM extends Action
 object READ_DMEM  extends Action
 object BRANCH     extends Action
@@ -43,7 +43,7 @@ case class ActionMap() {
     READ_RS1   -> false,
     READ_RS2   -> false,
     WRITE_RD   -> false,
-    SELECT_IMM -> false,
+    OP2_IMM -> false,
     WRITE_DMEM -> false,
     READ_DMEM  -> false,
     BRANCH     -> false,
@@ -55,13 +55,13 @@ case class ActionMap() {
 class ACT_B_TYPE extends ActionMap {
   act.update(READ_RS1,true)
   act.update(READ_RS2,true)
-  act.update(SELECT_IMM,true)
+  act.update(OP2_IMM,true)
   act.update(BRANCH,true)
 }
 
 class ACT_U_TYPE extends ActionMap {
   act.update(WRITE_RD,true)
-  act.update(SELECT_IMM,true)
+  act.update(OP2_IMM,true)
 }
 
 /** Basic Instruction Trait defines information for each instruction category */
@@ -91,8 +91,7 @@ trait LAIInstr extends Instruction {
   override val action = ActionMap()
   action.act.update(READ_RS1,true)
   action.act.update(WRITE_RD,true)
-  action.act.update(SELECT_IMM,true)
-  action.act.update(READ_DMEM,true)
+  action.act.update(OP2_IMM,true)
   override val immSel = ImmCtrlEnum.I
 }
 
@@ -102,7 +101,7 @@ trait SDInstr extends Instruction {
   override val action = ActionMap()
   action.act.update(READ_RS1,true)
   action.act.update(READ_RS2,true)
-  action.act.update(SELECT_IMM,true)
+  action.act.update(OP2_IMM,true)
   action.act.update(WRITE_DMEM,true)
   override val aluOp = ALUCtrlEnum.ADD // Use ADD to calculate address
   override val immSel = ImmCtrlEnum.S
@@ -117,8 +116,9 @@ trait LDInstr extends Instruction {
   override val opcode = Integer.parseInt("0000011", 2)
   override val action = ActionMap()
   action.act.update(READ_RS1,true)
-  action.act.update(SELECT_IMM,true)
-  action.act.update(WRITE_DMEM,true)
+  action.act.update(OP2_IMM,true)
+  action.act.update(WRITE_RD,true)
+  action.act.update(READ_DMEM,true)
   override val aluOp = ALUCtrlEnum.ADD // Use ADD to calculate address
   override val immSel = ImmCtrlEnum.I
   val types = DmemTypeEnum.WD
@@ -133,7 +133,6 @@ trait BRInstr extends Instruction {
   override val action = ActionMap()
   action.act.update(READ_RS1,true)
   action.act.update(READ_RS2,true)
-  action.act.update(SELECT_IMM,true)
   action.act.update(BRANCH,true)
   override val immSel = ImmCtrlEnum.B
 }
@@ -146,7 +145,7 @@ trait JALRInstr extends Instruction {
   override val action = ActionMap()
   action.act.update(READ_RS1,true)
   action.act.update(WRITE_RD,true)
-  action.act.update(SELECT_IMM,true)
+  action.act.update(OP2_IMM,true)
   action.act.update(AJALR,true)
   override val immSel = ImmCtrlEnum.I
 }
@@ -159,7 +158,7 @@ trait JALInstr extends Instruction {
   override val opcode = Integer.parseInt("1101111", 2)
   override val action = ActionMap()
   action.act.update(WRITE_RD,true)
-  action.act.update(SELECT_IMM,true)
+  action.act.update(OP2_IMM,true)
   action.act.update(AJAL,true)
   override val immSel = ImmCtrlEnum.J
 }
@@ -171,7 +170,9 @@ trait AUIPCInstr extends Instruction {
   override val opcode = Integer.parseInt("0010111", 2)
   override val action = ActionMap()
   action.act.update(WRITE_RD,true)
-  action.act.update(SELECT_IMM,true)
+  action.act.update(OP2_IMM,true)
+  override val aluOp = ALUCtrlEnum.ADD
+  override val immSel = ImmCtrlEnum.U
 }
 
 /**
@@ -181,7 +182,9 @@ trait LUIInstr extends Instruction {
   override val opcode = Integer.parseInt("0110111", 2)
   override val action = ActionMap()
   action.act.update(WRITE_RD,true)
-  action.act.update(SELECT_IMM,true)
+  action.act.update(OP2_IMM,true)
+  override val aluOp = ALUCtrlEnum.ADD
+  override val immSel = ImmCtrlEnum.U
 }
 
 
@@ -195,19 +198,19 @@ object JAL   extends JALInstr
 object JALR  extends JALRInstr
 
 // B - Type
-object BEQ  extends BRInstr {override val f3 = 0}
-object BNE  extends BRInstr {override val f3 = 1}
-object BLT  extends BRInstr {override val f3 = 4}
-object BGE  extends BRInstr {override val f3 = 5}
-object BLTU extends BRInstr {override val f3 = 6}
-object BGEU extends BRInstr {override val f3 = 7}
+object BEQ  extends BRInstr {override val f3 = 0; override val branchOp = BranchCtrlEnum.BEQ}
+object BNE  extends BRInstr {override val f3 = 1; override val branchOp = BranchCtrlEnum.BNE}
+object BLT  extends BRInstr {override val f3 = 4; override val branchOp = BranchCtrlEnum.BLT}
+object BGE  extends BRInstr {override val f3 = 5; override val branchOp = BranchCtrlEnum.BGE}
+object BLTU extends BRInstr {override val f3 = 6; override val branchOp = BranchCtrlEnum.BLTU}
+object BGEU extends BRInstr {override val f3 = 7; override val branchOp = BranchCtrlEnum.BGEU}
 
 // I Type - Load
 object LB  extends LDInstr {override val f3 = 0; override val types = DmemTypeEnum.BY}
 object LH  extends LDInstr {override val f3 = 1; override val types = DmemTypeEnum.HW}
 object LW  extends LDInstr {override val f3 = 2}
-object LBU extends LDInstr {override val f3 = 3; override val types = DmemTypeEnum.BY; override val unsigned = true}
-object LHU extends LDInstr {override val f3 = 4; override val types = DmemTypeEnum.HW; override val unsigned = true}
+object LBU extends LDInstr {override val f3 = 4; override val types = DmemTypeEnum.BY; override val unsigned = true}
+object LHU extends LDInstr {override val f3 = 5; override val types = DmemTypeEnum.HW; override val unsigned = true}
 
 // S Type
 object SB extends SDInstr {override val f3 = 0; override val types = DmemTypeEnum.BY}

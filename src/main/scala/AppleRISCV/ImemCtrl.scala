@@ -20,7 +20,7 @@ case class ImemCtrl() extends Component {
 
   // Master signals
   io.imemSib.sel       := True           // We always want to read instruction memory
-  io.imemSib.enable    := io.ifStageCtrl.status =/= StageCtrlEnum.STALL
+  io.imemSib.enable    := io.ifStageCtrl.enable
   io.imemSib.addr      := io.pc2imemAddr
   io.imemSib.wdata     := 0              // Fixed to zero, We are not writing to I-mem through this port
   io.imemSib.write     := False          // Fixed to zero, We are not writing to I-mem through this port

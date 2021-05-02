@@ -131,7 +131,7 @@ case class InstrDec() extends Component {
           case READ_RS1   => io.rs1RdCtrl.rd := True
           case READ_RS2   => io.rs2RdCtrl.rd := True
           case WRITE_RD   => io.rdWrCtrl.wr  := rdIsNotZero // Do not write to RD if RD is zero
-          case SELECT_IMM => io.immSel       := True
+          case OP2_IMM    => io.immSel       := True
           case WRITE_DMEM => io.dmemCtrl.write := True
           case READ_DMEM  => io.dmemCtrl.read  := True
           case BRANCH     => io.buCtrl.branch  := True
@@ -176,6 +176,14 @@ case class InstrDec() extends Component {
             is(instr.f3) {
               io.aluCtrl.aluOp := instr.aluOp
               io.buCtrl.branchOp := instr.branchOp
+              instr match {
+                case sd: SDInstr => io.dmemCtrl.types := sd.types
+                case ld: LDInstr => {
+                  io.dmemCtrl.types := ld.types
+                  io.dmemCtrl.unsigned := Bool(ld.unsigned)
+                }
+                case _ =>
+              }
             }
           }
         }
@@ -192,7 +200,6 @@ case class InstrDec() extends Component {
               for (instr <- instrList){
                 is(instr.f7) {
                   io.aluCtrl.aluOp := instr.aluOp
-                  io.buCtrl.branchOp := instr.branchOp
                 }
               }
               default {io.excIllegalInstr := True}
@@ -226,15 +233,9 @@ case class InstrDec() extends Component {
           case br:    BRInstr    => doDec(br, useF3 = true)
           case ld:    LDInstr    => {
             doDec(ld, useF3 = true)
-            io.dmemCtrl.types := ld.types
-            io.dmemCtrl.unsigned := Bool(ld.unsigned)
             io.rdSelCtrl := RdSelEnum.MEM
           }
-          case sd:    SDInstr    => {
-            doDec(sd, useF3 = true)
-            io.dmemCtrl.types := sd.types
-            io.dmemCtrl.unsigned := Bool(sd.unsigned)
-          }
+          case sd:    SDInstr    => {doDec(sd, useF3 = true)}
           case lai:   LAIInstr   => doDec(lai, useF3 = true)
           case lar:   LARInstr   => doDec(lar, useF3 = true)
           case _ => ???

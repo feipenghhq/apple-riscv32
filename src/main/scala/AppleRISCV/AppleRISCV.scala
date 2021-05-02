@@ -54,6 +54,9 @@ case class AppleRISCV() extends Component {
 
   val core = new ClockingArea(coreClockDomain) {
 
+
+
+
     // ====================================
     // Instantiate all the modules
     // ====================================
@@ -76,14 +79,16 @@ case class AppleRISCV() extends Component {
     ifStage.io.trapCtrl2pc <> trapCtrl.io.trapCtrl2pc
     ifStage.io.ifStageCtrl <> hdu.io.ifStageCtrl
 
-
     // ID
     idStage.io.id2ex <> exStage.io.id2ex
     idStage.io.exRdWrCtrl := exStage.io.id2ex.rdWrCtrl
     idStage.io.memRdWrCtrl := memWbStage.io.ex2mem.rdWrCtrl
     idStage.io.rdWdata <> memWbStage.io.rdWdata
     idStage.io.rdWrCtrl <> memWbStage.io.wb_rdWrCtrl
-    idStage.io.idStageCtrl <> hdu.io.idStageCtrl
+    val idStageCtrl = StageCtrlBD()
+    idStageCtrl.enable := hdu.io.idStageCtrl.enable
+    idStageCtrl.flush := hdu.io.idStageCtrl.flush | ~ifStage.io.if2id.valid
+    idStage.io.idStageCtrl <> idStageCtrl
 
     // EX
     exStage.io.ex2mem <> memWbStage.io.ex2mem
@@ -91,10 +96,20 @@ case class AppleRISCV() extends Component {
     exStage.io.rs2DataMem := memWbStage.io.ex2mem.aluOut
     exStage.io.rs1DataWb := memWbStage.io.rdWdata
     exStage.io.rs2DataWb := memWbStage.io.rdWdata
-    exStage.io.exStageCtrl <> hdu.io.exStageCtrl
+    val exStageCtrl = StageCtrlBD()
+    exStageCtrl.enable := hdu.io.exStageCtrl.enable
+    exStageCtrl.flush := hdu.io.exStageCtrl.flush | ~idStage.io.id2ex.valid
+    exStage.io.exStageCtrl <> exStageCtrl
 
     // MEM
-    memWbStage.io.memStageCtrl <> hdu.io.memStageCtrl
+    val memStageCtrl = StageCtrlBD()
+    memStageCtrl.enable := hdu.io.memStageCtrl.enable
+    memStageCtrl.flush := hdu.io.memStageCtrl.flush | ~memWbStage.io.ex2mem.valid
+    memWbStage.io.memStageCtrl <> memStageCtrl
+
+    // HDU
+    hdu.io.branch := exStage.io.bu2pc.branch
+    hdu.io.loadDependence := idStage.io.rsDepEx & idStage.io.id2ex.dmemCtrl.read
   }
 }
 

@@ -96,7 +96,7 @@ ARCH = {
 OUTPUT_DIR  = 'output'
 
 FILES  = [
-    'DUT_apple_riscv_soc.vcd',
+    'DUT_AppleRISCVSoC.vcd',
     'results.xml',
 ]
 

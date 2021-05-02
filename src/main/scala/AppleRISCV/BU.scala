@@ -59,7 +59,7 @@ case class BU() extends Component {
     is(BranchCtrlEnum.BLTU) {takeBranch := !bgeu}
   }
 
-  val stageValid = io.exStageCtrl.status =/= StageCtrlEnum.FLUSH
+  val stageValid = io.exStageCtrl.enable
   io.bu2pc.branch := stageValid & (io.buCtrl.jal | io.buCtrl.jalr | (io.buCtrl.branch & takeBranch))
 
   // Address Calculation

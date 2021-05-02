@@ -22,6 +22,7 @@ import spinal.core._
 import spinal.lib._
 
 case class If2IdBD() extends Bundle with IMasterSlave {
+  val valid = out Bool
   val instr = out Bits(AppleRISCVCfg.xlen bits)
   val pc = out UInt(AppleRISCVCfg.xlen bits)
   override def asMaster(): Unit = {
@@ -60,7 +61,8 @@ case class IF() extends Component {
   // Pipeline stage
   //==========================
   ccPipeStage(pc.io.pcOut, io.if2id.pc)(io.ifStageCtrl)
-  ccPipeStage(imemCtrl.io.imemInstr, io.if2id.instr)(io.ifStageCtrl)
+  ccPipeStage(!io.ifStageCtrl.flush, io.if2id.valid)(io.ifStageCtrl)
+  io.if2id.instr := imemCtrl.io.imemInstr // No need pipeline for instruction
 }
 
 object IFMain {
