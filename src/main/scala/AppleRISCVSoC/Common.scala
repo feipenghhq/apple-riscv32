@@ -50,17 +50,17 @@ object SOCCfg {
   val SIB_DMEM_LO = Integer.parseInt ("01000000", 16)
   val SIB_DMEM_HI = Integer.parseInt ("01FFFFFF", 16)
 
-  val SIB_CLIC_LO = Integer.parseInt ("02000000", 16)
-  val SIB_CLIC_HI = Integer.parseInt ("02000FFF", 16)
+  val SIB_PERIP_HOST_LO = Integer.parseInt ("02000000", 16)
+  val SIB_PERIP_HOST_HI = Integer.parseInt ("02005FFF", 16)
+  val PERIP_HOST_ADDR_WIDTH = 16
+
+  val SIB_CLIC_LO = Integer.parseInt ("0000", 16)
+  val SIB_CLIC_HI = Integer.parseInt ("0FFF", 16)
   val CLIC_ADDR_WIDTH = 12
 
-  val SIB_PLIC_LO = Integer.parseInt ("02001000", 16)
-  val SIB_PLIC_HI = Integer.parseInt ("02001FFF", 16)
+  val SIB_PLIC_LO = Integer.parseInt ("1000", 16)
+  val SIB_PLIC_HI = Integer.parseInt ("1FFF", 16)
   val PLIC_ADDR_WIDTH = 12
-
-  val SIB_PERIP_HOST_LO = Integer.parseInt ("02002000", 16)
-  val SIB_PERIP_HOST_HI = Integer.parseInt ("02004FFF", 16)
-  val PERIP_HOST_ADDR_WIDTH = 16
 
   val SIB_TIMER_LO = Integer.parseInt ("2000", 16)
   val SIB_TIMER_HI = Integer.parseInt ("2FFF", 16)

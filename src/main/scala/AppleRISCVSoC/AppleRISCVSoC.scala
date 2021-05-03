@@ -96,18 +96,18 @@ case class AppleRISCVSoC(cfg: SoCCfg) extends Component {
         // dmem bus switch
         val dmemClientSibCfg = Array(
             SIBCfg.dmemSibCfg,
-            SIBCfg.clicSibCfg,
-            SIBCfg.plicSibCfg,
             SIBCfg.peripHostSibCfg)
         val dmem_switch = Sib_decoder(SIBCfg.cpuSibCfg, dmemClientSibCfg)
 
         // peripheral switch
         val peripClientSibCfg = Array(
+            SIBCfg.clicSibCfg,
+            SIBCfg.plicSibCfg,
             SIBCfg.timerSibCfg,
             SIBCfg.uartSibCfg,
             SIBCfg.gpio0SibCfg,
             SIBCfg.gpio1SibCfg)
-        val perip_switch = Sib_decoder(SIBCfg.peripHostSibCfg, peripClientSibCfg)
+        val perip_switch = Sib_decoder(SIBCfg.peripHostSibCfg, peripClientSibCfg, pipeline = Cfg.perip_switch_pipeline)
 
 
         // == SOC bus connection == //
@@ -117,17 +117,17 @@ case class AppleRISCVSoC(cfg: SoCCfg) extends Component {
         imem_switch.clientSib(0) <> imem_inst.imem_cpu_sib
 
         // dmem switch connection
-        dmem_switch.hostSib      <> cpu_core.io.dmem_sib // To CPU
-        dmem_switch.clientSib(0) <> dmem_inst.dmem_sib // To dmem
-        dmem_switch.clientSib(1) <> clic_inst.io.clic_sib // To CLIC
-        dmem_switch.clientSib(2) <> plic_inst.io.plic_sib // To PLIC
-        dmem_switch.clientSib(3) <> perip_switch.hostSib // To Peripheral SIB Switch
+        dmem_switch.hostSib      <> cpu_core.io.dmem_sib        // To CPU
+        dmem_switch.clientSib(0) <> dmem_inst.dmem_sib          // To dmem
+        dmem_switch.clientSib(1) <> perip_switch.hostSib        // To Peripheral SIB Switch
 
         // peripheral switch connection
-        perip_switch.clientSib(0) <> timer_inst.io.timer_sib // To Timer
-        perip_switch.clientSib(1) <> uart_inst.io.uart_sib // To Uart
-        perip_switch.clientSib(2) <> gpio0_inst.io.gpio_sib // To GPIO0
-        perip_switch.clientSib(3) <> gpio1_inst.io.gpio_sib // To GPIO1
+        perip_switch.clientSib(0) <> clic_inst.io.clic_sib      // To CLIC
+        perip_switch.clientSib(1) <> plic_inst.io.plic_sib      // To PLIC
+        perip_switch.clientSib(2) <> timer_inst.io.timer_sib    // To Timer
+        perip_switch.clientSib(3) <> uart_inst.io.uart_sib      // To Uart
+        perip_switch.clientSib(4) <> gpio0_inst.io.gpio_sib     // To GPIO0
+        perip_switch.clientSib(5) <> gpio1_inst.io.gpio_sib     // To GPIO1
 
         // == Other ports/interface connection == //
 

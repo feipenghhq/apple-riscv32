@@ -392,13 +392,13 @@ case class AppleRISCV() extends Component {
                                 ~trap_ctrl_inst.io.trap_flush
             ex_stage_valid  := id2ex.stage_valid  & ~trap_ctrl_inst.io.trap_flush
             mem_stage_valid := ex2mem.stage_valid & ~trap_ctrl_inst.io.trap_flush
-            wb_stage_valid  := mem2wb.stage_valid & ~trap_ctrl_inst.io.trap_flush
+            wb_stage_valid  := mem2wb.stage_valid & ~trap_ctrl_inst.io.trap_flush & ~dmem_ctrl_isnt.io.dmem_stall_req
 
             // Stall
-            if_pipe_stall  := id_stall_on_load_dep | id_stall_on_csr_dep
-            id_pipe_stall  := False
-            ex_pipe_stall  := False
-            mem_pipe_stall := False
+            if_pipe_stall  := id_stall_on_load_dep | id_stall_on_csr_dep | dmem_ctrl_isnt.io.dmem_stall_req
+            id_pipe_stall  := dmem_ctrl_isnt.io.dmem_stall_req
+            ex_pipe_stall  := dmem_ctrl_isnt.io.dmem_stall_req
+            mem_pipe_stall := dmem_ctrl_isnt.io.dmem_stall_req
         }
     }
 }

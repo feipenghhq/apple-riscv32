@@ -120,7 +120,7 @@ import load_store3
 @cocotb.test()
 async def test_load_store3(dut):
     """ Test the lb/lh logic """
-    await run_test(dut, load_store3.imem_data, load_store3.expected_register, 1000)
+    await run_test(dut, load_store3.imem_data, load_store3.expected_register, 800)
 
 import branch1
 @cocotb.test()
