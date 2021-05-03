@@ -307,8 +307,8 @@ case class AppleRISCV() extends Component {
         trap_ctrl_inst.io.debug_interrupt    := io.debug_interrupt
         trap_ctrl_inst.io.exc_ill_instr      := mem2wb.exc_ill_instr
         trap_ctrl_inst.io.exc_instr_addr_ma  := mem2wb.exc_instr_addr_ma
-        trap_ctrl_inst.io.exc_ld_addr_ma     := mem2wb.exc_sd_addr_ma
-        trap_ctrl_inst.io.exc_sd_addr_ma     := mem2wb.exc_ld_addr_ma
+        trap_ctrl_inst.io.exc_ld_addr_ma     := mem2wb.exc_ld_addr_ma
+        trap_ctrl_inst.io.exc_sd_addr_ma     := mem2wb.exc_sd_addr_ma
         trap_ctrl_inst.io.mret               := mem2wb.mret
         trap_ctrl_inst.io.ecall              := mem2wb.ecall
         trap_ctrl_inst.io.wb_pc              := mem2wb.pc
@@ -334,7 +334,7 @@ case class AppleRISCV() extends Component {
             is(CsrSelEnum.SET) {mcsr_inst.io.mcsr_din  := mcsr_masked_set}
             is(CsrSelEnum.CLEAR) {mcsr_inst.io.mcsr_din  := mcsr_masked_clear}
         }
-        mcsr_inst.io.mcsr_wen  := mem2wb.csr_wr
+        mcsr_inst.io.mcsr_wen  := mem2wb.csr_wr & wb_stage_valid
         // mem2wb_csr_rd is not used so far
         mcsr_inst.io.mtrap_enter  := trap_ctrl_inst.io.mtrap_enter
         mcsr_inst.io.mtrap_exit   := trap_ctrl_inst.io.mtrap_exit
@@ -347,7 +347,7 @@ case class AppleRISCV() extends Component {
         mcsr_inst.io.hartId              := B"0".resized
 
         // == Write back to register == //
-        regfile_inst.io.register_wr := mem2wb.rd_wr
+        regfile_inst.io.register_wr := mem2wb.rd_wr & wb_stage_valid
         regfile_inst.io.register_wr_addr := mem2wb.rd_idx
         // Select data between memory output and alu output
         val wb_rd_wdata = mem2wb.alu_out.clone()
@@ -387,12 +387,13 @@ case class AppleRISCV() extends Component {
             val id_stall_on_csr_dep = id_rs2_depends_on_csr | id_rs1_depends_on_csr
 
             // Flushing/Bubble Insertion
-            if_stage_valid  := ~branch_unit_inst.io.branch_taken & ~trap_ctrl_inst.io.mtrap_enter
+            if_stage_valid  := ~branch_unit_inst.io.branch_taken & ~trap_ctrl_inst.io.trap_flush
             id_stage_valid  := if2id.stage_valid  & ~branch_unit_inst.io.branch_taken & ~(id_stall_on_load_dep | id_stall_on_csr_dep) &
-                                ~trap_ctrl_inst.io.mtrap_enter
-            ex_stage_valid  := id2ex.stage_valid  & ~trap_ctrl_inst.io.mtrap_enter
-            mem_stage_valid := ex2mem.stage_valid & ~trap_ctrl_inst.io.mtrap_enter
-            wb_stage_valid  := mem2wb.stage_valid
+                                ~trap_ctrl_inst.io.trap_flush
+            ex_stage_valid  := id2ex.stage_valid  & ~trap_ctrl_inst.io.trap_flush
+            mem_stage_valid := ex2mem.stage_valid & ~trap_ctrl_inst.io.trap_flush
+            wb_stage_valid  := mem2wb.stage_valid & ~trap_ctrl_inst.io.trap_flush
+
             // Stall
             if_pipe_stall  := id_stall_on_load_dep | id_stall_on_csr_dep
             id_pipe_stall  := False

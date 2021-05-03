@@ -68,7 +68,7 @@ case class trap_ctrl_io() extends Bundle {
   val pc_value     = out UInt(AppleRISCVCfg.XLEN bits)
 
   // output to hdu for flushing
-  val int_flush   = out Bool
+  val trap_flush   = out Bool
 }
 
 case class TrapCtrl() extends Component {
@@ -92,7 +92,6 @@ case class TrapCtrl() extends Component {
   val pc_plus_4 = io.wb_pc + 4
 
   // == mcause exception code == //
-
   // interrupt
   val interrupt_code_sel_in   = io.external_interrupt ## io.timer_interrupt ## io.software_interrupt
   val interrupt_code_sel_data = Array(
@@ -100,8 +99,6 @@ case class TrapCtrl() extends Component {
     B(ExcCode.EXC_CODE_M_TIMER_INT, AppleRISCVCfg.MXLEN-1 bits),
     B(ExcCode.EXC_CODE_M_EXT_INT, AppleRISCVCfg.MXLEN-1 bits))
   val interrupt_code = MuxOH(interrupt_code_sel_in, interrupt_code_sel_data)
-
-
   // exception
   val exceptions_code_sel_in = io.exc_ld_addr_ma ## io.exc_sd_addr_ma ## io.exc_ill_instr ## io.exc_instr_addr_ma ## io.ecall
   val exceptions_code_sel_data = Array(
@@ -111,18 +108,20 @@ case class TrapCtrl() extends Component {
     B(ExcCode.EXC_CODE_SD_ADDR_MA, AppleRISCVCfg.MXLEN-1 bits),
     B(ExcCode.EXC_CODE_LD_ADDR_MA, AppleRISCVCfg.MXLEN-1 bits))
   val exception_code = MuxOH(exceptions_code_sel_in, exceptions_code_sel_data)
-
   val trap_code = Mux(interrupt, interrupt_code, exception_code)
 
-  // == mcsr == //
+  // mcsr
   io.mtrap_enter  := exception | interrupt | io.ecall
   io.mtrap_exit   := io.mret
-  io.mtrap_mepc   := Mux(exception | io.ecall, io.wb_pc.asBits, pc_plus_4.asBits)
+  io.mtrap_mepc   := io.wb_pc.asBits
   io.mtrap_mcause := interrupt ## trap_code
   io.mtrap_mtval  := Mux(io.exc_ill_instr, io.wb_instr, dmem_addr_extended.asBits)
 
+  // update pc
   io.pc_trap      := io.mtrap_enter | io.mtrap_exit
   val mtvec_base  =  io.mtvec(AppleRISCVCfg.MXLEN-1 downto 2)
   io.pc_value     := Mux(io.mret, io.mepc.asUInt, mtvec_base.asUInt.resized)
-  io.int_flush    := interrupt
+
+  // request to flush
+  io.trap_flush   := io.mtrap_enter | io.mtrap_exit
 }
