@@ -10,6 +10,7 @@ all: $(TARGET)
 REPO_ROOT   = $(shell git rev-parse --show-toplevel)
 BSP_BASE    = $(REPO_ROOT)/sdk/bsp
 ENV_DIR     = $(BSP_BASE)/env
+DRIVER_DIR  = $(BSP_BASE)/driver
 NEWLIB_DIR  = $(BSP_BASE)/newlib
 
 #############################################################
@@ -33,6 +34,8 @@ LINKER_SCRIPT := $(ENV_DIR)/link_bram.lds
 
 INCLUDES += -I$(ENV_DIR)
 INCLUDES += -I$(NEWLIB_DIR)
+
+include $(DRIVER_DIR)/driver.mk
 
 #############################################################
 # Compilation Flag

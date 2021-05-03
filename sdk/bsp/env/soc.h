@@ -1,7 +1,6 @@
 #ifndef _SOC_H_
 #define _SOC_H_
 
-
 // SOC component address mapping
 #define IMEM_BASE 0x00000000
 #define DMEM_BASE 0x01000000
