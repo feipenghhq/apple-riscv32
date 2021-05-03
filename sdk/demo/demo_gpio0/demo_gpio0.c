@@ -9,22 +9,23 @@
 //
 // ================== Description ==================
 //
-// A very basic FPGA board demo - Flusing LED on the FPGA board.
-// This program will flush 4 LEDs on the FPGA board.
+// A very basic FPGA board demo - Control the LED on the FPGA board.
+// The program use 4 button on FPGA to control the LED
 //
 // Assuming GPIO0 Bit 0~3 is connected to LED
+// Assuming GPIO0 Bit 4~7 is connected to button or switch
 //
-// Demostrate GPIO write function.
+// Demostrate GPIO read/write function.
 //
 // To compile the program and generate verilog memory dump
 //
 // cd AppleRISCV/sdk/software
-// make make dasm PROGRAM=demo_led
+// make make dasm PROGRAM=demo_gpio0
 //
 // To upload the verilog file to instruction ram  through uart:
 //
 // cd AppleRISCV/sdk/tool
-// sudo ./uart_download.py ../demo/demo_led/demo_led.verilog
+// sudo ./uart_download.py ../software/demo_gpio0/demo_gpio0.verilog
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -32,16 +33,16 @@
 #include <gpio.h>
 #include <soc.h>
 
+#define btn_read(base) ((gpio_read(base) >> 4) & 0xF)
+
 int main(int argc, char **argv)
 {
-    int                 i;
-    volatile uint32_t   value = 0;
 
-    gpio_enable_all(GPIO0_BASE);
+    volatile uint32_t   value;
+    gpio_enable(GPIO0_BASE, 0xF);
     while(1) {
+        value = btn_read(GPIO0_BASE);
         gpio_write(GPIO0_BASE, value);
-        value = value + 1;
-        for (i = 0; i < 10000000; i++);
     }
     return 0;
 }

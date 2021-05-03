@@ -12,7 +12,7 @@ TOPLEVEL_LANG = verilog
 # -----------------------------------------
 REPO_ROOT     	= $(shell git rev-parse --show-toplevel)
 TB_PATH       	= $(REPO_ROOT)/tests/verilog
-RTL_SOC_PATH  	= $(REPO_ROOT)/gen/rtl
+RTL_SOC_PATH  	= $(REPO_ROOT)
 RISCV_TEST_PATH = $(REPO_ROOT)/tests/riscv-tests-simple
 IMEM_ROM_PATH 	= $(RISCV_TEST_PATH)/generated
 
@@ -20,7 +20,7 @@ IMEM_ROM_PATH 	= $(RISCV_TEST_PATH)/generated
 # Source files
 # -----------------------------------------
 TB_FILES      	= $(TB_PATH)/apple_riscv_soc_tb.v
-RTL_FILES     	= $(RTL_SOC_PATH)/apple_riscv_soc.v
+RTL_FILES     	= $(RTL_SOC_PATH)/AppleRISCVSoC.v
 
 VERILOG_SOURCES += $(TB_FILES)
 VERILOG_SOURCES += $(RTL_FILES)

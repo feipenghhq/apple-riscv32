@@ -28,15 +28,8 @@ REPO_ROOT = subprocess_return.decode().rstrip()
 # Common function
 ###############################
 
-def process_rom_file(name, main):
+def process_rom_file():
     """ Split the text and data section for the generated verilog file """
-
-    # Link the instruction rom file to the tb directory
-    SRC_FILE = REPO_ROOT + '/sdk/software/' + name + '/' + main + ".verilog"
-    ROM_FILE = os.getcwd() + '/verilog.rom' # need to link the instruction ram file the the current directory
-    if os.path.isfile(ROM_FILE):
-        os.remove(ROM_FILE)
-    os.symlink(SRC_FILE, ROM_FILE)
 
     FP = open('verilog.rom', "r")
     IRAM_FP = open('instr_ram.rom', "w")
@@ -52,7 +45,6 @@ def process_rom_file(name, main):
         else:
             DRAM_FP.write(line)
 
-
     FP.close()
     IRAM_FP.close()
     DRAM_FP.close()
@@ -61,15 +53,15 @@ def print_register(dut, size=32):
     """ Print the register value """
     for i in range(size):
         try:
-            val = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.ram[i].value.integer
+            val = dut.DUT_AppleRISCVSoC.soc_cpu_core.core_regfile_inst.ram[i].value.integer
+            print(f"Register {i}, {hex(val)}")
         except ValueError:
-            val = 'X'
-        print(f"Register {i}, {hex(val)}")
+            print(f"Register {i}, XXXX")
 
 def check_register(dut, expected):
     """ Check the register file with the expected data """
     for key, value in expected.items():
-        val = dut.DUT_apple_riscv_soc.cpu_core.regfile_inst.ram[key].value.integer
+        val = dut.DUT_AppleRISCVSoC.soc_cpu_core.core_regfile_inst.ram[key].value.integer
         assert value == val, f"RAM1: Register {key}, Expected: {value}, Actual: {val}"
         print(f"RAM1: Register {key}, Expected: {value}, Actual: {val}")
 
@@ -87,13 +79,23 @@ async def reset(dut, time=20):
 # Test suites
 ###############################
 
-@cocotb.test()
+#@cocotb.test()
 async def run_test(dut):
     runtime = int(os.getenv('RUN_TIME'))
     name = os.getenv('PROGRAM')
     top = os.getenv('PROGRAM_TOP')
-    process_rom_file(name, top)
+    process_rom_file()
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10us period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
+    await reset(dut)
+    await Timer(runtime, units="ns")
+
+@cocotb.test()
+async def demo_gpio0(dut):
+    runtime = int(os.getenv('RUN_TIME'))
+    process_rom_file()
+    clock = Clock(dut.clk, 10, units="ns")  # Create a 10us period clock on port clk
+    cocotb.fork(clock.start())  # Start the clock
+    dut.DUT_AppleRISCVSoC.gpio0_port = 0xF0
     await reset(dut)
     await Timer(runtime, units="ns")
