@@ -56,6 +56,9 @@ TEST_PASSFAIL
     bne t0, t1, fail
     sw x0, 0(s0)  # clear the interrupt
     li a0, 0xf
+    csrr t0, mepc
+    addi t0, t0, 4  # advance pc to pc + 4
+    csrw mepc, t0
     mret
 
 RVTEST_CODE_END

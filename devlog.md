@@ -2,6 +2,11 @@
 
 ## Milestone 0.2
 
+- 04/28/2021
+  - RTL update
+    - All the operation needs to check whether the instruction in that stage is flushed or not
+    - Simplified hdu logic
+
 - 04/27/2021
   - Added a reset controller to soc
   - Added clock domain in order to control the reset of the cpu.

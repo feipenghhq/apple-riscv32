@@ -79,6 +79,9 @@ Disassembly of section .text.init:
   f4:	fc6294e3          	bne	t0,t1,bc <fail>
   f8:	00042023          	sw	zero,0(s0)
   fc:	00f00513          	li	a0,15
- 100:	30200073          	mret
- 104:	c0001073          	unimp
+ 100:	341022f3          	csrr	t0,mepc
+ 104:	00428293          	addi	t0,t0,4
+ 108:	34129073          	csrw	mepc,t0
+ 10c:	30200073          	mret
+ 110:	c0001073          	unimp
 	...

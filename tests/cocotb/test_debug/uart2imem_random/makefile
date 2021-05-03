@@ -11,7 +11,7 @@ TOPLEVEL_LANG = verilog
 # Path Variable
 # -----------------------------------------
 REPO_ROOT     	= $(shell git rev-parse --show-toplevel)
-RTL_SOC_PATH  	= $(REPO_ROOT)/gen/rtl
+RTL_SOC_PATH  	= $(REPO_ROOT)/src/rtl/gen/generic
 TB_PATH       	= $(REPO_ROOT)/tests/verilog
 
 # -----------------------------------------

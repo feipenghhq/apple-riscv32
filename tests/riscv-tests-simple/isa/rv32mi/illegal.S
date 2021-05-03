@@ -16,6 +16,11 @@ RVTEST_CODE_BEGIN
   .align 2
   .option norvc
 
+  # Added by me: set the mtvec to interrupt handler address
+  la t0, mtvec_handler
+  slli t0, t0, 2 # left shift t bit to add the mode field
+  csrw	mtvec,t0
+
   li TESTNUM, 2
 bad2:
   .word 0
