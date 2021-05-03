@@ -5,6 +5,7 @@
 RISCV_ARCH := rv32i
 RISCV_ABI  := ilp32
 
+
 # Default target
 PROGRAM ?= demo_led
 
@@ -13,7 +14,11 @@ PROGRAM ?= demo_led
 #############################################################
 .PHONY: help
 help:
-	@echo " FIXME "
+	@echo "#####################################################################"
+	@echo "# Usage:                                                            #"
+	@echo "# make software PROGRAM=<program>  # Build the software for program #"
+	@echo "# make dasm PROGRAM=<program>      # deassemble the program         #"
+	@echo "#####################################################################"
 
 .PHONY: clean
 clean:
