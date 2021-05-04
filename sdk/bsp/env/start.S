@@ -1,3 +1,16 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright 2021 by Heqing Huang (feipenghhq@gamil.com)
+//
+// Author: Heqing Huang
+// Date Created: 04/26/2021
+//
+// ================== Description ==================
+//
+// Start up code
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 .section .init
 .globl _start
 .type _start @function
@@ -41,12 +54,15 @@ _start:
 2:
 
     // call global constructors
-    //la a0, __libc_fini_array
-    //call atexit
-    //call __libc_init_array
+    la a0, __libc_fini_array
+    call atexit
+    call __libc_init_array
     // Note:
     // __libc_fini_array, atexit and __libc_init_array function are special lib function in
     // Newlib C runtime library.
+
+    // call init function
+    call _init
 
     // call main function
     // argc == argv = 0

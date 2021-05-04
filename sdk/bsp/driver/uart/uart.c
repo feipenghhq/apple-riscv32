@@ -60,6 +60,17 @@ void uart_send_string(uint32_t base, char* s) {
        uart_send_byte(base, *s);
        s++;
     }
+}
 
+/**
+ * Send n bytes through uart tx.
+ * This will block if the uart tx buffer is full
+ */
+void uart_send_nbyte(uint32_t base, char *buf, size_t nbytes) {
 
+    while(nbytes > 0) {
+       uart_send_byte(base, *buf);
+       buf++;
+       nbytes--;
+    }
 }

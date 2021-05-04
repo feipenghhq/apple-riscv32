@@ -44,6 +44,9 @@ include $(DRIVER_DIR)/driver.mk
 LDFLAGS += -T $(LINKER_SCRIPT) -nostartfiles -Wl,--gc-sections  -Wl,--check-sections
 LDFLAGS += -L$(ENV_DIR)
 
+# reduce code size
+LDFLAGS += --specs=nano.specs
+
 ASM_OBJS     := $(ASM_SRCS:.S=.o)
 C_OBJS       := $(C_SRCS:.c=.o)
 DUMP_OBJS    := $(C_SRCS:.c=.dump)

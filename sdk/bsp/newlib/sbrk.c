@@ -1,9 +1,6 @@
 // Allocate more Heap, sbrk
 
-#include <errno.h>
-
-#undef errno
-extern int  errno;
+#include <stddef.h>
 
 void * _sbrk (int nbytes)
 {
@@ -11,7 +8,7 @@ void * _sbrk (int nbytes)
     extern int _end[];
 
     // Value set by linker map - end of free memory
-    extern int _heap_end;
+    extern int _heap_end[];
 
     // The statically held previous end of the heap, with its initialization.
     static int *heap_ptr = _end;
@@ -20,6 +17,7 @@ void * _sbrk (int nbytes)
         return NULL - 1;
     }
 
+    heap_ptr += nbytes;
     return heap_ptr - nbytes;
 
 }

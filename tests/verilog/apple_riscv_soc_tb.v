@@ -1,8 +1,8 @@
 module apple_riscv_soc_tb ();
 
-parameter DATA_RAM_ADDR_WIDTH = 12;
+parameter DATA_RAM_ADDR_WIDTH = 16;
 parameter DATA_RAM_SIZE = 1 << (DATA_RAM_ADDR_WIDTH);
-parameter INSTR_RAM_ADDR_WIDTH = 12;
+parameter INSTR_RAM_ADDR_WIDTH = 16;
 parameter INSTR_RAM_SIZE = 1 << (INSTR_RAM_ADDR_WIDTH);
 
 reg clk;
