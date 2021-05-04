@@ -13,6 +13,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifndef _IO_H_
+#define _IO_H_
+
+
 #include <stdint.h>
 
 /**
@@ -24,3 +28,17 @@ int32_t IORD(uint32_t base, uint32_t offset);
  * Write IO device.
  */
 void IOWR(uint32_t base, uint32_t offset, int32_t value);
+
+/**
+ * Set Specific bits using the mask
+ * When the corresponding bit in mask is set, it will set that bit
+ */
+void IOSET(uint32_t base, uint32_t offset, int32_t mask);
+
+/**
+ * Clear Specific bits using the mask
+ * When the corresponding bit in mask is set, it will clear that bit
+ */
+void IOCLEAR(uint32_t base, uint32_t offset, int32_t mask);
+
+#endif

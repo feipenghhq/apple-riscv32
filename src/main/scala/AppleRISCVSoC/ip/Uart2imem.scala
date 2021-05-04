@@ -12,7 +12,7 @@ import spinal.lib.master
  * uart rx to imem logic.
  * Used to download instruction from uart to instruction mem
  */
-case class Uart2imem(sibConfig: SibConfig, buardrate: Int) extends Component {
+case class Uart2imem(sibConfig: SibConfig, baudrate: Int) extends Component {
 
   noIoPrefix()
 
@@ -36,8 +36,8 @@ case class Uart2imem(sibConfig: SibConfig, buardrate: Int) extends Component {
   val uart = new UartCtrl(uartCfg)
   uart.io.uart <> io.uart
   // baudrate = Fclk / rxSamplePerBit / clockDivider
-  // clockDivider = Fclk / rxSamplePerBit / buardrate
-  uart.io.config.clockDivider := (clockDomain.frequency.getValue / uartCfg.rxSamplePerBit / buardrate).toInt
+  // clockDivider = Fclk / rxSamplePerBit / baudrate
+  uart.io.config.clockDivider := (clockDomain.frequency.getValue / uartCfg.rxSamplePerBit / baudrate).toInt
   uart.io.config.frame.parity := NONE
   uart.io.config.frame.stop := ONE
   uart.io.config.frame.dataLength := 7

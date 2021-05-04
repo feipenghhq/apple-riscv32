@@ -41,7 +41,7 @@ include $(DRIVER_DIR)/driver.mk
 # Compilation Flag
 #############################################################
 
-LDFLAGS += -T $(LINKER_SCRIPT)  -nostartfiles -Wl,--gc-sections  -Wl,--check-sections
+LDFLAGS += -T $(LINKER_SCRIPT) -nostartfiles -Wl,--gc-sections  -Wl,--check-sections
 LDFLAGS += -L$(ENV_DIR)
 
 ASM_OBJS     := $(ASM_SRCS:.S=.o)

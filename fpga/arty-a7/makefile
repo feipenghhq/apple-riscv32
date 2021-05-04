@@ -25,11 +25,14 @@ _XDC          += constraints/constraints.xdc
 _XDC          += constraints/io.xdc
 _XDC          += constraints/timing.xdc
 
+_PROGRAM	  ?= 0
+
 export PRJ_NAME 	= soc
 export TOP 			= ArtyA7_AppleRISCVSoC
 export RTL_SRC     	= $(_RTL_SRC)
 export XDC         	= $(_XDC)
 export DEVICE 	    = $(_DEVICE)
+export PROGRAM 		= $(_PROGRAM)
 
 # run vivado at SOC level
 soc: clean_soc

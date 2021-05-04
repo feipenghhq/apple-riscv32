@@ -32,3 +32,27 @@ void IOWR(uint32_t base, uint32_t offset, int32_t value) {
     ptr = (uint32_t *) (base + offset);
     *ptr = value;
 }
+
+/**
+ * Set Specific bits using the mask
+ * When the corresponding bit in mask is set, it will set that bit
+ */
+void IOSET(uint32_t base, uint32_t offset, int32_t mask) {
+    int32_t data;
+
+    data = IORD(base, offset);
+    data = data | mask;
+    IOWR(base, offset, data);
+}
+
+/**
+ * Clear Specific bits using the mask
+ * When the corresponding bit in mask is set, it will clear that bit
+ */
+void IOCLEAR(uint32_t base, uint32_t offset, int32_t mask) {
+    int32_t data;
+
+    data = IORD(base, offset);
+    data = data ^ mask;
+    IOWR(base, offset, data);
+}

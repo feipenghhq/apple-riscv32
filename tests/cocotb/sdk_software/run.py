@@ -17,6 +17,8 @@ import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import FallingEdge, Timer
 
+from cocotbext.uart import UartSource, UartSink
+
 import os
 import subprocess
 
@@ -90,12 +92,22 @@ async def run_test(dut):
     await reset(dut)
     await Timer(runtime, units="ns")
 
-@cocotb.test()
+#@cocotb.test()
 async def demo_gpio0(dut):
     runtime = int(os.getenv('RUN_TIME'))
     process_rom_file()
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10us period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
     dut.DUT_AppleRISCVSoC.gpio0_port = 0xF0
+    await reset(dut)
+    await Timer(runtime, units="ns")
+
+@cocotb.test()
+async def demo_uart0(dut):
+    runtime = int(os.getenv('RUN_TIME'))
+    process_rom_file()
+    clock = Clock(dut.clk, 10, units="ns")  # Create a 10us period clock on port clk
+    cocotb.fork(clock.start())  # Start the clock
+    dut.DUT_AppleRISCVSoC.uart_port_rxd = 1
     await reset(dut)
     await Timer(runtime, units="ns")

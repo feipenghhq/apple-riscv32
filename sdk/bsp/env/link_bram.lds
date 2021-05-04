@@ -4,9 +4,8 @@ ENTRY( _start)
 
 MEMORY
 {
-    /* FIXME: The actual ram is not large enough */
-    irom (rxai!w): ORIGIN = 0x00000000, LENGTH = 64K
-    ram (wxa!ri): ORIGIN = 0x01000000, LENGTH = 64K
+    irom (rxai!w): ORIGIN = 0x00000000, LENGTH = 16K
+    ram (wxa!ri): ORIGIN = 0x01000000, LENGTH = 16K
 }
 
 SECTIONS

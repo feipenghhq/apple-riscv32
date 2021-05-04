@@ -61,15 +61,15 @@ case class SibUart(cfg: UartCfg, sibCfg: SibConfig) extends Component {
 
   // Uart Config
   busCtrl.driveAndRead(uartCtrl.io.config.frame       , 0x4, 0, frameDoc)
-  busCtrl.driveAndRead(uartCtrl.io.config.clockDivider, 0x8, 0, "Uart Clock divider")
+  busCtrl.driveAndRead(uartCtrl.io.config.clockDivider, 0x8, 0, "Uart Clock divider") init 0
 
   // Uart TX/RX Data
-  val (txQueue, txAvail) = busCtrl.createAndDriveFlow(Bits(cfg.uartCfg.dataWidthMax bits), 0x8, 0).
+  val (txQueue, txAvail) = busCtrl.createAndDriveFlow(Bits(cfg.uartCfg.dataWidthMax bits), 0xC, 0).
     toStream.queueWithAvailability(cfg.txFifoDepth)
   txQueue >> uartCtrl.io.write
   val (rxQueue, rxOccup) = uartCtrl.io.read.queueWithOccupancy(cfg.rxFifoDepth)
   busCtrl.readStreamNonBlocking(rxQueue, address = 0xC, validBitOffset = 31, payloadBitOffset = 0)
-  busCtrl.read(rxOccup, 0xC, 8, "Uart remaining RX data in FIFO")
+  busCtrl.read(rxOccup, 0xC, 16, "Uart remaining RX data in FIFO")
 
   // == Uart Interrupt and Status == //
   val txFull  = (txAvail === 0)
