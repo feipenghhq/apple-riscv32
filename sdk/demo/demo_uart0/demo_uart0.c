@@ -26,7 +26,7 @@
 /**
  * This test will send a-z through uart port to the console
  * it does not check if the uart tx buffer is full or not so
- * some charactor will be lost
+ * some character will be lost
  */
 void test0(void) {
     int i;
@@ -57,17 +57,17 @@ void test1(void) {
 
 void test2(void) {
     char c = 'a';
-    char string[]  = "123456789\n";
+    char string[]  = "Hello AppleRISCV ~\n";
 
     uart_setup_appleriscv(UART_BASE);
     while(1) {
         uart_send_string(UART_BASE, string);
-        //while(c < 'a' + 26) {
-        //    uart_send_byte(UART_BASE, c++);
-        //}
-        //c = 'a';
-        //uart_send_byte(UART_BASE, '\n');
-        //for (int i = 0; i < 1000000; i++);
+        while(c < 'a' + 26) {
+            uart_send_byte(UART_BASE, c++);
+        }
+        c = 'a';
+        uart_send_byte(UART_BASE, '\n');
+        for (int i = 0; i < 1000000; i++);
     }
 }
 

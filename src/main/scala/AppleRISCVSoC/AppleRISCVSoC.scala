@@ -91,13 +91,18 @@ case class AppleRISCVSoC(cfg: SoCCfg) extends Component {
 
         // imem switch
         val imemClientSibCfg = Array(SIBCfg.imemSibCfg)
-        val imem_switch = Sib_decoder(SIBCfg.cpuSibCfg, imemClientSibCfg)
+        val imem_switch = SibDecoder(SIBCfg.cpuSibCfg, imemClientSibCfg)
+
+        // imem mux for the data port
+        val imemDataMuxCfg = Array(SIBCfg.dmemSibCfg, SIBCfg.imemSibCfg)
+        val imem_data_mux = SibMux(imemDataMuxCfg, SIBCfg.imemSibCfg)
 
         // dmem bus switch
         val dmemClientSibCfg = Array(
+            SIBCfg.imemSibCfg,
             SIBCfg.dmemSibCfg,
             SIBCfg.peripHostSibCfg)
-        val dmem_switch = Sib_decoder(SIBCfg.cpuSibCfg, dmemClientSibCfg)
+        val dmem_switch = SibDecoder(SIBCfg.cpuSibCfg, dmemClientSibCfg)
 
         // peripheral switch
         val peripClientSibCfg = Array(
@@ -107,19 +112,23 @@ case class AppleRISCVSoC(cfg: SoCCfg) extends Component {
             SIBCfg.uartSibCfg,
             SIBCfg.gpio0SibCfg,
             SIBCfg.gpio1SibCfg)
-        val perip_switch = Sib_decoder(SIBCfg.peripHostSibCfg, peripClientSibCfg, pipeline = Cfg.perip_switch_pipeline)
+        val perip_switch = SibDecoder(SIBCfg.peripHostSibCfg, peripClientSibCfg)
 
 
         // == SOC bus connection == //
 
         // imem switch connection
         imem_switch.hostSib      <> cpu_core.io.imem_sib
-        imem_switch.clientSib(0) <> imem_inst.imem_cpu_sib
+        imem_switch.clientSib(0) <> imem_inst.imem_instr_sib
+
+        // imem data mux connection
+        imem_inst.imem_data_sib  <> imem_data_mux.outputSib
 
         // dmem switch connection
         dmem_switch.hostSib      <> cpu_core.io.dmem_sib        // To CPU
-        dmem_switch.clientSib(0) <> dmem_inst.dmem_sib          // To dmem
-        dmem_switch.clientSib(1) <> perip_switch.hostSib        // To Peripheral SIB Switch
+        dmem_switch.clientSib(0) <> imem_data_mux.inputSib(0)  // To imem data mux port 0
+        dmem_switch.clientSib(1) <> dmem_inst.dmem_sib          // To dmem
+        dmem_switch.clientSib(2) <> perip_switch.hostSib        // To Peripheral SIB Switch
 
         // peripheral switch connection
         perip_switch.clientSib(0) <> clic_inst.io.clic_sib      // To CLIC
@@ -132,7 +141,7 @@ case class AppleRISCVSoC(cfg: SoCCfg) extends Component {
         // == Other ports/interface connection == //
 
         // Imem debug bus
-        uart2imem_inst.io.imem_dbg_sib <> imem_inst.imem_dbg_sib
+        uart2imem_inst.io.imem_dbg_sib <> imem_data_mux.inputSib(1)  // To imem data mux port 1
 
         // GPIO port
         io.gpio0_port <> gpio0_inst.io.gpio
