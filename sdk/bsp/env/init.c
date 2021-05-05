@@ -7,7 +7,7 @@
 //
 // ================== Description ==================
 //
-// Init Code
+// CPU init code - config and setup the peripherials
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -18,7 +18,7 @@ extern int main(int argc, char** argv);
 
 void _init() {
 
-    // init the uart module
+    // init the uart with default configuration
     uart_setup_appleriscv(UART_BASE);
 
 }

@@ -1,5 +1,9 @@
+//
+// Provide Process Timing Information, times
+//
 // A minimal implementation need not offer any timing information,
 // so should always fail with an appropriate value in errno.
+//
 
 #include <errno.h>
 #include <sys/times.h>

@@ -1,24 +1,28 @@
 #############################################################
-# Configuration
+# Makefile to compile softare
+#############################################################
+
+#############################################################
+# RISCV ISA Configuration
 #############################################################
 
 RISCV_ARCH := rv32i
 RISCV_ABI  := ilp32
 
-
 # Default target
-PROGRAM ?= demo_led
+PROGRAM ?= coremark
 
 #############################################################
 # Prints help message
 #############################################################
 .PHONY: help
 help:
-	@echo "#####################################################################"
-	@echo "# Usage:                                                            #"
-	@echo "# make software PROGRAM=<program>  # Build the software for program #"
-	@echo "# make dasm PROGRAM=<program>      # deassemble the program         #"
-	@echo "#####################################################################"
+	@echo "Usage:"
+	@echo "make software PROGRAM=<program>"
+	@echo "- Build the executable for program:"
+	@echo "make dasm PROGRAM=<program>  "
+	@echo "- Build the executable for the program and also generate the instruction rom"
+
 
 .PHONY: clean
 clean:
@@ -35,7 +39,6 @@ RISCV_GDB     := riscv-none-embed-gdb
 RISCV_AR      := riscv-none-embed-ar
 RISCV_SIZE    := riscv-none-embed-size
 
-
 #############################################################
 # This Section is for Software Compilation
 #############################################################
@@ -51,6 +54,6 @@ software: software_clean
 	$(MAKE) -C $(PROGRAM_DIR) SIZE=$(RISCV_SIZE) CC=$(RISCV_GCC) RISCV_ARCH=$(RISCV_ARCH) RISCV_ABI=$(RISCV_ABI) AR=$(RISCV_AR)
 
 dasm: software
-	$(RISCV_OBJDUMP) -D -S $(PROGRAM_ELF) > $(PROGRAM_ELF).dump
+	$(RISCV_OBJDUMP) -D $(PROGRAM_ELF) > $(PROGRAM_ELF).dump
 	$(RISCV_OBJCOPY) $(PROGRAM_ELF) -O verilog $(PROGRAM_ELF).verilog
 	sed -i 's/@800/@000/g' $(PROGRAM_ELF).verilog

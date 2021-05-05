@@ -10,6 +10,9 @@
 #
 # Python program to download instructions into instruction rom
 #
+# Usage:
+# sudo ./uart_download.py <Path to the Instruction ROM image>
+#
 ##################################################################
 
 import sys
@@ -87,9 +90,7 @@ class UartDownload:
         print(f"write {num} of bytes")
 
 
-
 if __name__ == "__main__":
-
     uartDownload = UartDownload(64)
     uartDownload.createData(sys.argv[1])
     uartDownload.setupUart()

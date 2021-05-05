@@ -10,21 +10,11 @@
 // ================== Description ==================
 //
 // A very basic FPGA board demo - Flusing LED on the FPGA board.
-// This program will flush 4 LEDs on the FPGA board.
+// This program will blink 4 LEDs on the FPGA board.
 //
-// Assuming GPIO0 Bit 0~3 is connected to LED
+// GPIO0 Bit 0~3 should be connected to LED
 //
 // Demostrate GPIO write function.
-//
-// To compile the program and generate verilog memory dump
-//
-// cd AppleRISCV/sdk/software
-// make make dasm PROGRAM=demo_led
-//
-// To upload the verilog file to instruction ram  through uart:
-//
-// cd AppleRISCV/sdk/tool
-// sudo ./uart_download.py ../demo/demo_led/demo_led.verilog
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 

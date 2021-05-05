@@ -9,23 +9,13 @@
 //
 // ================== Description ==================
 //
-// A very basic FPGA board demo - Control the LED on the FPGA board.
-// The program use 4 button on FPGA to control the LED
+// A very basic FPGA board demo - Control the LED on the FPGA board through push button.
+// The program use 4 button/switch on FPGA to control the 4 LEDs
 //
-// Assuming GPIO0 Bit 0~3 is connected to LED
-// Assuming GPIO0 Bit 4~7 is connected to button or switch
+// GPIO0 Bit 0~3 should be connected to LED
+// GPIO0 Bit 4~7 should be connected to button or switch
 //
 // Demostrate GPIO read/write function.
-//
-// To compile the program and generate verilog memory dump
-//
-// cd AppleRISCV/sdk/software
-// make make dasm PROGRAM=demo_gpio0
-//
-// To upload the verilog file to instruction ram  through uart:
-//
-// cd AppleRISCV/sdk/tool
-// sudo ./uart_download.py ../software/demo_gpio0/demo_gpio0.verilog
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 

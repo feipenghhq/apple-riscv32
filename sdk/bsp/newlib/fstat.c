@@ -1,4 +1,6 @@
 //
+// Provide the Status of an Open File, fstat
+//
 // A minimal implementation should assume that all files are character special devices
 // and populate the status data structure accordingly.
 //

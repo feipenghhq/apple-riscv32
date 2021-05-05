@@ -1,4 +1,9 @@
+//
+// Write to a File, write
+//
 // A minimal implementation only supports writing to standard output.
+//
+//
 
 #include <errno.h>
 #include <uart.h>

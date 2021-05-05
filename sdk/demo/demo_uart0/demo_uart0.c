@@ -9,12 +9,10 @@
 //
 // ================== Description ==================
 //
-// A very basic FPGA board demo - Send byte to host machine console through uart port.
+// A very basic FPGA board demo - Send data to host machine console through uart port.
 //
-// It will send latter a-z to the host machine console port
-//
-// cd AppleRISCV/sdk/tool
-// sudo ./uart_download.py ../software/demo_uart0/demo_uart0.verilog
+// It will send latter a-z to the host machine console port and iterate over and over again.
+// There are three different implementations. Check the comments on each function.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -54,7 +52,9 @@ void test1(void) {
     }
 }
 
-
+/**
+ * This test will send "Hello AppleRISCV ~"" and then a-z through uart port to the console.
+ */
 void test2(void) {
     char c = 'a';
     char string[]  = "Hello AppleRISCV ~\n";
