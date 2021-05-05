@@ -90,7 +90,7 @@ class UartDownload:
 
 if __name__ == "__main__":
 
-    uartDownload = UartDownload(16)
+    uartDownload = UartDownload(64)
     uartDownload.createData(sys.argv[1])
     uartDownload.setupUart()
     uartDownload.writeRam()

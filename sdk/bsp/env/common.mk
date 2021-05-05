@@ -70,15 +70,12 @@ $(TARGET): $(LINK_OBJS) $(LINK_DEPS)
 	$(CC) $(CFLAGS) $(INCLUDES) $(LINK_OBJS) -o $@ $(LDFLAGS)
 	$(SIZE) $@
 
-$(ASM_OBJS): %.o: %.S $(HEADERS)
+$(ASM_OBJS): %.o: %.S
 	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
-$(C_OBJS): %.o: %.c $(HEADERS)
+$(C_OBJS): %.o: %.c
 	$(CC) $(CFLAGS) $(INCLUDES) -include sys/cdefs.h -c -o $@ $<
 
 .PHONY: clean
 clean:
-	rm -f $(TARGET)
-
-clean_all:
-	rm -f $(CLEAN_OBJS)
+	rm -f $(TARGET) $(CLEAN_OBJS)

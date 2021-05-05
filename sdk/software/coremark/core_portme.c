@@ -15,10 +15,10 @@ limitations under the License.
 
 Original Author: Shay Gal-on
 */
-
-#include <stdio.h>
-#include <stdlib.h>
 #include "coremark.h"
+#include "core_portme.h"
+
+#include "task.h"
 
 #if VALIDATION_RUN
 volatile ee_s32 seed1_volatile = 0x3415;
@@ -43,6 +43,12 @@ volatile ee_s32 seed5_volatile = 0;
    cpu clock cycles performance counter etc. Sample implementation for standard
    time.h and windows.h definitions included.
 */
+CORETIMETYPE
+barebones_clock()
+{
+    CORETIMETYPE clock = (CORETIMETYPE) rdmcycle();
+    return clock;
+}
 /* Define : TIMER_RES_DIVIDER
         Divider to trade off timer resolution and total time that can be
    measured.
@@ -51,13 +57,12 @@ volatile ee_s32 seed5_volatile = 0;
    does not occur. If there are issues with the return value overflowing,
    increase this value.
         */
-#define NSECS_PER_SEC              CLOCKS_PER_SEC
-#define CORETIMETYPE               clock_t
-#define GETMYTIME(_t)              (*_t = clock())
+#define GETMYTIME(_t)              (*_t = barebones_clock())
 #define MYTIMEDIFF(fin, ini)       ((fin) - (ini))
 #define TIMER_RES_DIVIDER          1
 #define SAMPLE_TIME_IMPLEMENTATION 1
-#define EE_TICKS_PER_SEC           (NSECS_PER_SEC / TIMER_RES_DIVIDER)
+#define CLOCKS_PER_SEC             50 * 1000 * 1000
+#define EE_TICKS_PER_SEC           (CLOCKS_PER_SEC / TIMER_RES_DIVIDER)
 
 /** Define Host specific (POSIX), or target specific global time variables. */
 static CORETIMETYPE start_time_val, stop_time_val;
@@ -127,16 +132,8 @@ ee_u32 default_num_contexts = 1;
 void
 portable_init(core_portable *p, int *argc, char *argv[])
 {
-    if (sizeof(ee_ptr_int) != sizeof(ee_u8 *))
-    {
-        ee_printf(
-            "ERROR! Please define ee_ptr_int to a type that holds a "
-            "pointer!\n");
-    }
-    if (sizeof(ee_u32) != 4)
-    {
-        ee_printf("ERROR! Please define ee_u32 to a 32b unsigned type!\n");
-    }
+    // No thing need to be init here. The init.c has already take care of all the
+    // initialization.
     p->portable_id = 1;
 }
 /* Function : portable_fini

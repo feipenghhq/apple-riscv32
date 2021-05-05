@@ -83,17 +83,16 @@ case class MCSR() extends Component {
   val mtval     = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
   val mip       = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
 
+  // Machine Counter/Timers
+  val mcycle    = Reg(UInt(AppleRISCVCfg.MXLEN bits)) init 0  // RW
+  val mcycleh   = Reg(UInt(AppleRISCVCfg.MXLEN bits)) init 0  // RW
+
   // ============================================
   // SW access
   // ============================================
 
   // Read Logic
   switch (io.mcsr_addr) {
-    is(B"hF11") {io.mcsr_dout := mvendorid}
-    is(B"hF12") {io.mcsr_dout := marchid}
-    is(B"hF13") {io.mcsr_dout := mimpid}
-    is(B"hF14") {io.mcsr_dout := mhartid}
-
     is(B"h300") {io.mcsr_dout := mstatus}
     is(B"h301") {io.mcsr_dout := misa}
     is(B"h304") {io.mcsr_dout := mie}
@@ -104,6 +103,14 @@ case class MCSR() extends Component {
     is(B"h342") {io.mcsr_dout := mcause}
     is(B"h343") {io.mcsr_dout := mtval}
     is(B"h344") {io.mcsr_dout := mip}
+
+    is(B"hB00") {io.mcsr_dout := mcycle.asBits}
+    is(B"hB80") {io.mcsr_dout := mcycleh.asBits}
+
+    is(B"hF11") {io.mcsr_dout := mvendorid}
+    is(B"hF12") {io.mcsr_dout := marchid}
+    is(B"hF13") {io.mcsr_dout := mimpid}
+    is(B"hF14") {io.mcsr_dout := mhartid}
 
     default {io.mcsr_dout := mvendorid}
   }
@@ -197,6 +204,11 @@ case class MCSR() extends Component {
   mip_meip := io.external_interrupt &  mie_meie
   mip_mtip := io.timer_interrupt    &  mie_mtie
   mip_msip := io.software_interrupt &  mie_msie
+
+  // mcycle register
+  val mcycle64_plus1 = (mcycleh @@ mcycle) + 1
+  mcycle  := mcycle64_plus1(31 downto 0)
+  mcycleh := mcycle64_plus1(63 downto 32)
 
   // ============================================
   // Trap related
