@@ -55,8 +55,6 @@ case class ALU() extends Component {
     val sll_result = io.operand_1 |<< shift_value
     val slt_result = (op1_signed < op2_signed).asBits.resize(AppleRISCVCfg.XLEN bits)
     val sltu_result = (op1_unsigned < op2_unsigned).asBits.resize(AppleRISCVCfg.XLEN bits)
-    val lui_result = io.operand_2(31 downto 12) ## B"12'h0"
-    val auipc_result = io.pc + (io.operand_2(31 downto 12) ## B"12'h0").asUInt
     val pcplus4_result = io.pc + 4
 
     switch(io.alu_opcode) {

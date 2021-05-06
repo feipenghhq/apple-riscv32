@@ -74,6 +74,6 @@ object ArtyA7_AppleRISCVSoCMain{
       gpio1Cfg   = new GpioCfg(false, false, false, false, 0),
       uartCfg   = new UartCfg(UartCtrlGenerics(), 8, 8)
     )
-    SpinalVerilog(InOutWrapper(ArtyA7_AppleRISCVSoC(cfg)))
+    SpinalVerilog(InOutWrapper(ArtyA7_AppleRISCVSoC(cfg))).printPruned()
   }
 }

@@ -91,7 +91,6 @@ case class TrapCtrl() extends Component {
   val interrupt = io.stage_valid & (
                   external_interrupt_masked | timer_interrupt_masked |
                   software_interrupt_masked | debug_interrupt_masked)
-  val pc_plus_4 = io.cur_pc + 4
 
   // == mcause exception code == //
   // interrupt

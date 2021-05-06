@@ -159,8 +159,6 @@ case class AppleRISCV() extends Component {
             val rd_wr         = RegNextWhen(instr_dec_inst.io.rd_wr       & id_stage_valid, ~id_pipe_stall) init False
             val dmem_wr       = RegNextWhen(instr_dec_inst.io.dmem_wr     & id_stage_valid, ~id_pipe_stall) init False
             val dmem_rd       = RegNextWhen(instr_dec_inst.io.dmem_rd     & id_stage_valid, ~id_pipe_stall) init False
-            val rs1_rd        = RegNextWhen(instr_dec_inst.io.rs1_rd      & id_stage_valid, ~id_pipe_stall) init False
-            val rs2_rd        = RegNextWhen(instr_dec_inst.io.rs2_rd      & id_stage_valid, ~id_pipe_stall) init False
             val branch_op     = RegNextWhen(instr_dec_inst.io.branch_op   & id_stage_valid, ~id_pipe_stall) init False
             val jal_op        = RegNextWhen(instr_dec_inst.io.jal_op      & id_stage_valid, ~id_pipe_stall) init False
             val jalr_op       = RegNextWhen(instr_dec_inst.io.jalr_op     & id_stage_valid, ~id_pipe_stall) init False
@@ -172,7 +170,6 @@ case class AppleRISCV() extends Component {
             // Payload
             val rd_idx         = RegNextWhen(instr_dec_inst.io.rd_idx ,         ~id_pipe_stall)
             val rs1_idx        = RegNextWhen(instr_dec_inst.io.rs1_idx,         ~id_pipe_stall)
-            val rs2_idx        = RegNextWhen(instr_dec_inst.io.rs2_idx,         ~id_pipe_stall)
             val csr_sel_imm    = RegNextWhen(instr_dec_inst.io.csr_sel_imm,     ~id_pipe_stall)
             val csr_idx        = RegNextWhen(instr_dec_inst.io.csr_idx,         ~id_pipe_stall)
             val wb_sel         = RegNextWhen(instr_dec_inst.io.wb_sel,          ~id_pipe_stall)
@@ -239,8 +236,6 @@ case class AppleRISCV() extends Component {
             // control signal
             val stage_valid  = RegNextWhen(ex_stage_valid                , ~ex_pipe_stall) init False
             val rd_wr        = RegNextWhen(id2ex.rd_wr   & ex_stage_valid, ~ex_pipe_stall) init False
-            val dmem_wr      = RegNextWhen(id2ex.dmem_wr & ex_stage_valid, ~ex_pipe_stall) init False
-            val dmem_rd      = RegNextWhen(id2ex.dmem_rd & ex_stage_valid, ~ex_pipe_stall) init False
             val mret         = RegNextWhen(id2ex.mret    & ex_stage_valid, ~ex_pipe_stall) init False
             val ecall        = RegNextWhen(id2ex.ecall   & ex_stage_valid, ~ex_pipe_stall) init False
             val ebreak       = RegNextWhen(id2ex.ebreak  & ex_stage_valid, ~ex_pipe_stall) init False
@@ -251,14 +246,9 @@ case class AppleRISCV() extends Component {
             val rs1_value      = RegNextWhen(ex_rs1_value_forwarded,    ~ex_pipe_stall)
             val alu_out        = RegNextWhen(alu_inst.io.alu_out,       ~ex_pipe_stall)
             val rs1_idx        = RegNextWhen(id2ex.rs1_idx,             ~ex_pipe_stall)
-            val rs2_idx        = RegNextWhen(id2ex.rs2_idx,             ~ex_pipe_stall)
             val rd_idx         = RegNextWhen(id2ex.rd_idx,              ~ex_pipe_stall)
-            val rs2_value      = RegNextWhen(ex_rs2_value_forwarded,    ~ex_pipe_stall)
             val pc             = RegNextWhen(id2ex.pc,                  ~ex_pipe_stall)
             val instr          = RegNextWhen(id2ex.instr,               ~ex_pipe_stall)
-            val dmem_ld_byte   = RegNextWhen(id2ex.dmem_ld_byte,        ~ex_pipe_stall)
-            val dmem_ld_hword  = RegNextWhen(id2ex.dmem_ld_hword,       ~ex_pipe_stall)
-            val dmem_ld_unsign = RegNextWhen(id2ex.dmem_ld_unsign,      ~ex_pipe_stall)
             val csr_sel_imm    = RegNextWhen(id2ex.csr_sel_imm,         ~ex_pipe_stall)
             val csr_idx        = RegNextWhen(id2ex.csr_idx,             ~ex_pipe_stall)
             val wb_sel         = RegNextWhen(id2ex.wb_sel,              ~ex_pipe_stall)
@@ -327,33 +317,13 @@ case class AppleRISCV() extends Component {
             // control signal
             val stage_valid  = RegNextWhen(mem_stage_valid,                ~mem_pipe_stall) init False
             val rd_wr   = RegNextWhen(ex2mem.rd_wr      & mem_stage_valid, ~mem_pipe_stall) init False
-            val dmem_rd = RegNextWhen(ex2mem.dmem_rd    & mem_stage_valid, ~mem_pipe_stall) init False
-            val mret    = RegNextWhen(ex2mem.mret       & mem_stage_valid, ~mem_pipe_stall) init False
-            val ecall   = RegNextWhen(ex2mem.ecall      & mem_stage_valid, ~mem_pipe_stall) init False
-            val ebreak  = RegNextWhen(ex2mem.ebreak     & mem_stage_valid, ~mem_pipe_stall) init False
-            val csr_wr  = RegNextWhen(ex2mem.csr_wr     & mem_stage_valid, ~mem_pipe_stall) init False
-            val csr_rd  = RegNextWhen(ex2mem.csr_rd     & mem_stage_valid, ~mem_pipe_stall) init False
 
             // payload
-            val csr_idx  = RegNextWhen(ex2mem.csr_idx,   ~mem_pipe_stall)
             val wb_sel   = RegNextWhen(ex2mem.wb_sel,    ~mem_pipe_stall)
-            val csr_sel  = RegNextWhen(ex2mem.csr_sel,    ~mem_pipe_stall)
-            val csr_sel_imm = RegNextWhen(ex2mem.csr_sel_imm, ~mem_pipe_stall)
-            val rs1_idx     = RegNextWhen(ex2mem.rs1_idx,   ~mem_pipe_stall)
-            val rs1_value   = RegNextWhen(ex2mem.rs1_value, ~mem_pipe_stall)
             val alu_out     = RegNextWhen(ex2mem.alu_out,   ~mem_pipe_stall)
             val dmem_out    = RegNextWhen(dmem_ctrl_isnt.io.mc2cpu_data,   ~mem_pipe_stall)
             val csr_out     = RegNextWhen(mcsr_inst.io.mcsr_dout,   ~mem_pipe_stall)
             val rd_idx      = RegNextWhen(ex2mem.rd_idx,    ~mem_pipe_stall)
-            val pc          = RegNextWhen(ex2mem.pc,        ~mem_pipe_stall)
-            val instr       = RegNextWhen(ex2mem.instr,     ~mem_pipe_stall)
-            val dmem_addr   = RegNextWhen(ex2mem.alu_out,   ~mem_pipe_stall) // memory address is from alu output
-
-            // Exception
-            val exc_ill_instr       = RegNextWhen(ex2mem.exc_ill_instr      & mem_stage_valid, ~mem_pipe_stall) init False
-            val exc_instr_addr_ma   = RegNextWhen(ex2mem.exc_instr_addr_ma  & mem_stage_valid, ~mem_pipe_stall) init False
-            val exc_ld_addr_ma      = RegNextWhen(ex2mem.exc_ld_addr_ma     & mem_stage_valid, ~mem_pipe_stall) init False
-            val exc_sd_addr_ma      = RegNextWhen(ex2mem.exc_sd_addr_ma     & mem_stage_valid, ~mem_pipe_stall) init False
         }
 
         // =========================
