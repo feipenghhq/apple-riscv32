@@ -77,7 +77,6 @@ case class InstrDecIO() extends Bundle{
 case class InstrDec() extends Component {
 
     noIoPrefix()
-
     val io = InstrDecIO()
 
     // ============================================
@@ -105,7 +104,9 @@ case class InstrDec() extends Component {
     alu_imm_type := alu_imm_type_e.ITYPE
 
     // intermediate logic
-    val func7_not_all_zero  = func7 =/= 0
+    val func7_0000000 = func7 === 0
+    val func7_0000001 = func7 === 1
+    val func7_0100000 = func7 === B"7'b0100000"
     val rd_isnot_x0         = io.rd_idx =/= 0
     val rs1_isnot_x0        = io.rs1_idx =/= 0
     val ill_instr           = False
@@ -234,7 +235,7 @@ case class InstrDec() extends Component {
             io.rs1_rd       := True
             io.rd_wr        := rd_isnot_x0
             switch(func3) {
-                is(InstrDefine.LA_F3_ADD_SUB) {io.alu_opcode := AluOpcodeEnum.ADD} // ADDI
+                is(InstrDefine.LA_F3_ADD)  {io.alu_opcode := AluOpcodeEnum.ADD} // ADDI
                 is(InstrDefine.LA_F3_SLT)  {io.alu_opcode := AluOpcodeEnum.SLT}
                 is(InstrDefine.LA_F3_SLTU) {io.alu_opcode := AluOpcodeEnum.SLTU}
                 is(InstrDefine.LA_F3_XOR)  {io.alu_opcode := AluOpcodeEnum.XOR}
@@ -257,49 +258,38 @@ case class InstrDec() extends Component {
             io.rs1_rd  := True
             io.rs2_rd  := True
             io.rd_wr   := rd_isnot_x0
-            switch(func3) {
-                is(InstrDefine.LA_F3_ADD_SUB) {
-                    switch(func7) {
-                        is(InstrDefine.LA_F7_ADD) {io.alu_opcode  := AluOpcodeEnum.ADD} // ADD
-                        is(InstrDefine.LA_F7_SUB) {io.alu_opcode  := AluOpcodeEnum.SUB} // SUB
+
+            when(func7_0000000) {
+                switch(func3) {
+                    is(InstrDefine.LA_F3_ADD)  {io.alu_opcode  := AluOpcodeEnum.ADD}
+                    is(InstrDefine.LA_F3_SLL)  {io.alu_opcode := AluOpcodeEnum.SLL}
+                    is(InstrDefine.LA_F3_SLT)  {io.alu_opcode := AluOpcodeEnum.SLT}
+                    is(InstrDefine.LA_F3_SLTU) {io.alu_opcode := AluOpcodeEnum.SLTU}
+                    is(InstrDefine.LA_F3_XOR)  {io.alu_opcode := AluOpcodeEnum.XOR}
+                    is(InstrDefine.LA_F3_SR)   {io.alu_opcode := AluOpcodeEnum.SRL}
+                    is(InstrDefine.LA_F3_OR)   {io.alu_opcode := AluOpcodeEnum.OR}
+                    is(InstrDefine.LA_F3_AND)  {io.alu_opcode := AluOpcodeEnum.AND}
+                }
+            }.elsewhen(func7_0100000) {
+                switch(func3) {
+                    is(InstrDefine.LA_F3_SUB) {io.alu_opcode  := AluOpcodeEnum.SUB}
+                    is(InstrDefine.LA_F3_SR)  {io.alu_opcode  := AluOpcodeEnum.SRA}
+                    default {ill_instr := True}
+                }
+            }.elsewhen(func7_0000001) {
+                // RV32M Instruction
+                if (AppleRISCVCfg.RV32M) {
+                    switch(func3) {
+                        is(InstrDefine.RV32M_MUL)    {io.alu_opcode := AluOpcodeEnum.MUL}
+                        is(InstrDefine.RV32M_MULH)   {io.alu_opcode := AluOpcodeEnum.MULH}
+                        is(InstrDefine.RV32M_MULHSU) {io.alu_opcode := AluOpcodeEnum.MULHSU}
+                        is(InstrDefine.RV32M_MULHU)  {io.alu_opcode := AluOpcodeEnum.MULHU}
                         default {ill_instr := True}
                     }
+                } else {
+                    ill_instr := True
                 }
-                is(InstrDefine.LA_F3_SLL) {
-                    io.alu_opcode  := AluOpcodeEnum.SLL
-                    ill_instr  := func7_not_all_zero
-                }
-                is(InstrDefine.LA_F3_SLT) {
-                    io.alu_opcode  := AluOpcodeEnum.SLT
-                    ill_instr  := func7_not_all_zero
-                }
-                is(InstrDefine.LA_F3_SLTU) {
-                    io.alu_opcode  := AluOpcodeEnum.SLTU
-                    ill_instr  := func7_not_all_zero
-                }
-                is(InstrDefine.LA_F3_XOR) {
-                    io.alu_opcode   := AluOpcodeEnum.XOR
-                    ill_instr := func7_not_all_zero
-                }
-                is(InstrDefine.LA_F3_SR) {
-                    switch(func7) {
-                        is(InstrDefine.LA_F7_SRL) {io.alu_opcode  := AluOpcodeEnum.SRL}
-                        is(InstrDefine.LA_F7_SRA) {io.alu_opcode  := AluOpcodeEnum.SRA}
-                        default {ill_instr := True}
-                    }
-                }
-                // ORI
-                is(InstrDefine.LA_F3_OR) {
-                    io.alu_opcode := AluOpcodeEnum.OR
-                    ill_instr  := func7_not_all_zero
-                }
-                // AND
-                is(InstrDefine.LA_F3_AND) {
-                    io.alu_opcode := AluOpcodeEnum.AND
-                    ill_instr := func7_not_all_zero
-                }
-                // No default required. Complete switch statement
-            }
+            }.otherwise(ill_instr := True)
         }
         // End of R-Type Logic/Arithmetic Instruction
         // SYSTEM Instruction

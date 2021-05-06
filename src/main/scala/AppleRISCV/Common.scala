@@ -23,6 +23,7 @@ import spinal.core._
 object AppleRISCVCfg {
 
     val NAME            = "AppleRISCV"
+
     val XLEN            = 32
     val RF_SIZE         = 32
     val RF_ADDR_WDITH   = log2Up(RF_SIZE)
@@ -33,6 +34,12 @@ object AppleRISCVCfg {
         addressWidth = XLEN,
         dataWidth = XLEN
     )
+
+    // RV32M Extension Configuration
+    val RV32M           = true
+    val MULTYPE         = "DSP" // Or Comb for combinational logic
+    val MULSTAGE        = 5
+
 }
 
 object InstrDefine {
@@ -50,18 +57,22 @@ object InstrDefine {
     val OP_JALR             = Integer.parseInt("1100111", 2) // JALR
     // RV32 Extension
     val OP_EXT_FEANCE       = Integer.parseInt("0001111", 2) // FANCE
-    val OP_SYS          = Integer.parseInt("1110011", 2) // System Instruction: Zicsr, Trap RET
+    val OP_SYS              = Integer.parseInt("1110011", 2) // System Instruction: Zicsr, Trap RET
+
+    // val OP_RV32M            = Integer.parseInt("0110011", 2) // RV32M Standard Extension
+    // => Same as Logic and arithmetic
 
     // == func3 == //
     // Logic arithmetic func3 field
-    val LA_F3_AND     = Integer.parseInt("111", 2) // AND
-    val LA_F3_OR      = Integer.parseInt("110", 2) // OR
-    val LA_F3_XOR     = Integer.parseInt("100", 2) // XOR
-    val LA_F3_ADD_SUB = Integer.parseInt("000", 2) // ADD, SUB
-    val LA_F3_SR      = Integer.parseInt("101", 2) // SRL, SRLI, SRA, SRAI
-    val LA_F3_SLL     = Integer.parseInt("001", 2) // SLL, SLLI
-    val LA_F3_SLT     = Integer.parseInt("010", 2) // SLT, SLTI
-    val LA_F3_SLTU    = Integer.parseInt("011", 2) // SLTU, SLTIU
+    val LA_F3_AND  = Integer.parseInt("111", 2) // AND
+    val LA_F3_OR   = Integer.parseInt("110", 2) // OR
+    val LA_F3_XOR  = Integer.parseInt("100", 2) // XOR
+    val LA_F3_ADD  = Integer.parseInt("000", 2) // ADD
+    val LA_F3_SUB  = Integer.parseInt("000", 2) // ADD
+    val LA_F3_SR   = Integer.parseInt("101", 2) // SRL, SRLI, SRA, SRAI
+    val LA_F3_SLL  = Integer.parseInt("001", 2) // SLL, SLLI
+    val LA_F3_SLT  = Integer.parseInt("010", 2) // SLT, SLTI
+    val LA_F3_SLTU = Integer.parseInt("011", 2) // SLTU, SLTIU
     // Load/Store func3 field
     val LW_F3_LB  = Integer.parseInt("000", 2) // LB
     val LW_F3_LH  = Integer.parseInt("001", 2) // LH
@@ -90,6 +101,11 @@ object InstrDefine {
     val CSR_F3_RCI = Integer.parseInt("111", 2) // CSRRC
     // Pirvileged Instruction
     val SYS_F3_PRIV = Integer.parseInt("000", 2)
+    // RV32M Standard Extension
+    val RV32M_MUL      = Integer.parseInt("000", 2)
+    val RV32M_MULH     = Integer.parseInt("001", 2)
+    val RV32M_MULHSU   = Integer.parseInt("010", 2)
+    val RV32M_MULHU    = Integer.parseInt("011", 2)
 
     // == func7 == //
     // Logic arithmetic func7 field
@@ -104,8 +120,13 @@ object InstrDefine {
     val F12_EBREAK = Integer.parseInt("000000000001", 2) // EBREAK
 }
 
-object AluOpcodeEnum extends SpinalEnum(binaryOneHot){
+object AluOpcodeEnum extends SpinalEnum(binaryOneHot) {
     val NOP, ADD, SUB, AND, OR, XOR, SRA, SRL, SLL, SLT, SLTU, PC4 = newElement()
+    // RV32M related operation
+    val MUL     = if (AppleRISCVCfg.RV32M) newElement() else null
+    val MULH    = if (AppleRISCVCfg.RV32M) newElement() else null
+    val MULHSU  = if (AppleRISCVCfg.RV32M) newElement() else null
+    val MULHU   = if (AppleRISCVCfg.RV32M) newElement() else null
 }
 
 object BranchOpcodeEnum extends SpinalEnum(){

@@ -9,6 +9,7 @@ src_dir := .
 include $(src_dir)/isa/rv32ui/Makefrag
 include $(src_dir)/isa/rv32mi/Makefrag
 include $(src_dir)/isa/rv32si/Makefrag
+include $(src_dir)/isa/rv32um/Makefrag
 include $(src_dir)/isa/soc/Makefrag
 
 default: all
@@ -44,9 +45,10 @@ tests += $$($(1)_tests)
 
 endef
 
-$(eval $(call compile_template,rv32ui,-march=rv32i -mabi=ilp32))
-$(eval $(call compile_template,rv32mi,-march=rv32i -mabi=ilp32))
-$(eval $(call compile_template,rv32si,-march=rv32i -mabi=ilp32))
+$(eval $(call compile_template,rv32ui,-march=rv32im -mabi=ilp32))
+$(eval $(call compile_template,rv32mi,-march=rv32im -mabi=ilp32))
+$(eval $(call compile_template,rv32si,-march=rv32im -mabi=ilp32))
+$(eval $(call compile_template,rv32um,-march=rv32im -mabi=ilp32))
 $(eval $(call compile_template,soc,-march=rv32i -mabi=ilp32))
 
 tests_dump = $(addsuffix .dump, $(tests))

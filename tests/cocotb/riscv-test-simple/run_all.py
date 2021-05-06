@@ -81,12 +81,20 @@ soc_isa = [
     ['timer_interrupt', 6000],
 ]
 
+rv32um_isa = [
+    ['mul', 10000],
+    ['mulh', 10000],
+    ['mulhsu', 10000],
+    ['mulhu', 10000],
+]
+
 # architecture
 ARCH = {
     'rv32ui': rv32ui_isa,
     'rv32mi': rv32mi_isa,
     'rv32si': rv32si_isa,
-    'soc': soc_isa
+    'soc'   : soc_isa,
+    'rv32um': rv32um_isa
 }
 
 #####################################
