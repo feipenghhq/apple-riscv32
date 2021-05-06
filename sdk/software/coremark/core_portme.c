@@ -19,6 +19,7 @@ Original Author: Shay Gal-on
 #include "core_portme.h"
 
 #include "task.h"
+#include "soc.h"
 
 #if VALIDATION_RUN
 volatile ee_s32 seed1_volatile = 0x3415;
@@ -61,7 +62,7 @@ barebones_clock()
 #define MYTIMEDIFF(fin, ini)       ((fin) - (ini))
 #define TIMER_RES_DIVIDER          1
 #define SAMPLE_TIME_IMPLEMENTATION 1
-#define CLOCKS_PER_SEC             50 * 1000 * 1000
+#define CLOCKS_PER_SEC             CLK_FEQ_MHZ * 1000 * 1000
 #define EE_TICKS_PER_SEC           (CLOCKS_PER_SEC / TIMER_RES_DIVIDER)
 
 /** Define Host specific (POSIX), or target specific global time variables. */

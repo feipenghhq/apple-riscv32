@@ -15,6 +15,9 @@
 #ifndef _SOC_H_
 #define _SOC_H_
 
+// Clock Frequency in MHz
+#define CLK_FEQ_MHZ     100
+
 // SOC component address mapping
 #define IMEM_BASE       0x00000000
 #define DMEM_BASE       0x01000000

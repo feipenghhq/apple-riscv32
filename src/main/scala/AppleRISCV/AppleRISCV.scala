@@ -138,6 +138,17 @@ case class AppleRISCV() extends Component {
         val id_rs2_dep_ex_rd   = Bool
         val id_rs2_dep_mem_rd  = Bool
 
+        val idRs1Mux = new Area {
+            val id_rs1_final = regfile_inst.io.rs1_data_out.clone()
+            when(instr_dec_inst.io.op1_sel_pc) {
+                id_rs1_final := if2id.pc.asBits
+            }.elsewhen(instr_dec_inst.io.op1_sel_zero) {
+                id_rs1_final := 0
+            }.otherwise{
+                id_rs1_final := regfile_inst.io.rs1_data_out
+            }
+        }
+
         // =========================
         // ID/EX Pipeline
         // =========================
@@ -171,7 +182,7 @@ case class AppleRISCV() extends Component {
             val dmem_ld_byte   = RegNextWhen(instr_dec_inst.io.dmem_ld_byte,    ~id_pipe_stall)
             val dmem_ld_hword  = RegNextWhen(instr_dec_inst.io.dmem_ld_hword,   ~id_pipe_stall)
             val dmem_ld_unsign = RegNextWhen(instr_dec_inst.io.dmem_ld_unsign,  ~id_pipe_stall)
-            val rs1_value      = RegNextWhen(regfile_inst.io.rs1_data_out,      ~id_pipe_stall)
+            val rs1_value      = RegNextWhen(idRs1Mux.id_rs1_final ,            ~id_pipe_stall)
             val rs2_value      = RegNextWhen(regfile_inst.io.rs2_data_out,      ~id_pipe_stall)
             val imm_value      = RegNextWhen(instr_dec_inst.io.imm_value ,      ~id_pipe_stall)
             val rs1_dep_mem    = RegNextWhen(id_rs1_dep_ex_rd ,                    ~id_pipe_stall)
@@ -213,6 +224,16 @@ case class AppleRISCV() extends Component {
         branch_unit_inst.io.jalr_op         := id2ex.jalr_op
         branch_unit_inst.io.ex_stage_valid  := ex_stage_valid
 
+        // Memory Controller Input
+        dmem_ctrl_isnt.dmem_sib                     <> io.dmem_sib
+        dmem_ctrl_isnt.io.cpu2mc_wr                 := id2ex.dmem_wr & ex_stage_valid
+        dmem_ctrl_isnt.io.cpu2mc_rd                 := id2ex.dmem_rd & ex_stage_valid
+        dmem_ctrl_isnt.io.cpu2mc_addr               := id2ex.imm_value.asUInt + ex_rs1_value_forwarded.asUInt
+        dmem_ctrl_isnt.io.cpu2mc_data               := ex_rs2_value_forwarded
+        dmem_ctrl_isnt.io.cpu2mc_mem_LS_byte        := id2ex.dmem_ld_byte
+        dmem_ctrl_isnt.io.cpu2mc_mem_LS_halfword    := id2ex.dmem_ld_hword
+        dmem_ctrl_isnt.io.cpu2mc_mem_LW_unsigned    := id2ex.dmem_ld_unsign
+
         // EX/Mem Pipeline
         val ex2mem = new Area {
             // control signal
@@ -246,21 +267,60 @@ case class AppleRISCV() extends Component {
             // Exception
             val exc_ill_instr      = RegNextWhen(id2ex.exc_ill_instr                    & ex_stage_valid, ~ex_pipe_stall) init False
             val exc_instr_addr_ma  = RegNextWhen(branch_unit_inst.io.exc_instr_addr_ma  & ex_stage_valid, ~ex_pipe_stall) init False
+            val exc_ld_addr_ma     = RegNextWhen(dmem_ctrl_isnt.io.exc_ld_addr_ma       & ex_stage_valid, ~ex_pipe_stall) init False
+            val exc_sd_addr_ma     = RegNextWhen(dmem_ctrl_isnt.io.exc_sd_addr_ma       & ex_stage_valid, ~ex_pipe_stall) init False
         }
 
         // =========================
         // Mem stage
         // =========================
 
-        // Memory Controller
-        dmem_ctrl_isnt.dmem_sib                     <> io.dmem_sib
-        dmem_ctrl_isnt.io.cpu2mc_wr                 := ex2mem.dmem_wr & mem_stage_valid
-        dmem_ctrl_isnt.io.cpu2mc_rd                 := ex2mem.dmem_rd & mem_stage_valid
-        dmem_ctrl_isnt.io.cpu2mc_addr               := ex2mem.alu_out.asUInt
-        dmem_ctrl_isnt.io.cpu2mc_data               := ex2mem.rs2_value
-        dmem_ctrl_isnt.io.cpu2mc_mem_LS_byte        := ex2mem.dmem_ld_byte
-        dmem_ctrl_isnt.io.cpu2mc_mem_LS_halfword    := ex2mem.dmem_ld_hword
-        dmem_ctrl_isnt.io.cpu2mc_mem_LW_unsigned    := ex2mem.dmem_ld_unsign
+        // csr
+        mcsr_inst.io.mcsr_addr := ex2mem.csr_idx
+        // Note: uimm is the same field as rs1 in instruction so use rs1 here instead
+        val mcsr_data          = Mux(ex2mem.csr_sel_imm, ex2mem.rs1_idx.asBits.resized, ex2mem.rs1_value)
+        val mcsr_masked_set    = mcsr_inst.io.mcsr_dout | mcsr_data
+        val mcsr_masked_clear  = mcsr_inst.io.mcsr_dout & ~mcsr_data
+        switch(ex2mem.csr_sel) {
+            is(CsrSelEnum.DATA) {mcsr_inst.io.mcsr_din  := mcsr_data}
+            is(CsrSelEnum.SET) {mcsr_inst.io.mcsr_din  := mcsr_masked_set}
+            is(CsrSelEnum.CLEAR) {mcsr_inst.io.mcsr_din  := mcsr_masked_clear}
+        }
+        mcsr_inst.io.mcsr_wen  := ex2mem.csr_wr & mem_stage_valid
+        // mem2wb_csr_rd is not used so far
+        mcsr_inst.io.mtrap_enter  := trap_ctrl_inst.io.mtrap_enter
+        mcsr_inst.io.mtrap_exit   := trap_ctrl_inst.io.mtrap_exit
+        mcsr_inst.io.mtrap_mepc   := trap_ctrl_inst.io.mtrap_mepc
+        mcsr_inst.io.mtrap_mcause := trap_ctrl_inst.io.mtrap_mcause
+        mcsr_inst.io.mtrap_mtval  := trap_ctrl_inst.io.mtrap_mtval
+        mcsr_inst.io.external_interrupt  := io.external_interrupt
+        mcsr_inst.io.timer_interrupt     := io.timer_interrupt
+        mcsr_inst.io.software_interrupt  := io.software_interrupt
+        mcsr_inst.io.hartId              := B"0".resized
+
+        // trap controller wire connection
+        trap_ctrl_inst.io.external_interrupt := io.external_interrupt
+        trap_ctrl_inst.io.timer_interrupt    := io.timer_interrupt
+        trap_ctrl_inst.io.software_interrupt := io.software_interrupt
+        trap_ctrl_inst.io.debug_interrupt    := io.debug_interrupt
+        trap_ctrl_inst.io.exc_ill_instr      := ex2mem.exc_ill_instr
+        trap_ctrl_inst.io.exc_instr_addr_ma  := ex2mem.exc_instr_addr_ma
+        trap_ctrl_inst.io.exc_ld_addr_ma     := ex2mem.exc_ld_addr_ma
+        trap_ctrl_inst.io.exc_sd_addr_ma     := ex2mem.exc_sd_addr_ma
+        trap_ctrl_inst.io.mret               := ex2mem.mret
+        trap_ctrl_inst.io.ecall              := ex2mem.ecall
+        trap_ctrl_inst.io.cur_pc             := ex2mem.pc
+        trap_ctrl_inst.io.stage_valid        := ex2mem.stage_valid // no one should flush mem stage right now
+        trap_ctrl_inst.io.cur_instr          := ex2mem.instr
+        trap_ctrl_inst.io.cur_dmem_addr      := ex2mem.alu_out.asUInt
+        trap_ctrl_inst.io.mtvec              := mcsr_inst.io.mtvec
+        trap_ctrl_inst.io.mepc               := mcsr_inst.io.mepc
+        trap_ctrl_inst.io.mie_meie           := mcsr_inst.io.mie_meie
+        trap_ctrl_inst.io.mie_mtie           := mcsr_inst.io.mie_mtie
+        trap_ctrl_inst.io.mie_msie           := mcsr_inst.io.mie_msie
+        trap_ctrl_inst.io.mstatus_mie        := mcsr_inst.io.mstatus_mie
+        pc_inst.io.trap                      := trap_ctrl_inst.io.pc_trap
+        pc_inst.io.trap_pc_in                := trap_ctrl_inst.io.pc_value
 
         // Mem/WB stage pipeline
         val mem2wb = new Area {
@@ -279,72 +339,26 @@ case class AppleRISCV() extends Component {
             val wb_sel   = RegNextWhen(ex2mem.wb_sel,    ~mem_pipe_stall)
             val csr_sel  = RegNextWhen(ex2mem.csr_sel,    ~mem_pipe_stall)
             val csr_sel_imm = RegNextWhen(ex2mem.csr_sel_imm, ~mem_pipe_stall)
-
-            // data signal
             val rs1_idx     = RegNextWhen(ex2mem.rs1_idx,   ~mem_pipe_stall)
             val rs1_value   = RegNextWhen(ex2mem.rs1_value, ~mem_pipe_stall)
             val alu_out     = RegNextWhen(ex2mem.alu_out,   ~mem_pipe_stall)
+            val dmem_out    = RegNextWhen(dmem_ctrl_isnt.io.mc2cpu_data,   ~mem_pipe_stall)
+            val csr_out     = RegNextWhen(mcsr_inst.io.mcsr_dout,   ~mem_pipe_stall)
             val rd_idx      = RegNextWhen(ex2mem.rd_idx,    ~mem_pipe_stall)
             val pc          = RegNextWhen(ex2mem.pc,        ~mem_pipe_stall)
             val instr       = RegNextWhen(ex2mem.instr,     ~mem_pipe_stall)
             val dmem_addr   = RegNextWhen(ex2mem.alu_out,   ~mem_pipe_stall) // memory address is from alu output
 
             // Exception
-            val exc_ill_instr       = RegNextWhen(ex2mem.exc_ill_instr              & mem_stage_valid, ~mem_pipe_stall) init False
-            val exc_instr_addr_ma   = RegNextWhen(ex2mem.exc_instr_addr_ma          & mem_stage_valid, ~mem_pipe_stall) init False
-            val exc_ld_addr_ma      = RegNextWhen(dmem_ctrl_isnt.io.exc_ld_addr_ma  & mem_stage_valid, ~mem_pipe_stall) init False
-            val exc_sd_addr_ma      = RegNextWhen(dmem_ctrl_isnt.io.exc_sd_addr_ma  & mem_stage_valid, ~mem_pipe_stall) init False
+            val exc_ill_instr       = RegNextWhen(ex2mem.exc_ill_instr      & mem_stage_valid, ~mem_pipe_stall) init False
+            val exc_instr_addr_ma   = RegNextWhen(ex2mem.exc_instr_addr_ma  & mem_stage_valid, ~mem_pipe_stall) init False
+            val exc_ld_addr_ma      = RegNextWhen(ex2mem.exc_ld_addr_ma     & mem_stage_valid, ~mem_pipe_stall) init False
+            val exc_sd_addr_ma      = RegNextWhen(ex2mem.exc_sd_addr_ma     & mem_stage_valid, ~mem_pipe_stall) init False
         }
 
         // =========================
         // WB stage
         // =========================
-
-        // trap controller wire connection
-        trap_ctrl_inst.io.external_interrupt := io.external_interrupt
-        trap_ctrl_inst.io.timer_interrupt    := io.timer_interrupt
-        trap_ctrl_inst.io.software_interrupt := io.software_interrupt
-        trap_ctrl_inst.io.debug_interrupt    := io.debug_interrupt
-        trap_ctrl_inst.io.exc_ill_instr      := mem2wb.exc_ill_instr
-        trap_ctrl_inst.io.exc_instr_addr_ma  := mem2wb.exc_instr_addr_ma
-        trap_ctrl_inst.io.exc_ld_addr_ma     := mem2wb.exc_ld_addr_ma
-        trap_ctrl_inst.io.exc_sd_addr_ma     := mem2wb.exc_sd_addr_ma
-        trap_ctrl_inst.io.mret               := mem2wb.mret
-        trap_ctrl_inst.io.ecall              := mem2wb.ecall
-        trap_ctrl_inst.io.wb_pc              := mem2wb.pc
-        trap_ctrl_inst.io.wb_instr           := mem2wb.instr
-        trap_ctrl_inst.io.wb_dmem_addr       := mem2wb.dmem_addr.asUInt
-        trap_ctrl_inst.io.mtvec              := mcsr_inst.io.mtvec
-        trap_ctrl_inst.io.mepc               := mcsr_inst.io.mepc
-        trap_ctrl_inst.io.mie_meie           := mcsr_inst.io.mie_meie
-        trap_ctrl_inst.io.mie_mtie           := mcsr_inst.io.mie_mtie
-        trap_ctrl_inst.io.mie_msie           := mcsr_inst.io.mie_msie
-        trap_ctrl_inst.io.mstatus_mie        := mcsr_inst.io.mstatus_mie
-        pc_inst.io.trap                      := trap_ctrl_inst.io.pc_trap
-        pc_inst.io.trap_pc_in                := trap_ctrl_inst.io.pc_value
-
-        // mcsr
-        mcsr_inst.io.mcsr_addr := mem2wb.csr_idx
-        // Note: uimm is the same field as rs1 in instruction so use rs1 here instead
-        val mcsr_data          = Mux(mem2wb.csr_sel_imm, mem2wb.rs1_idx.asBits.resized, mem2wb.rs1_value)
-        val mcsr_masked_set    = mcsr_inst.io.mcsr_dout | mcsr_data
-        val mcsr_masked_clear  = mcsr_inst.io.mcsr_dout & ~mcsr_data
-        switch(mem2wb.csr_sel) {
-            is(CsrSelEnum.DATA) {mcsr_inst.io.mcsr_din  := mcsr_data}
-            is(CsrSelEnum.SET) {mcsr_inst.io.mcsr_din  := mcsr_masked_set}
-            is(CsrSelEnum.CLEAR) {mcsr_inst.io.mcsr_din  := mcsr_masked_clear}
-        }
-        mcsr_inst.io.mcsr_wen  := mem2wb.csr_wr & wb_stage_valid
-        // mem2wb_csr_rd is not used so far
-        mcsr_inst.io.mtrap_enter  := trap_ctrl_inst.io.mtrap_enter
-        mcsr_inst.io.mtrap_exit   := trap_ctrl_inst.io.mtrap_exit
-        mcsr_inst.io.mtrap_mepc   := trap_ctrl_inst.io.mtrap_mepc
-        mcsr_inst.io.mtrap_mcause := trap_ctrl_inst.io.mtrap_mcause
-        mcsr_inst.io.mtrap_mtval  := trap_ctrl_inst.io.mtrap_mtval
-        mcsr_inst.io.external_interrupt  := io.external_interrupt
-        mcsr_inst.io.timer_interrupt     := io.timer_interrupt
-        mcsr_inst.io.software_interrupt  := io.software_interrupt
-        mcsr_inst.io.hartId              := B"0".resized
 
         // == Write back to register == //
         regfile_inst.io.register_wr := mem2wb.rd_wr & wb_stage_valid
@@ -353,8 +367,8 @@ case class AppleRISCV() extends Component {
         val wb_rd_wdata = mem2wb.alu_out.clone()
         switch(mem2wb.wb_sel){
             is(WbSelEnum.ALU) {wb_rd_wdata := mem2wb.alu_out}
-            is(WbSelEnum.MEM) {wb_rd_wdata := dmem_ctrl_isnt.io.mc2cpu_data}
-            is(WbSelEnum.CSR) {wb_rd_wdata := mcsr_inst.io.mcsr_dout}
+            is(WbSelEnum.MEM) {wb_rd_wdata := mem2wb.dmem_out}
+            is(WbSelEnum.CSR) {wb_rd_wdata := mem2wb.csr_out}
         }
         regfile_inst.io.rd_wdata := wb_rd_wdata
 
@@ -382,8 +396,8 @@ case class AppleRISCV() extends Component {
             // Load dependency on ID
             val id_stall_on_load_dep = (id_rs1_dep_ex_rd | id_rs2_dep_ex_rd) & id2ex.dmem_rd
             // csr dependency
-            val id_rs1_depends_on_csr = (Bypassing.id_rs1_match_ex_rd & id2ex.csr_rd) | (Bypassing.id_rs1_match_mem_rd & id2ex.csr_rd)
-            val id_rs2_depends_on_csr = (Bypassing.id_rs2_match_ex_rd & id2ex.csr_rd) | (Bypassing.id_rs2_match_mem_rd & id2ex.csr_rd)
+            val id_rs1_depends_on_csr = (Bypassing.id_rs1_match_ex_rd & id2ex.csr_rd) | (Bypassing.id_rs1_match_mem_rd & ex2mem.csr_rd)
+            val id_rs2_depends_on_csr = (Bypassing.id_rs2_match_ex_rd & id2ex.csr_rd) | (Bypassing.id_rs2_match_mem_rd & ex2mem.csr_rd)
             val id_stall_on_csr_dep = id_rs2_depends_on_csr | id_rs1_depends_on_csr
 
             // Flushing/Bubble Insertion
@@ -392,13 +406,13 @@ case class AppleRISCV() extends Component {
                                 ~trap_ctrl_inst.io.trap_flush
             ex_stage_valid  := id2ex.stage_valid  & ~trap_ctrl_inst.io.trap_flush
             mem_stage_valid := ex2mem.stage_valid & ~trap_ctrl_inst.io.trap_flush
-            wb_stage_valid  := mem2wb.stage_valid & ~trap_ctrl_inst.io.trap_flush & ~dmem_ctrl_isnt.io.dmem_stall_req
+            wb_stage_valid  := mem2wb.stage_valid & ~dmem_ctrl_isnt.io.dmem_stall_req
 
             // Stall
-            if_pipe_stall  := id_stall_on_load_dep | id_stall_on_csr_dep | dmem_ctrl_isnt.io.dmem_stall_req
-            id_pipe_stall  := dmem_ctrl_isnt.io.dmem_stall_req
-            ex_pipe_stall  := dmem_ctrl_isnt.io.dmem_stall_req
-            mem_pipe_stall := dmem_ctrl_isnt.io.dmem_stall_req
+            if_pipe_stall  := if_stage_valid & (id_stall_on_load_dep | id_stall_on_csr_dep | dmem_ctrl_isnt.io.dmem_stall_req)
+            id_pipe_stall  := id_stage_valid & dmem_ctrl_isnt.io.dmem_stall_req
+            ex_pipe_stall  := ex_stage_valid & dmem_ctrl_isnt.io.dmem_stall_req
+            mem_pipe_stall := mem_stage_valid & dmem_ctrl_isnt.io.dmem_stall_req
         }
     }
 }

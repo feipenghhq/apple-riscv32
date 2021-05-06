@@ -70,8 +70,6 @@ case class ALU() extends Component {
         is(AluOpcodeEnum.SLL) {io.alu_out := sll_result.asBits}
         is(AluOpcodeEnum.SLT) {io.alu_out := slt_result.asBits}
         is(AluOpcodeEnum.SLTU) {io.alu_out := sltu_result.asBits}
-        is(AluOpcodeEnum.LUI)  {io.alu_out := lui_result.asBits}
-        is(AluOpcodeEnum.AUIPC) {io.alu_out := auipc_result.asBits}
         is(AluOpcodeEnum.PC4) {io.alu_out := pcplus4_result.asBits}
         default {io.alu_out := and_result.asBits}
     }

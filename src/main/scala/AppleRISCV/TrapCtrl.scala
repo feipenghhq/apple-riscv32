@@ -44,9 +44,10 @@ case class trap_ctrl_io() extends Bundle {
   val ecall               = in Bool
 
   // info
-  val wb_pc         = in UInt(AppleRISCVCfg.XLEN bits)
-  val wb_instr      = in Bits(AppleRISCVCfg.XLEN bits)
-  val wb_dmem_addr  = in UInt(AppleRISCVCfg.XLEN bits)
+  val stage_valid    = in Bool
+  val cur_pc         = in UInt(AppleRISCVCfg.XLEN bits)
+  val cur_instr      = in Bits(AppleRISCVCfg.XLEN bits)
+  val cur_dmem_addr  = in UInt(AppleRISCVCfg.XLEN bits)
 
   // mcsr input
   val mie_meie    = in Bool
@@ -80,16 +81,17 @@ case class TrapCtrl() extends Component {
   // == exception control == //
   val dmem_addr_exception = io.exc_ld_addr_ma | io.exc_sd_addr_ma
   val exception           = dmem_addr_exception | io.exc_ill_instr | io.exc_instr_addr_ma
-  val dmem_addr_extended  = io.wb_dmem_addr.resize(AppleRISCVCfg.MXLEN)
+  val dmem_addr_extended  = io.cur_dmem_addr.resize(AppleRISCVCfg.MXLEN)
 
   // == interrupt control == //
   val external_interrupt_masked = io.external_interrupt & io.mstatus_mie & io.mie_meie
   val timer_interrupt_masked    = io.timer_interrupt & io.mstatus_mie & io.mie_mtie
   val software_interrupt_masked = io.software_interrupt & io.mstatus_mie & io.mie_msie
   val debug_interrupt_masked    = io.debug_interrupt & io.mstatus_mie
-  val interrupt = external_interrupt_masked | timer_interrupt_masked |
-                  software_interrupt_masked | debug_interrupt_masked
-  val pc_plus_4 = io.wb_pc + 4
+  val interrupt = io.stage_valid & (
+                  external_interrupt_masked | timer_interrupt_masked |
+                  software_interrupt_masked | debug_interrupt_masked)
+  val pc_plus_4 = io.cur_pc + 4
 
   // == mcause exception code == //
   // interrupt
@@ -113,9 +115,9 @@ case class TrapCtrl() extends Component {
   // mcsr
   io.mtrap_enter  := exception | interrupt | io.ecall
   io.mtrap_exit   := io.mret
-  io.mtrap_mepc   := io.wb_pc.asBits
+  io.mtrap_mepc   := io.cur_pc.asBits
   io.mtrap_mcause := interrupt ## trap_code
-  io.mtrap_mtval  := Mux(io.exc_ill_instr, io.wb_instr, dmem_addr_extended.asBits)
+  io.mtrap_mtval  := Mux(io.exc_ill_instr, io.cur_instr, dmem_addr_extended.asBits)
 
   // update pc
   io.pc_trap      := io.mtrap_enter | io.mtrap_exit

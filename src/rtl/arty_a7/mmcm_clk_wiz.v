@@ -56,7 +56,7 @@
 //  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
 //   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 //----------------------------------------------------------------------------
-// clk_out1__50.00000______0.000______50.0______151.636_____98.575
+// clk_out1__100.00000______0.000______50.0______130.958_____98.575
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
@@ -103,7 +103,6 @@ wire clk_in2_mmcm;
   wire        psdone_unused;
   wire        locked_int;
   wire        clkfbout_mmcm;
-  wire        clkfbout_buf_mmcm;
   wire        clkfboutb_unused;
     wire clkout0b_unused;
    wire clkout1_unused;
@@ -127,7 +126,7 @@ wire clk_in2_mmcm;
     .CLKFBOUT_MULT_F      (10.000),
     .CLKFBOUT_PHASE       (0.000),
     .CLKFBOUT_USE_FINE_PS ("FALSE"),
-    .CLKOUT0_DIVIDE_F     (20.000),
+    .CLKOUT0_DIVIDE_F     (10.000),
     .CLKOUT0_PHASE        (0.000),
     .CLKOUT0_DUTY_CYCLE   (0.500),
     .CLKOUT0_USE_FINE_PS  ("FALSE"),
@@ -149,7 +148,7 @@ wire clk_in2_mmcm;
     .CLKOUT5             (clkout5_unused),
     .CLKOUT6             (clkout6_unused),
      // Input clock control
-    .CLKFBIN             (clkfbout_buf_mmcm),
+    .CLKFBIN             (clkfbout_mmcm),
     .CLKIN1              (clk_in1_mmcm),
     .CLKIN2              (1'b0),
      // Tied to always select the primary input clock
@@ -178,10 +177,6 @@ wire clk_in2_mmcm;
 //--------------------------------------
  // Output buffering
   //-----------------------------------
-
-  BUFG clkf_buf
-   (.O (clkfbout_buf_mmcm),
-    .I (clkfbout_mmcm));
 
 
 

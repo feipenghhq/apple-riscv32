@@ -48,7 +48,7 @@ case class AppleRISCVSoC(cfg: SoCCfg) extends Component {
 
     val socClockDomain = ClockDomain.internal(
         name = "AppleRISCVSoC",
-        frequency = FixedFrequency(50 MHz),
+        frequency = FixedFrequency(100 MHz),
         config = ClockDomainConfig(
             clockEdge        = RISING,
             resetKind        = SYNC,

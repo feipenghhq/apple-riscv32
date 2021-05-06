@@ -44,7 +44,7 @@ case class ArtyA7_AppleRISCVSoC(cfg: SoCCfg) extends Component {
     //Create a new clock domain named 'core'
     val coreClockDomain = ClockDomain.internal(
       name = "core",
-      frequency = FixedFrequency(50 MHz),
+      frequency = FixedFrequency(100 MHz),
       config = ClockDomainConfig(
         clockEdge        = RISING,
         resetKind        = SYNC,

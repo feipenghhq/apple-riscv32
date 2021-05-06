@@ -56,16 +56,21 @@ case class InstrDecIO() extends Bundle{
     val csr_sel_imm = out Bool
     val csr_idx = out Bits(AppleRISCVCfg.CSR_ADDR_WIDTH bits)
 
+    // System Instruction
+    val mret         = out Bool
+    val ecall        = out Bool
+    val ebreak       = out Bool
+
     // data selection
     val wb_sel = out(WbSelEnum())
     val csr_sel  = out(CsrSelEnum())
 
     // Other control signal
     val op2_sel_imm  = out Bool
+    val op1_sel_zero = out Bool
+    val op1_sel_pc   = out Bool
 
-    val mret         = out Bool
-    val ecall        = out Bool
-    val ebreak       = out Bool
+    // Exception
     val exc_ill_instr  = out Bool
 }
 
@@ -130,18 +135,22 @@ case class InstrDec() extends Component {
     io.csr_rd         := False
     io.csr_wr         := False
     io.csr_sel_imm    := False
-    
+    io.op1_sel_zero   := False
+    io.op1_sel_pc     := False
+
     // The big switch for the opcode decode
     switch(opcode) {
         is(InstrDefine.OP_LUI) {
-            io.alu_opcode  := AluOpcodeEnum.LUI
+            io.alu_opcode  := AluOpcodeEnum.ADD
             io.op2_sel_imm := True
+            io.op1_sel_zero := True
             io.rd_wr       := rd_isnot_x0
             alu_imm_type   := alu_imm_type_e.UTYPE
         }
         is(InstrDefine.OP_AUIPC) {
-            io.alu_opcode  := AluOpcodeEnum.AUIPC
+            io.alu_opcode  := AluOpcodeEnum.ADD
             io.op2_sel_imm := True
+            io.op1_sel_pc  := True
             io.rd_wr       := rd_isnot_x0
             alu_imm_type   := alu_imm_type_e.UTYPE
         }

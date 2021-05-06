@@ -17,6 +17,7 @@
 #define _UART_H_
 
 #include <io.h>
+#include <soc.h>
 
 #define UART_CONTROL                        0x0
 #define UART_CFG_FRAME                      0x4

@@ -2,6 +2,8 @@
 # Tcl script for vivado
 ############################################################
 
+set_param general.maxThreads 16
+
 # ========================================
 # Step 1: Create project Design Setup
 # ========================================

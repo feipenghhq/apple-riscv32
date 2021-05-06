@@ -37,7 +37,7 @@ Disassembly of section .text.init:
   74:	00000f13          	li	t5,0
   78:	00000f93          	li	t6,0
   7c:	00000297          	auipc	t0,0x0
-  80:	11c28293          	addi	t0,t0,284 # 198 <mtvec_handler>
+  80:	1b428293          	addi	t0,t0,436 # 230 <mtvec_handler>
   84:	00229293          	slli	t0,t0,0x2
   88:	30529073          	csrw	mtvec,t0
   8c:	01000417          	auipc	s0,0x1000
@@ -50,15 +50,15 @@ Disassembly of section .text.init:
   a8:	00141303          	lh	t1,1(s0)
   ac:	ffffc3b7          	lui	t2,0xffffc
   b0:	bcc38393          	addi	t2,t2,-1076 # ffffbbcc <_end+0xfeffbabc>
-  b4:	0c731063          	bne	t1,t2,174 <fail>
+  b4:	14731e63          	bne	t1,t2,210 <fail>
   b8:	00300193          	li	gp,3
   bc:	00000397          	auipc	t2,0x0
   c0:	01c38393          	addi	t2,t2,28 # d8 <_start+0xd8>
   c4:	00140313          	addi	t1,s0,1
   c8:	00145303          	lhu	t1,1(s0)
   cc:	0000c3b7          	lui	t2,0xc
-  d0:	bcc38393          	addi	t2,t2,-1076 # bbcc <mtvec_handler+0xba34>
-  d4:	0a731063          	bne	t1,t2,174 <fail>
+  d0:	bcc38393          	addi	t2,t2,-1076 # bbcc <mtvec_handler+0xb99c>
+  d4:	12731e63          	bne	t1,t2,210 <fail>
   d8:	00400193          	li	gp,4
   dc:	00000397          	auipc	t2,0x0
   e0:	01c38393          	addi	t2,t2,28 # f8 <_start+0xf8>
@@ -66,7 +66,7 @@ Disassembly of section .text.init:
   e8:	00142303          	lw	t1,1(s0)
   ec:	99aac3b7          	lui	t2,0x99aac
   f0:	bcc38393          	addi	t2,t2,-1076 # 99aabbcc <_end+0x98aababc>
-  f4:	08731063          	bne	t1,t2,174 <fail>
+  f4:	10731e63          	bne	t1,t2,210 <fail>
   f8:	00500193          	li	gp,5
   fc:	00000397          	auipc	t2,0x0
  100:	01c38393          	addi	t2,t2,28 # 118 <_start+0x118>
@@ -74,7 +74,7 @@ Disassembly of section .text.init:
  108:	00242303          	lw	t1,2(s0)
  10c:	8899b3b7          	lui	t2,0x8899b
  110:	abb38393          	addi	t2,t2,-1349 # 8899aabb <_end+0x8799a9ab>
- 114:	06731063          	bne	t1,t2,174 <fail>
+ 114:	0e731e63          	bne	t1,t2,210 <fail>
  118:	00600193          	li	gp,6
  11c:	00000397          	auipc	t2,0x0
  120:	01c38393          	addi	t2,t2,28 # 138 <_start+0x138>
@@ -82,7 +82,7 @@ Disassembly of section .text.init:
  128:	00342303          	lw	t1,3(s0)
  12c:	7788a3b7          	lui	t2,0x7788a
  130:	9aa38393          	addi	t2,t2,-1622 # 778899aa <_end+0x7688989a>
- 134:	04731063          	bne	t1,t2,174 <fail>
+ 134:	0c731e63          	bne	t1,t2,210 <fail>
  138:	00600493          	li	s1,6
  13c:	01600193          	li	gp,22
  140:	00000397          	auipc	t2,0x0
@@ -90,42 +90,80 @@ Disassembly of section .text.init:
  148:	00140313          	addi	t1,s0,1
  14c:	000410a3          	sh	zero,1(s0)
  150:	00040303          	lb	t1,0(s0)
- 154:	02030063          	beqz	t1,174 <fail>
+ 154:	0a030e63          	beqz	t1,210 <fail>
  158:	00340303          	lb	t1,3(s0)
- 15c:	00030c63          	beqz	t1,174 <fail>
+ 15c:	0a030a63          	beqz	t1,210 <fail>
  160:	00140303          	lb	t1,1(s0)
- 164:	00031863          	bnez	t1,174 <fail>
+ 164:	0a031663          	bnez	t1,210 <fail>
  168:	00240303          	lb	t1,2(s0)
- 16c:	00031463          	bnez	t1,174 <fail>
- 170:	00301a63          	bne	zero,gp,184 <pass>
+ 16c:	0a031263          	bnez	t1,210 <fail>
+ 170:	01700193          	li	gp,23
+ 174:	00000397          	auipc	t2,0x0
+ 178:	03038393          	addi	t2,t2,48 # 1a4 <_start+0x1a4>
+ 17c:	00540313          	addi	t1,s0,5
+ 180:	000422a3          	sw	zero,5(s0)
+ 184:	00440303          	lb	t1,4(s0)
+ 188:	08030463          	beqz	t1,210 <fail>
+ 18c:	00940303          	lb	t1,9(s0)
+ 190:	08030063          	beqz	t1,210 <fail>
+ 194:	00540303          	lb	t1,5(s0)
+ 198:	06031c63          	bnez	t1,210 <fail>
+ 19c:	00840303          	lb	t1,8(s0)
+ 1a0:	06031863          	bnez	t1,210 <fail>
+ 1a4:	01800193          	li	gp,24
+ 1a8:	00000397          	auipc	t2,0x0
+ 1ac:	03038393          	addi	t2,t2,48 # 1d8 <_start+0x1d8>
+ 1b0:	00a40313          	addi	t1,s0,10
+ 1b4:	00042523          	sw	zero,10(s0)
+ 1b8:	00940303          	lb	t1,9(s0)
+ 1bc:	04030a63          	beqz	t1,210 <fail>
+ 1c0:	00e40303          	lb	t1,14(s0)
+ 1c4:	04030663          	beqz	t1,210 <fail>
+ 1c8:	00a40303          	lb	t1,10(s0)
+ 1cc:	04031263          	bnez	t1,210 <fail>
+ 1d0:	00d40303          	lb	t1,13(s0)
+ 1d4:	02031e63          	bnez	t1,210 <fail>
+ 1d8:	01900193          	li	gp,25
+ 1dc:	00000397          	auipc	t2,0x0
+ 1e0:	03038393          	addi	t2,t2,48 # 20c <_start+0x20c>
+ 1e4:	00f40313          	addi	t1,s0,15
+ 1e8:	000427a3          	sw	zero,15(s0)
+ 1ec:	00e40303          	lb	t1,14(s0)
+ 1f0:	02030063          	beqz	t1,210 <fail>
+ 1f4:	01340303          	lb	t1,19(s0)
+ 1f8:	00030c63          	beqz	t1,210 <fail>
+ 1fc:	00f40303          	lb	t1,15(s0)
+ 200:	00031863          	bnez	t1,210 <fail>
+ 204:	01240303          	lb	t1,18(s0)
+ 208:	00031463          	bnez	t1,210 <fail>
+ 20c:	00301a63          	bne	zero,gp,220 <pass>
 
-00000174 <fail>:
- 174:	00f00093          	li	ra,15
- 178:	00f00113          	li	sp,15
- 17c:	00f00193          	li	gp,15
+00000210 <fail>:
+ 210:	00f00093          	li	ra,15
+ 214:	00f00113          	li	sp,15
+ 218:	00f00193          	li	gp,15
 
-00000180 <fail_loop>:
- 180:	0000006f          	j	180 <fail_loop>
+0000021c <fail_loop>:
+ 21c:	0000006f          	j	21c <fail_loop>
 
-00000184 <pass>:
- 184:	00100093          	li	ra,1
- 188:	00200113          	li	sp,2
- 18c:	00300193          	li	gp,3
+00000220 <pass>:
+ 220:	00100093          	li	ra,1
+ 224:	00200113          	li	sp,2
+ 228:	00300193          	li	gp,3
 
-00000190 <pass_loop>:
- 190:	0000006f          	j	190 <pass_loop>
- 194:	00000013          	nop
+0000022c <pass_loop>:
+ 22c:	0000006f          	j	22c <pass_loop>
 
-00000198 <mtvec_handler>:
- 198:	342022f3          	csrr	t0,mcause
- 19c:	fc929ce3          	bne	t0,s1,174 <fail>
- 1a0:	343022f3          	csrr	t0,mtval
- 1a4:	fc6298e3          	bne	t0,t1,174 <fail>
- 1a8:	00028283          	lb	t0,0(t0)
- 1ac:	fc0284e3          	beqz	t0,174 <fail>
- 1b0:	34139073          	csrw	mepc,t2
- 1b4:	30200073          	mret
- 1b8:	c0001073          	unimp
+00000230 <mtvec_handler>:
+ 230:	342022f3          	csrr	t0,mcause
+ 234:	fc929ee3          	bne	t0,s1,210 <fail>
+ 238:	343022f3          	csrr	t0,mtval
+ 23c:	fc629ae3          	bne	t0,t1,210 <fail>
+ 240:	00028283          	lb	t0,0(t0)
+ 244:	fc0286e3          	beqz	t0,210 <fail>
+ 248:	34139073          	csrw	mepc,t2
+ 24c:	30200073          	mret
+ 250:	c0001073          	unimp
 	...
 
 Disassembly of section .data:

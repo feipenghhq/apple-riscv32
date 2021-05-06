@@ -35,7 +35,7 @@ void uart_setup_appleriscv(uint32_t base) {
     uart_set_frame(base, frame_cfg);
 
     const int baudrate = 115200;
-    const int clkdiv   = 50 * 1000000 / (data_length + 1) / baudrate;
+    const int clkdiv   = CLK_FEQ_MHZ * 1000000 / (data_length + 1) / baudrate;
     uart_set_clkdiv(base, clkdiv);
 }
 

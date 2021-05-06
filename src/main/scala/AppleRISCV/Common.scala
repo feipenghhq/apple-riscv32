@@ -104,12 +104,12 @@ object InstrDefine {
     val F12_EBREAK = Integer.parseInt("000000000001", 2) // EBREAK
 }
 
-object AluOpcodeEnum extends SpinalEnum(){
-    val NOP, ADD, SUB, AND, OR, XOR, SRA, SRL, SLL, SLT, SLTU, LUI, AUIPC, PC4 = newElement()
+object AluOpcodeEnum extends SpinalEnum(binaryOneHot){
+    val NOP, ADD, SUB, AND, OR, XOR, SRA, SRL, SLL, SLT, SLTU, PC4 = newElement()
 }
 
 object BranchOpcodeEnum extends SpinalEnum(){
-    val NONE, BEQ, BNE, BLT, BGE, BLTU, BGEU = newElement()
+    val NOP, BEQ, BNE, BLT, BGE, BLTU, BGEU = newElement()
 }
 
 object CsrOpcodeEnum extends SpinalEnum(){
