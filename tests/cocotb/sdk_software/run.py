@@ -87,7 +87,7 @@ async def run_test(dut):
     name = os.getenv('PROGRAM')
     top = os.getenv('PROGRAM_TOP')
     process_rom_file()
-    clock = Clock(dut.clk, 10, units="ns")  # Create a 10us period clock on port clk
+    clock = Clock(dut.clk, 2, units="ns")  # Create a 10us period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
     await reset(dut)
     await Timer(runtime, units="ns")
@@ -103,10 +103,10 @@ async def demo_gpio0(dut):
     await Timer(runtime, units="ns")
 
 @cocotb.test()
-async def demo_uart0(dut):
+async def generic(dut):
     runtime = int(os.getenv('RUN_TIME'))
     process_rom_file()
-    clock = Clock(dut.clk, 10, units="ns")  # Create a 10us period clock on port clk
+    clock = Clock(dut.clk, 2, units="ns")  # Create a 10us period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
     dut.DUT_AppleRISCVSoC.uart_port_rxd = 1
     await reset(dut)

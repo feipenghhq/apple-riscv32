@@ -20,7 +20,7 @@
  */
 int32_t IORD(uint32_t base, uint32_t offset) {
     uint32_t* ptr;
-    ptr = (base + offset);
+    ptr = (uint32_t *) (base + offset);
     return *ptr;
 }
 

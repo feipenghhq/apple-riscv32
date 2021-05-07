@@ -17,6 +17,8 @@ NEWLIB_DIR  = $(BSP_BASE)/newlib
 #############################################################
 # Additional Start up code and newlib stub file
 #############################################################
+
+ASM_SRCS += $(ENV_DIR)/trap_entry.S
 ASM_SRCS += $(ENV_DIR)/start.S
 
 C_SRCS += $(NEWLIB_DIR)/_exit.c
@@ -30,6 +32,7 @@ C_SRCS += $(NEWLIB_DIR)/time.c
 C_SRCS += $(NEWLIB_DIR)/sbrk.c
 
 C_SRCS += $(ENV_DIR)/init.c
+C_SRCS += $(ENV_DIR)/trap.c
 
 LINKER_SCRIPT := $(ENV_DIR)/link_bram.lds
 

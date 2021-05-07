@@ -18,7 +18,7 @@ Original Author: Shay Gal-on
 #include "coremark.h"
 #include "core_portme.h"
 
-#include "task.h"
+#include "utils.h"
 #include "soc.h"
 
 #if VALIDATION_RUN

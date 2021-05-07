@@ -10,7 +10,7 @@ RISCV_ARCH := rv32i
 RISCV_ABI  := ilp32
 
 # Default target
-PROGRAM ?= coremark
+PROGRAM ?= demo_uart0 
 
 #############################################################
 # Prints help message

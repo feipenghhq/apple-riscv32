@@ -6,6 +6,8 @@
 //
 
 #include <errno.h>
+#include <unistd.h>
+
 #include <uart.h>
 #include <soc.h>
 

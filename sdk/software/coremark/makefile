@@ -8,9 +8,16 @@ TARGET = coremark
 # Config
 #############################################################
 
-CFLAGS := -O2 -fno-common -funroll-loops -finline-functions --param max-inline-insns-auto=20 -falign-functions=4 -falign-jumps=4 -falign-loops=4
+# This flag cause error with M instruction
+ifeq ($(RISCV_ARCH), rv32im)
+# loop unroll will cause address misaligned error when we add m instruction set support :(
+	CFLAGS := -O2 -fno-common -finline-functions --param max-inline-insns-auto=20 -falign-functions=4 -falign-jumps=4 -falign-loops=4
+else
+	CFLAGS := -O2 -fno-common -funroll-loops -finline-functions --param max-inline-insns-auto=20 -falign-functions=4 -falign-jumps=4 -falign-loops=4
+endif
 CFLAGS += -DFLAGS_STR=\""$(CFLAGS)"\"
-CFLAGS += -DITERATIONS=2000
+CFLAGS += -DITERATIONS=2500
+
 
 BSP_BASE = ../../bsp
 
