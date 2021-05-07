@@ -86,6 +86,10 @@ rv32um_isa = [
     ['mulh', 10000],
     ['mulhsu', 10000],
     ['mulhu', 10000],
+    ['div', 10000],
+    ['divu', 10000],
+    ['rem', 10000],
+    ['remu', 10000],
 ]
 
 # architecture

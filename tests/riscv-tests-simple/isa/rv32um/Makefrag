@@ -3,9 +3,8 @@
 #-----------------------------------------------------------------------
 
 rv32um_sc_tests = \
-	mul \
-	mulh \
-	mulhsu \
-	mulhu \
+	mul mulh mulhsu mulhu \
+	div divu \
+	rem remu \
 
 rv32um_tests = $(addprefix rv32um-, $(rv32um_sc_tests))

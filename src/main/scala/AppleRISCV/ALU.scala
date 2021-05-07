@@ -28,8 +28,8 @@ case class ALUIO() extends Bundle {
     // RV32 Multiplier Result
     val ex_stage_valid = in Bool
     val alu_stall_req  = out Bool
-    val alu_mulop = if (AppleRISCVCfg.RV32M) out Bool else null
-    val mul_out   = if (AppleRISCVCfg.RV32M) out Bits(AppleRISCVCfg.XLEN bits) else null
+    val product_valid  = if (AppleRISCVCfg.RV32M) out Bool else null
+    val product        = if (AppleRISCVCfg.RV32M) out Bits(AppleRISCVCfg.XLEN bits) else null
 
 }
 
@@ -62,23 +62,15 @@ case class ALU() extends Component {
     val sltu_result = (op1_unsigned < op2_unsigned).asBits.resize(AppleRISCVCfg.XLEN bits)
     val pcplus4_result = io.pc + 4
 
-
     if (!AppleRISCVCfg.RV32M) io.alu_stall_req := False
-    // Multiplier using FPGA DSP block => Inferring DSP block
-    val multiplierDSPArea = if (AppleRISCVCfg.RV32M) new Area {
-        val is_multl = io.alu_opcode === AluOpcodeEnum.MUL
-        val is_multh = io.alu_opcode === AluOpcodeEnum.MULH | io.alu_opcode === AluOpcodeEnum.MULHSU | io.alu_opcode === AluOpcodeEnum.MULHU
-        val is_mult = (is_multh | is_multl)
-        val busy = RegInit(False)
-        val new_op = is_mult & ~busy
-        // pipeline stages except the input stage
-        val stage = Vec(Reg(SInt((2 * AppleRISCVCfg.XLEN) bits)), AppleRISCVCfg.MULSTAGE - 1)
-        // pipeline valid stage, including the fist stage
-        val stage_valid = Vec(RegInit(False), AppleRISCVCfg.MULSTAGE)
 
-        // Stage 0 - flop the operand
-        val op1 = RegNext(io.operand_1)
-        val op2 = RegNext(io.operand_2)
+    val rv32mArea = if (AppleRISCVCfg.RV32M) new Area {
+
+        // Multiplier using FPGA DSP block => Inferring DSP block
+        val multiplier_inst = Multiplier("DSP", 4, AppleRISCVCfg.XLEN+1, AppleRISCVCfg.XLEN+1)
+
+        val is_mul = io.alu_opcode === AluOpcodeEnum.MUL    | io.alu_opcode === AluOpcodeEnum.MULH |
+                     io.alu_opcode === AluOpcodeEnum.MULHSU | io.alu_opcode === AluOpcodeEnum.MULHU
 
         // Process the signed and unsigned bits
         // Note: We always use signed multiplier here to save DSP resource
@@ -87,47 +79,45 @@ case class ALU() extends Component {
         // For signed value, we will add 1, for unsigned value we will add 0
         // Now the multiplier become 33 * 33 bit this is OK for FPGA because
         // FPGA usually has 18 * 18 as DSP block and we will need to use multiple of them anyway.
-        val multiplicand = SInt(AppleRISCVCfg.XLEN + 1 bits)    // RS1
+        val multiplicand = SInt(AppleRISCVCfg.XLEN + 1 bits) // RS1
         when(io.alu_opcode === AluOpcodeEnum.MULHU) {
-            multiplicand := (False ## op1).asSInt
+            multiplicand := (False ## io.operand_1).asSInt
         }.otherwise{
-            multiplicand := op1.asSInt.resized
+            multiplicand := io.operand_1.asSInt.resized
         }
-        val multiplier = SInt(AppleRISCVCfg.XLEN+1 bits)      // RS2
+        val multiplier = SInt(AppleRISCVCfg.XLEN+1 bits) // RS2
         when(io.alu_opcode === AluOpcodeEnum.MULHU || io.alu_opcode === AluOpcodeEnum.MULHSU) {
-            multiplier := (False ## op2).asSInt
+            multiplier := (False ## io.operand_2).asSInt
         }.otherwise{
-            multiplier := op2.asSInt.resized
+            multiplier := io.operand_2.asSInt.resized
         }
 
-        // Stage 1
-        stage(0) := (multiplicand * multiplier)(2*AppleRISCVCfg.XLEN-1 downto 0)
+        multiplier_inst.io.multiplier   := multiplier
+        multiplier_inst.io.multiplicand := multiplicand
+        multiplier_inst.io.mul_valid    := is_mul
 
-        // Remaining Stage pipeline
-        for (i <- Range(1, stage.length)) {
-            stage(i) := stage(i-1)
-        }
+        val is_mul_s   = RegNext(io.alu_opcode === AluOpcodeEnum.MUL);
+        val product_lo = multiplier_inst.io.product(AppleRISCVCfg.XLEN-1 downto 0)
+        val product_hi = multiplier_inst.io.product(2*AppleRISCVCfg.XLEN-1 downto AppleRISCVCfg.XLEN)
 
-        // Stage valid pipeline
-        stage_valid(0) := new_op
-        for (i <- Range(1, stage_valid.length)) {
-            stage_valid(i) := stage_valid(i-1)
-        }
+        io.product       := Mux(is_mul_s, product_lo, product_hi).asBits
+        io.product_valid := multiplier_inst.io.product_valid // EX/MEM stage pipeline is embedded here
+        val mul_stall_req = (multiplier_inst.io.mul_valid & multiplier_inst.io.mul_ready) | (~multiplier_inst.io.mul_ready & ~multiplier_inst.io.product_early_valid)
 
-        val done = stage_valid(AppleRISCVCfg.MULSTAGE-1)
-        when(new_op) {
-            busy := True
-        }.elsewhen(done) {
-            busy := False
-        }
+        // Divider
+        val divider_inst = MixedDivider(AppleRISCVCfg.XLEN)
+        val is_div = io.alu_opcode === AluOpcodeEnum.DIV    | io.alu_opcode === AluOpcodeEnum.DIVU |
+                     io.alu_opcode === AluOpcodeEnum.REM    | io.alu_opcode === AluOpcodeEnum.REMU
+        divider_inst.io.div_req  := is_div
+        divider_inst.io.dividend := io.operand_1
+        divider_inst.io.divisor  := io.operand_2
+        divider_inst.io.flush    := ~io.ex_stage_valid
+        divider_inst.io.signed   := io.alu_opcode === AluOpcodeEnum.DIV | io.alu_opcode === AluOpcodeEnum.REM
+        val quotient = divider_inst.io.quotient
+        val reminder = divider_inst.io.remainder
+        val div_stall_req = (is_div & divider_inst.io.div_ready) | (~divider_inst.io.div_ready & ~divider_inst.io.div_done)
 
-        val lo = stage(AppleRISCVCfg.MULSTAGE-2)(AppleRISCVCfg.XLEN-1 downto 0).asBits
-        val hi = stage(AppleRISCVCfg.MULSTAGE-2)(2*AppleRISCVCfg.XLEN-1 downto AppleRISCVCfg.XLEN).asBits
-        val is_multl_s1 = RegNext(is_multl)    // need to delay this for one cycle as we are selecting the data at MEM stage
-        io.mul_out := Mux(is_multl_s1, lo, hi) // EX/MEM stage pipeline is embedded in the DSP block
-        io.alu_mulop := done // EX/MEM stage pipeline is embedded in also embedded here
-        // the stall request is from stage 0 to stage N-2
-        io.alu_stall_req := (new_op | busy & ~stage_valid(AppleRISCVCfg.MULSTAGE-2)) & io.ex_stage_valid
+        io.alu_stall_req := io.ex_stage_valid & (div_stall_req | mul_stall_req)
     } else null
 
     switch(io.alu_opcode) {
@@ -142,6 +132,12 @@ case class ALU() extends Component {
         is(AluOpcodeEnum.SLT) {io.alu_out := slt_result.asBits}
         is(AluOpcodeEnum.SLTU) {io.alu_out := sltu_result.asBits}
         is(AluOpcodeEnum.PC4) {io.alu_out := pcplus4_result.asBits}
+        if(AppleRISCVCfg.RV32M) {
+            is(AluOpcodeEnum.DIV)  {io.alu_out := rv32mArea.quotient}
+            is(AluOpcodeEnum.DIVU) {io.alu_out := rv32mArea.quotient}
+            is(AluOpcodeEnum.REM)  {io.alu_out := rv32mArea.reminder}
+            is(AluOpcodeEnum.REMU) {io.alu_out := rv32mArea.reminder}
+        }
         default {io.alu_out := and_result.asBits}
     }
 }

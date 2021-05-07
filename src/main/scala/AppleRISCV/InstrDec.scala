@@ -258,7 +258,6 @@ case class InstrDec() extends Component {
             io.rs1_rd  := True
             io.rs2_rd  := True
             io.rd_wr   := rd_isnot_x0
-
             when(func7_0000000) {
                 switch(func3) {
                     is(InstrDefine.LA_F3_ADD)  {io.alu_opcode  := AluOpcodeEnum.ADD}
@@ -284,7 +283,10 @@ case class InstrDec() extends Component {
                         is(InstrDefine.RV32M_MULH)   {io.alu_opcode := AluOpcodeEnum.MULH}
                         is(InstrDefine.RV32M_MULHSU) {io.alu_opcode := AluOpcodeEnum.MULHSU}
                         is(InstrDefine.RV32M_MULHU)  {io.alu_opcode := AluOpcodeEnum.MULHU}
-                        default {ill_instr := True}
+                        is(InstrDefine.RV32M_DIV)    {io.alu_opcode := AluOpcodeEnum.DIV}
+                        is(InstrDefine.RV32M_DIVU)   {io.alu_opcode := AluOpcodeEnum.DIVU}
+                        is(InstrDefine.RV32M_REM)    {io.alu_opcode := AluOpcodeEnum.REM}
+                        is(InstrDefine.RV32M_REMU)   {io.alu_opcode := AluOpcodeEnum.REMU}
                     }
                 } else {
                     ill_instr := True

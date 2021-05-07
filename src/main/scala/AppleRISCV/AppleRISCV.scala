@@ -270,7 +270,7 @@ case class AppleRISCV() extends Component {
 
         // Select between alu and alu mult
         // Because the EX/MEM stage pipeline for mult portion is embedded in the DSP block
-        val mem_alu_out = Mux(alu_inst.io.alu_mulop, alu_inst.io.mul_out, ex2mem.alu_out)
+        val mem_alu_out = Mux(alu_inst.io.product_valid, alu_inst.io.product, ex2mem.alu_out)
 
         // csr
         mcsr_inst.io.mcsr_addr := ex2mem.csr_idx

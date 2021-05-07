@@ -102,10 +102,14 @@ object InstrDefine {
     // Pirvileged Instruction
     val SYS_F3_PRIV = Integer.parseInt("000", 2)
     // RV32M Standard Extension
-    val RV32M_MUL      = Integer.parseInt("000", 2)
-    val RV32M_MULH     = Integer.parseInt("001", 2)
-    val RV32M_MULHSU   = Integer.parseInt("010", 2)
-    val RV32M_MULHU    = Integer.parseInt("011", 2)
+    val RV32M_MUL    = Integer.parseInt("000", 2)
+    val RV32M_MULH   = Integer.parseInt("001", 2)
+    val RV32M_MULHSU = Integer.parseInt("010", 2)
+    val RV32M_MULHU  = Integer.parseInt("011", 2)
+    val RV32M_DIV    = Integer.parseInt("100", 2)
+    val RV32M_DIVU   = Integer.parseInt("101", 2)
+    val RV32M_REM    = Integer.parseInt("110", 2)
+    val RV32M_REMU   = Integer.parseInt("111", 2)
 
     // == func7 == //
     // Logic arithmetic func7 field
@@ -127,6 +131,10 @@ object AluOpcodeEnum extends SpinalEnum(binaryOneHot) {
     val MULH    = if (AppleRISCVCfg.RV32M) newElement() else null
     val MULHSU  = if (AppleRISCVCfg.RV32M) newElement() else null
     val MULHU   = if (AppleRISCVCfg.RV32M) newElement() else null
+    val DIV     = if (AppleRISCVCfg.RV32M) newElement() else null
+    val DIVU    = if (AppleRISCVCfg.RV32M) newElement() else null
+    val REM     = if (AppleRISCVCfg.RV32M) newElement() else null
+    val REMU    = if (AppleRISCVCfg.RV32M) newElement() else null
 }
 
 object BranchOpcodeEnum extends SpinalEnum(){
