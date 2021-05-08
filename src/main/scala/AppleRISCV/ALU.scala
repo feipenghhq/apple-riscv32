@@ -94,7 +94,7 @@ case class ALU() extends Component {
 
         multiplier_inst.io.multiplier   := multiplier
         multiplier_inst.io.multiplicand := multiplicand
-        multiplier_inst.io.mul_valid    := is_mul
+        multiplier_inst.io.mul_valid    := is_mul & io.ex_stage_valid
 
         val is_mul_s   = RegNext(io.alu_opcode === AluOpcodeEnum.MUL);
         val product_lo = multiplier_inst.io.product(AppleRISCVCfg.XLEN-1 downto 0)
@@ -108,7 +108,7 @@ case class ALU() extends Component {
         val divider_inst = MixedDivider(AppleRISCVCfg.XLEN)
         val is_div = io.alu_opcode === AluOpcodeEnum.DIV    | io.alu_opcode === AluOpcodeEnum.DIVU |
                      io.alu_opcode === AluOpcodeEnum.REM    | io.alu_opcode === AluOpcodeEnum.REMU
-        divider_inst.io.div_req  := is_div
+        divider_inst.io.div_req  := is_div & io.ex_stage_valid
         divider_inst.io.dividend := io.operand_1
         divider_inst.io.divisor  := io.operand_2
         divider_inst.io.flush    := ~io.ex_stage_valid

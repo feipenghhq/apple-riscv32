@@ -39,7 +39,7 @@ case class Multiplier(_type: String, stages: Int, multiplierSize: Int, multiplic
   noIoPrefix()
 
   // Inferring DSP block in FPGA
-  if (_type == "DSP") {
+  val dsp = if (_type == "DSP") new Area {
     val busy = RegInit(False)
     val new_op = io.mul_valid & io.mul_ready
 
@@ -70,10 +70,10 @@ case class Multiplier(_type: String, stages: Int, multiplierSize: Int, multiplic
       busy := False
     }
 
-    io.mul_ready := ~busy
     io.product   := stage(AppleRISCVCfg.MULSTAGE-2)
     io.product_valid := stage_valid(AppleRISCVCfg.MULSTAGE-1)
     io.product_early_valid := stage_valid(AppleRISCVCfg.MULSTAGE-2)
+    io.mul_ready := ~busy | io.product_valid
   }
 
 }

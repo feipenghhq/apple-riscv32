@@ -1,6 +1,37 @@
 # Development Log
 
+## Milestone 0.3
+
+Goal:
+
+- Doing architecture explore to improve the timing and performance
+
+Details:
+
+- 05/07/2021
+  - Added RV32M Instructions (mul, div, rem) to the CPU. This is feature is optional and can be configured.
+
+- 05/05/2021
+  - Moved the memory input entry to the end of EX stage to leverage the input register of the block ram as the EX/MEM stage register. Pipelined the dmem output as MEM/EX stage register to improve timing.
+  - Moved CSR module into MEM stage and pipelined the output as MEM/EX stage to improve timing.
+  - Moved the trap controller to MEM stage. Now all the interrupt and exception are handled at MEM stage.
+
 ## Milestone 0.2
+
+Summary:
+
+- Completed all the RV32I ISA including CSR extension and Interrupt.
+- Fixed bug/issue found during software tests
+
+Details
+
+- 05/03/2021
+  - Added logic for dmem_ctrl to read instruction.
+    - This is because we need to move data stored in instruction rom into data ram so the dmem controller needs to access the address belongs to the instruction rom.
+    - The uart2imem and dmem_ctrl share the same ports. A SibMux module was designed to accomplish this.
+
+- 05/02/2021
+  - rewrite the scala code
 
 - 04/28/2021
   - RTL update
@@ -28,9 +59,9 @@
   - Wrote a test to test software interrupt
     - **[RTL Bug Fix]** Fixed bug in trap control logic:
       - Corrected the wrong pc output value when interrupt triggers trap
-      - Added flushing logic for the interrupt. Need to flush the pipeline when we switch pc to mtval 
+      - Added flushing logic for the interrupt. Need to flush the pipeline when we switch pc to mtval
   - Wrote a test to test timer interrupt
-        
+
 - 04/21/2021
   - Designed a sib switch with 1 to N topology
   - Replaced the AHB bus with the SIB bus
