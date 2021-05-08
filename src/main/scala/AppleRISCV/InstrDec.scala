@@ -62,7 +62,7 @@ case class InstrDecIO() extends Bundle{
     val ebreak       = out Bool
 
     // data selection
-    val wb_sel = out(WbSelEnum())
+    val rd_sel = out(RdSelEnum())
     val csr_sel  = out(CsrSelEnum())
 
     // Other control signal
@@ -110,9 +110,9 @@ case class InstrDec() extends Component {
     val rd_isnot_x0         = io.rd_idx =/= 0
     val rs1_isnot_x0        = io.rs1_idx =/= 0
     val ill_instr           = False
-    
+
     io.exc_ill_instr := ill_instr & io.instr_vld
-    
+
     // default value
     io.rd_wr          := False
     io.rs1_rd         := False
@@ -124,7 +124,7 @@ case class InstrDec() extends Component {
     io.dmem_ld_unsign := False
     io.alu_opcode     := AluOpcodeEnum.AND
     io.bu_opcode      := BranchOpcodeEnum.BEQ
-    io.wb_sel         := WbSelEnum.ALU
+    io.rd_sel         := RdSelEnum.ALU
     io.csr_sel        := CsrSelEnum.DATA
     io.op2_sel_imm    := False
     io.branch_op      := False
@@ -194,7 +194,7 @@ case class InstrDec() extends Component {
             io.rs1_rd      := True
             io.rd_wr       := rd_isnot_x0
             io.alu_opcode  := AluOpcodeEnum.ADD
-            io.wb_sel      := WbSelEnum.MEM
+            io.rd_sel      := RdSelEnum.MEM
             alu_imm_type   := alu_imm_type_e.ITYPE
             switch(func3) {
                 is(InstrDefine.LW_F3_LB) {io.dmem_ld_byte := True}
@@ -296,7 +296,7 @@ case class InstrDec() extends Component {
         // End of R-Type Logic/Arithmetic Instruction
         // SYSTEM Instruction
         is(InstrDefine.OP_SYS) {
-            io.wb_sel := WbSelEnum.CSR
+            io.rd_sel := RdSelEnum.CSR
             switch(func3) {
                 is(InstrDefine.CSR_F3_RW) {
                     io.rd_wr  := rd_isnot_x0

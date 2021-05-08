@@ -11,7 +11,7 @@
 //
 // ================== Description ==================
 //
-// Define basic AppleRISCVCfgeters for the CPU
+// Define basic parameter for the CPU
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -36,10 +36,13 @@ object AppleRISCVCfg {
     )
 
     // RV32M Extension Configuration
-    val RV32M           = true
-    val MULTYPE         = "DSP" // Or Comb for combinational logic
-    val MULSTAGE        = 5
+    var RV32M           = true
+    var MULTYPE         = "DSP" // Or Comb for combinational logic
+    var MULSTAGE        = 3
 
+    // Branch Prediction
+    var USE_BPB         = true
+    var BPB_DEPTH       = 16    // need to be power of 2
 }
 
 object InstrDefine {
@@ -145,7 +148,7 @@ object CsrOpcodeEnum extends SpinalEnum(){
     val RD, WR, RW, RS, RC, BGEU = newElement()
 }
 
-object WbSelEnum extends SpinalEnum(){
+object RdSelEnum extends SpinalEnum(){
     val MEM, CSR, ALU = newElement()
 }
 

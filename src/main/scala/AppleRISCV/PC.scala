@@ -24,6 +24,8 @@ case class PC() extends Component {
     
     val io  = new Bundle{
         // IO port
+        val bpu_pred_take   = in Bool
+        val bpu_pc_in       = in UInt(AppleRISCVCfg.XLEN bits)
         val branch_pc_in    = in UInt(AppleRISCVCfg.XLEN bits)
         val branch          = in Bool
         val trap            = in Bool
@@ -35,10 +37,12 @@ case class PC() extends Component {
 
     val pc_value = Reg(UInt(AppleRISCVCfg.XLEN bits)) init 0
     when(!io.stall) {
-        when(io.branch) {   // stall has higher priority then branch
-            pc_value := io.branch_pc_in
-        }.elsewhen(io.trap) {
+        when( io.trap) {
             pc_value := io.trap_pc_in
+        }.elsewhen(io.branch) {
+            pc_value := io.branch_pc_in
+        }.elsewhen(io.bpu_pred_take) {
+            pc_value := io.bpu_pc_in
         }.otherwise {
             pc_value := pc_value + 4
         }
