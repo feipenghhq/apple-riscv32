@@ -15,6 +15,8 @@ limitations under the License.
 
 Original Author: Shay Gal-on
 */
+#include <stdint.h>
+
 #include "coremark.h"
 #include "core_portme.h"
 
@@ -47,7 +49,16 @@ volatile ee_s32 seed5_volatile = 0;
 CORETIMETYPE
 barebones_clock()
 {
-    CORETIMETYPE clock = (CORETIMETYPE) rdmcycle();
+    // 32 bit counter is not good enough. so here we will ignore the lower 10 bits
+    // and pad the mcycleh[9:0] and mcycle[31:10] together.
+    // the clock is in term of 1024 clock cycle
+    ee_u32 clock;
+    ee_u32 clock_lo = (ee_u32) rdmcycle();
+    ee_u32 clock_hi = (ee_u32) rdmcycleh();
+    printf("clock lo = %u, clock hi = %u ", clock_lo, clock_hi);
+    clock_lo = clock_lo >> 10;
+    clock = (clock_hi << (32 - 10)) | clock_lo;
+    printf("clock = %d\n", clock_lo, clock_hi, clock);
     return clock;
 }
 /* Define : TIMER_RES_DIVIDER
@@ -60,7 +71,7 @@ barebones_clock()
         */
 #define GETMYTIME(_t)              (*_t = barebones_clock())
 #define MYTIMEDIFF(fin, ini)       ((fin) - (ini))
-#define TIMER_RES_DIVIDER          1
+#define TIMER_RES_DIVIDER          1024
 #define SAMPLE_TIME_IMPLEMENTATION 1
 #define CLOCKS_PER_SEC             CLK_FEQ_MHZ * 1000 * 1000
 #define EE_TICKS_PER_SEC           (CLOCKS_PER_SEC / TIMER_RES_DIVIDER)

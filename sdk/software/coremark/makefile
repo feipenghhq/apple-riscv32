@@ -9,8 +9,9 @@ TARGET = coremark
 #############################################################
 
 CFLAGS := -O2 -fno-common -funroll-loops -finline-functions --param max-inline-insns-auto=20 -falign-functions=4 -falign-jumps=4 -falign-loops=4
+#CFLAGS := -O2 -fno-common -finline-functions --param max-inline-insns-auto=20 -falign-functions=4 -falign-jumps=4 -falign-loops=4
 CFLAGS += -DFLAGS_STR=\""$(CFLAGS)"\"
-CFLAGS += -DITERATIONS=5000
+CFLAGS += -DITERATIONS=10000
 
 BSP_BASE = ../../bsp
 

@@ -36,7 +36,7 @@ export PROGRAM 		= $(_PROGRAM)
 
 # run vivado at SOC level
 soc: clean_soc
-	vivado -mode tcl -source run.tcl
+	vivado -mode tcl -source run.tcl | tee run.log
 
 clean:  clean_soc
 

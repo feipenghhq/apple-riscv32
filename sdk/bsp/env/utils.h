@@ -23,6 +23,7 @@ asm volatile ("csrr %0, " #reg:"=r"(__tmp)); \
 __tmp;})
 
 #define rdmcycle() read_csr(mcycle)
+#define rdmcycleh() read_csr(mcycleh)
 #define rdmtval()  read_csr(mtval)
 
 
