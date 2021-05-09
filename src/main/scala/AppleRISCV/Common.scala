@@ -36,12 +36,12 @@ object AppleRISCVCfg {
     )
 
     // RV32M Extension Configuration
-    var RV32M           = true
+    var USE_RV32M       = true
     var MULTYPE         = "DSP" // Or Comb for combinational logic
     var MULSTAGE        = 3
 
     // Branch Prediction
-    var USE_BPB         = true
+    var USE_BPB         = false
     var BPB_DEPTH       = 16    // need to be power of 2
 }
 
@@ -129,15 +129,6 @@ object InstrDefine {
 
 object AluOpcodeEnum extends SpinalEnum(binaryOneHot) {
     val NOP, ADD, SUB, AND, OR, XOR, SRA, SRL, SLL, SLT, SLTU, PC4 = newElement()
-    // RV32M related operation
-    val MUL     = if (AppleRISCVCfg.RV32M) newElement() else null
-    val MULH    = if (AppleRISCVCfg.RV32M) newElement() else null
-    val MULHSU  = if (AppleRISCVCfg.RV32M) newElement() else null
-    val MULHU   = if (AppleRISCVCfg.RV32M) newElement() else null
-    val DIV     = if (AppleRISCVCfg.RV32M) newElement() else null
-    val DIVU    = if (AppleRISCVCfg.RV32M) newElement() else null
-    val REM     = if (AppleRISCVCfg.RV32M) newElement() else null
-    val REMU    = if (AppleRISCVCfg.RV32M) newElement() else null
 }
 
 object BranchOpcodeEnum extends SpinalEnum(){
@@ -148,8 +139,21 @@ object CsrOpcodeEnum extends SpinalEnum(){
     val RD, WR, RW, RS, RC, BGEU = newElement()
 }
 
-object RdSelEnum extends SpinalEnum(){
+object MulOpcodeEnum extends SpinalEnum(){
+    val MUL, MULH, MULHSU, MULHU = newElement()
+}
+
+object DivOpcodeEnum extends SpinalEnum(){
+    val DIV, DIVU, REM, REMU = newElement()
+}
+
+// IMPORTANT: We Need to use binaryOneHot encoding here
+// If we use natural encoding (0, 1, 2, ...), there is a weird bug in the Vivado.
+// It put a not used value for DIV instruction hence create a wrong rd wdata for DIV.
+// Using onehot encoding will fix this issue.
+object RdSelEnum extends SpinalEnum(binaryOneHot){
     val MEM, CSR, ALU = newElement()
+    val MUL, DIV = if (AppleRISCVCfg.USE_RV32M) newElement() else null
 }
 
 object CsrSelEnum extends SpinalEnum(){

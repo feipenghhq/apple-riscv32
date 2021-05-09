@@ -8,6 +8,12 @@ Goal:
 
 Details:
 
+-05/08/2021
+  - Timing improvement: changed mul/div logic
+    - Moved mul/div out of the ALU as separate module in side the CPU EX stage
+    - mul/div output are now generated at EX stage and muxed with ALU output
+    - Moved the rd data selection mux from WB stage to EX stage to improve timimg
+
 - 05/07/2021
   - Added RV32M Instructions (mul, div, rem) to the CPU. This is feature is optional and can be configured.
 

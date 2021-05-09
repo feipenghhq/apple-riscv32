@@ -20,6 +20,53 @@ package AppleRISCV
 
 import spinal.core._
 
+case class AppleRISCVCMultiplier() extends Component {
+  val io = new Bundle {
+    val stage_valid   = in Bool
+    val mul_req       = in Bool
+    val mul_opcode    = in(MulOpcodeEnum())
+    val multiplier    = in Bits(AppleRISCVCfg.XLEN bits)
+    val multiplicand  = in Bits(AppleRISCVCfg.XLEN bits)
+    val result        = out Bits(AppleRISCVCfg.XLEN bits)
+    val mul_stall_req = out Bool
+  }
+  noIoPrefix()
+
+  // Multiplier using FPGA DSP block => Inferring DSP block
+  val multiplier_inst = Multiplier("DSP", 4, AppleRISCVCfg.XLEN+1, AppleRISCVCfg.XLEN+1)
+
+  // Process the signed and unsigned bits
+  // Note: We always use signed multiplier here to save DSP resource
+  // In make unsigned bit looks like signed, we add addition 1 bit to the
+  // top as the new signed bit for both signed and unsigned value
+  // For signed value, we will add 1, for unsigned value we will add 0
+  // Now the multiplier become 33 * 33 bit this is OK for FPGA because
+  // FPGA usually has 18 * 18 as DSP block and we will need to use multiple of them anyway.
+  val multiplicand = SInt(AppleRISCVCfg.XLEN + 1 bits) // RS1
+  when(io.mul_opcode === MulOpcodeEnum.MULHU) {
+    multiplicand := (False ## io.multiplicand).asSInt
+  }.otherwise{
+    multiplicand := io.multiplicand.asSInt.resized
+  }
+  val multiplier = SInt(AppleRISCVCfg.XLEN+1 bits) // RS2
+  when(io.mul_opcode === MulOpcodeEnum.MULHU || io.mul_opcode === MulOpcodeEnum.MULHSU) {
+    multiplier := (False ## io.multiplier).asSInt
+  }.otherwise{
+    multiplier := io.multiplier.asSInt.resized
+  }
+
+  multiplier_inst.io.multiplier   := multiplier
+  multiplier_inst.io.multiplicand := multiplicand
+  multiplier_inst.io.mul_valid    := io.stage_valid & io.mul_req & ~multiplier_inst.io.product_valid
+
+  val is_mul_s   = RegNext(io.mul_opcode === MulOpcodeEnum.MUL);
+  val product_lo = multiplier_inst.io.product(AppleRISCVCfg.XLEN-1 downto 0)
+  val product_hi = multiplier_inst.io.product(2*AppleRISCVCfg.XLEN-1 downto AppleRISCVCfg.XLEN)
+
+  io.result        := Mux(is_mul_s, product_lo, product_hi).asBits
+  io.mul_stall_req := io.stage_valid & io.mul_req & ~multiplier_inst.io.product_valid
+}
+
 /**
  * Multiplier
  * Use product_valid if you take the ouyput to the downstream pipeline
@@ -70,7 +117,7 @@ case class Multiplier(_type: String, stages: Int, multiplierSize: Int, multiplic
       busy := False
     }
 
-    io.product   := stage(AppleRISCVCfg.MULSTAGE-2)
+    io.product := stage(AppleRISCVCfg.MULSTAGE-2)
     io.product_valid := stage_valid(AppleRISCVCfg.MULSTAGE-1)
     io.product_early_valid := stage_valid(AppleRISCVCfg.MULSTAGE-2)
     io.mul_ready := ~busy | io.product_valid

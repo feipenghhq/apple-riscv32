@@ -38,7 +38,7 @@ case class BPU() extends Component {
     val branch_taken  = in Bool
     val branch_instr_pc = in UInt(AppleRISCVCfg.XLEN bits)
   }
-  //noIoPrefix()
+  noIoPrefix()
 
   val bpb_init = Array.fill[UInt](AppleRISCVCfg.BPB_DEPTH)(0)
   val bpb_ram = Mem(UInt(2 bits), bpb_init)

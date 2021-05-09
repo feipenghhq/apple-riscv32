@@ -44,6 +44,12 @@ case class InstrDecIO() extends Bundle{
     // ALU control
     val alu_opcode = out(AluOpcodeEnum())
 
+    // MUL/DIV module control
+    val mul_op     = if (AppleRISCVCfg.USE_RV32M) out Bool else null
+    val div_op     = if (AppleRISCVCfg.USE_RV32M) out Bool else null
+    val mul_opcode = if (AppleRISCVCfg.USE_RV32M) out(MulOpcodeEnum()) else null
+    val div_opcode = if (AppleRISCVCfg.USE_RV32M) out(DivOpcodeEnum()) else null
+
     // Branch Unit control
     val bu_opcode = out(BranchOpcodeEnum())
     val branch_op = out Bool
@@ -138,6 +144,13 @@ case class InstrDec() extends Component {
     io.csr_sel_imm    := False
     io.op1_sel_zero   := False
     io.op1_sel_pc     := False
+
+    if (AppleRISCVCfg.USE_RV32M) {
+        io.mul_op         := False
+        io.div_op         := False
+        io.mul_opcode     := MulOpcodeEnum.MUL
+        io.div_opcode     := DivOpcodeEnum.DIV            
+    }
 
     // The big switch for the opcode decode
     switch(opcode) {
@@ -277,16 +290,48 @@ case class InstrDec() extends Component {
                 }
             }.elsewhen(func7_0000001) {
                 // RV32M Instruction
-                if (AppleRISCVCfg.RV32M) {
+                if (AppleRISCVCfg.USE_RV32M) {
                     switch(func3) {
-                        is(InstrDefine.RV32M_MUL)    {io.alu_opcode := AluOpcodeEnum.MUL}
-                        is(InstrDefine.RV32M_MULH)   {io.alu_opcode := AluOpcodeEnum.MULH}
-                        is(InstrDefine.RV32M_MULHSU) {io.alu_opcode := AluOpcodeEnum.MULHSU}
-                        is(InstrDefine.RV32M_MULHU)  {io.alu_opcode := AluOpcodeEnum.MULHU}
-                        is(InstrDefine.RV32M_DIV)    {io.alu_opcode := AluOpcodeEnum.DIV}
-                        is(InstrDefine.RV32M_DIVU)   {io.alu_opcode := AluOpcodeEnum.DIVU}
-                        is(InstrDefine.RV32M_REM)    {io.alu_opcode := AluOpcodeEnum.REM}
-                        is(InstrDefine.RV32M_REMU)   {io.alu_opcode := AluOpcodeEnum.REMU}
+                        is(InstrDefine.RV32M_MUL) {
+                            io.mul_opcode := MulOpcodeEnum.MUL
+                            io.mul_op := True
+                            io.rd_sel := RdSelEnum.MUL
+                        }
+                        is(InstrDefine.RV32M_MULH) {
+                            io.mul_opcode := MulOpcodeEnum.MULH
+                            io.mul_op := True
+                            io.rd_sel := RdSelEnum.MUL
+                        }
+                        is(InstrDefine.RV32M_MULHSU) {
+                            io.mul_opcode := MulOpcodeEnum.MULHSU
+                            io.mul_op := True
+                            io.rd_sel := RdSelEnum.MUL
+                        }
+                        is(InstrDefine.RV32M_MULHU) {
+                            io.mul_opcode := MulOpcodeEnum.MULHU
+                            io.mul_op := True
+                            io.rd_sel := RdSelEnum.MUL
+                        }
+                        is(InstrDefine.RV32M_DIV) {
+                            io.div_opcode := DivOpcodeEnum.DIV
+                            io.div_op := True
+                            io.rd_sel := RdSelEnum.DIV
+                        }
+                        is(InstrDefine.RV32M_DIVU) {
+                            io.div_opcode := DivOpcodeEnum.DIVU
+                            io.div_op := True
+                            io.rd_sel := RdSelEnum.DIV
+                        }
+                        is(InstrDefine.RV32M_REM) {
+                            io.div_opcode := DivOpcodeEnum.REM
+                            io.div_op := True
+                            io.rd_sel := RdSelEnum.DIV
+                        }
+                        is(InstrDefine.RV32M_REMU) {
+                            io.div_opcode := DivOpcodeEnum.REMU
+                            io.div_op := True
+                            io.rd_sel := RdSelEnum.DIV
+                        }
                     }
                 } else {
                     ill_instr := True

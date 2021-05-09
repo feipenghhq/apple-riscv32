@@ -6,6 +6,35 @@ import spinal.lib.fsm._
 
 import scala.util.Random
 
+case class AppleRISCVDivider() extends Component {
+  val io = new Bundle {
+    val stage_valid = in Bool
+    val div_req     =  in  Bool
+    val div_opcode  = in(DivOpcodeEnum)
+    val dividend  = in  Bits(AppleRISCVCfg.XLEN bit)
+    val divisor   = in  Bits(AppleRISCVCfg.XLEN bits)
+    val result    = out Bits(AppleRISCVCfg.XLEN bits)
+    val div_stall_req = out Bool
+  }
+  noIoPrefix()
+  
+  val divider_inst = MixedDivider(AppleRISCVCfg.XLEN)
+  divider_inst.io.div_req  := io.div_req & io.stage_valid & ~divider_inst.io.div_done
+  divider_inst.io.dividend := io.dividend
+  divider_inst.io.divisor  := io.divisor
+  divider_inst.io.flush    := ~io.stage_valid
+  divider_inst.io.signed   := io.div_opcode === DivOpcodeEnum.DIV | io.div_opcode === DivOpcodeEnum.REM
+  val quotient = divider_inst.io.quotient
+  val reminder = divider_inst.io.remainder
+  switch(io.div_opcode) {
+    is(DivOpcodeEnum.DIV)  {io.result := quotient}
+    is(DivOpcodeEnum.DIVU) {io.result := quotient}
+    is(DivOpcodeEnum.REM)  {io.result := reminder}
+    is(DivOpcodeEnum.REMU) {io.result := reminder}
+  }
+  io.div_stall_req := io.div_req & io.stage_valid & ~divider_inst.io.div_done
+}
+
 case class MixedDivider(WIDTH: Int) extends Component {
   val io = new Bundle {
     val flush     = in Bool
@@ -17,7 +46,9 @@ case class MixedDivider(WIDTH: Int) extends Component {
     val quotient  = out Bits(WIDTH bits)
     val remainder = out Bits(WIDTH bits)
     val div_done  = out Bool
+    val div_early_done  = out Bool
   }
+  noIoPrefix()
 
   val divider = UnsignedDivider(WIDTH)
 
@@ -25,6 +56,7 @@ case class MixedDivider(WIDTH: Int) extends Component {
   divider.io.flush     := io.flush
   io.div_ready         := divider.io.div_ready
   io.div_done          := divider.io.div_done
+  io.div_early_done    := divider.io.div_early_done
   // process the input signal
   divider.io.dividend := io.dividend.asSInt.abs(io.signed)
   divider.io.divisor  := io.divisor.asSInt.abs(io.signed)
@@ -32,7 +64,7 @@ case class MixedDivider(WIDTH: Int) extends Component {
   // process the output signal
   val not_divide_by_zero = io.divisor =/= 0
   val quotient_is_negative = RegNextWhen(io.signed & not_divide_by_zero & (io.dividend.msb ^ io.divisor.msb), io.div_req & io.div_ready)
-  val remainder_is_negative = RegNextWhen(io.signed & not_divide_by_zero & (io.dividend.msb), io.div_req & io.div_ready)
+  val remainder_is_negative = RegNextWhen(io.signed & not_divide_by_zero & io.dividend.msb, io.div_req & io.div_ready)
   io.quotient := divider.io.quotient.twoComplement(quotient_is_negative).asBits.resized
   io.remainder := divider.io.remainder.twoComplement(remainder_is_negative).asBits.resized
 }
@@ -49,6 +81,7 @@ case class UnsignedDivider(WIDTH: Int) extends Component{
     val quotient  = out UInt(WIDTH bits)
     val remainder = out UInt(WIDTH bits)
     val div_done  = out Bool
+    val div_early_done  = out Bool
   }
 
   val dividend_ff = Reg(io.dividend.clone())
@@ -66,6 +99,7 @@ case class UnsignedDivider(WIDTH: Int) extends Component{
 
     val iter = Reg(UInt(log2Up(WIDTH+1) bits))
 
+    io.div_early_done := False
     io.div_done := False
     io.div_ready := True
     idle.whenIsActive {
@@ -91,6 +125,7 @@ case class UnsignedDivider(WIDTH: Int) extends Component{
         quotient_ff(0) := False
       }
 
+      when(iter === WIDTH) {io.div_early_done := True}
       when(io.flush) {
         goto(idle)
       }.elsewhen(iter === WIDTH + 1) {

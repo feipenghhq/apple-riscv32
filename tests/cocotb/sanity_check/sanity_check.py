@@ -132,7 +132,7 @@ import branch2
 @cocotb.test()
 async def test_branch2(dut):
     """ Test the blt/bge logic """
-    await run_test(dut, branch2.imem_data, branch2.expected_register, 400)
+    await run_test(dut, branch2.imem_data, branch2.expected_register, 1000)
 
 import branch3
 @cocotb.test()
@@ -157,3 +157,15 @@ import jalr1
 async def test_jalr1(dut):
     """ Test the jalr logic """
     await run_test(dut, jalr1.imem_data, jalr1.expected_register, 500)
+
+import mul
+@cocotb.test()
+async def test_mul(dut):
+    """ Test the jalr logic """
+    await run_test(dut, mul.imem_data, mul.expected_register, 500)
+
+import div
+@cocotb.test()
+async def test_div(dut):
+    """ Test the jalr logic """
+    await run_test(dut, div.imem_data, div.expected_register, 2000)
