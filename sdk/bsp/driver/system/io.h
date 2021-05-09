@@ -42,6 +42,4 @@ void IOSET(uint32_t base, uint32_t offset, int32_t mask);
 void IOCLEAR(uint32_t base, uint32_t offset, int32_t mask);
 
 
-
-
 #endif

@@ -14,9 +14,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "soc.h"
-#include "uart.h"
-#include "utils.h"
+#include "system.h"
+#include "periphals.h"
 
 #define MCAUSE_MASK             0xFFFFFFFF
 #define MCAUSE_LD_ADDR_MISALIGN 0x4

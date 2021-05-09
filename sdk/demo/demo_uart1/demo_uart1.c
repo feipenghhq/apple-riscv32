@@ -17,7 +17,8 @@
 
 #include <stdint.h>
 #include <stdio.h>
-#include <soc.h>
+
+#include "soc.h"
 
 
 void test_printf(void) {

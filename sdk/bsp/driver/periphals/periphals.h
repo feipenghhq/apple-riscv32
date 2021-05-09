@@ -1,0 +1,22 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright 2021 by Heqing Huang (feipenghhq@gamil.com)
+//
+// ~~~ Hardware in SpinalHDL ~~~
+//
+// Author: Heqing Huang
+// Date Created: 05/08/2021
+//
+// ================== Description ==================
+//
+// Periphals function header
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifndef _PERIPHALS_H_
+#define _PERIPHALS_H_
+
+#include "gpio.h"
+#include "uart.h"
+
+#endif

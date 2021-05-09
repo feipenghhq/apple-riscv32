@@ -8,8 +8,8 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include <uart.h>
-#include <soc.h>
+#include "periphals.h"
+#include "system.h"
 
 int _write (int file, char *buf, size_t nbytes)
 {

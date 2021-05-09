@@ -13,6 +13,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+#ifndef _CSR_H_
+#define _CSR_H_
+
 #include <stddef.h>
 
 /**
@@ -22,10 +25,13 @@
 asm volatile ("csrr %0, " #reg:"=r"(__tmp)); \
 __tmp;})
 
-#define rdmcycle() read_csr(mcycle)
-#define rdmcycleh() read_csr(mcycleh)
-#define rdmtval()  read_csr(mtval)
-
+#define rdmcycle()          read_csr(mcycle)
+#define rdmcycleh()         read_csr(mcycleh)
+#define rdmtval()           read_csr(mtval)
+#define rdmhpmcounter3()    read_csr(mhpmcounter3)
+#define rdmhpmcounter3h()   read_csr(mhpmcounter3h)
+#define rdmhpmcounter4()    read_csr(mhpmcounter4)
+#define rdmhpmcounter4h()   read_csr(mhpmcounter4h)
 
 /**
  * Write CSR register
@@ -35,3 +41,5 @@ __tmp;})
     asm volatile ("csrw " #reg ", %0" :: "i"(val)); \
   else \
     asm volatile ("csrw " #reg ", %0" :: "r"(val)); })
+
+#endif

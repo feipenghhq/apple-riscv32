@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "utils.h"
+#include "system.h"
 
 //#define get_opcode(instr)   (instr & 0x7F)
 //#define get_func3(instr)    ((instr >> 12) & 0x7)
