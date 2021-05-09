@@ -42,7 +42,6 @@ case class MCSRIO() extends Bundle {
   val timer_interrupt     = in Bool
   val software_interrupt  = in Bool
 
-
   // trap related output
   val mtvec        = out Bits(AppleRISCVCfg.XLEN bits)
   val mie_meie     = out Bool
@@ -53,6 +52,10 @@ case class MCSRIO() extends Bundle {
 
   // other
   val hartId       = in Bits(AppleRISCVCfg.MXLEN bits)
+
+  // performance counter
+  val inc_br_cnt    = in Bool
+  val inc_pred_good = in Bool
 }
 
 case class MCSR() extends Component {
@@ -84,8 +87,13 @@ case class MCSR() extends Component {
   val mip       = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
 
   // Machine Counter/Timers
-  val mcycle    = Reg(UInt(AppleRISCVCfg.MXLEN bits)) init 0  // RW
-  val mcycleh   = Reg(UInt(AppleRISCVCfg.MXLEN bits)) init 0  // RW
+  val mcycle_64    = Reg(UInt(2*AppleRISCVCfg.MXLEN bits)) init 0  // RW
+
+  // optional performance counter
+  // count number of branch instruction
+  val mbpmcounter3_64  = if (AppleRISCVCfg.USE_MHPMC3) Reg(UInt(2*AppleRISCVCfg.MXLEN bits)) init 0 else null
+  // count number of correct predicted instruction
+  val mbpmcounter4_64  = if (AppleRISCVCfg.USE_MHPMC3) Reg(UInt(2*AppleRISCVCfg.MXLEN bits)) init 0 else null
 
   // ============================================
   // SW access
@@ -104,13 +112,20 @@ case class MCSR() extends Component {
     is(B"h343") {io.mcsr_dout := mtval}
     is(B"h344") {io.mcsr_dout := mip}
 
-    is(B"hB00") {io.mcsr_dout := mcycle.asBits}
-    is(B"hB80") {io.mcsr_dout := mcycleh.asBits}
+    is(B"hB00") {io.mcsr_dout := mcycle_64(AppleRISCVCfg.MXLEN-1 downto 0).asBits}
+    is(B"hB80") {io.mcsr_dout := mcycle_64(2*AppleRISCVCfg.MXLEN-1 downto AppleRISCVCfg.MXLEN).asBits}
 
     is(B"hF11") {io.mcsr_dout := mvendorid}
     is(B"hF12") {io.mcsr_dout := marchid}
     is(B"hF13") {io.mcsr_dout := mimpid}
     is(B"hF14") {io.mcsr_dout := mhartid}
+
+    if (AppleRISCVCfg.USE_MHPMC3) {
+      is(B"hB03") {io.mcsr_dout := mbpmcounter3_64(AppleRISCVCfg.MXLEN-1 downto 0).asBits}
+      is(B"hB83") {io.mcsr_dout := mbpmcounter3_64(2*AppleRISCVCfg.MXLEN-1 downto AppleRISCVCfg.MXLEN).asBits}
+      is(B"hB04") {io.mcsr_dout := mbpmcounter4_64(AppleRISCVCfg.MXLEN-1 downto 0).asBits}
+      is(B"hB84") {io.mcsr_dout := mbpmcounter4_64(2*AppleRISCVCfg.MXLEN-1 downto AppleRISCVCfg.MXLEN).asBits}
+    }
 
     default {io.mcsr_dout := mvendorid}
   }
@@ -206,9 +221,10 @@ case class MCSR() extends Component {
   mip_msip := io.software_interrupt &  mie_msie
 
   // mcycle register
-  val mcycle64_plus1 = (mcycleh @@ mcycle) + 1
-  mcycle  := mcycle64_plus1(31 downto 0)
-  mcycleh := mcycle64_plus1(63 downto 32)
+  mcycle_64 := mcycle_64 + 1
+  when(io.inc_br_cnt)    {mbpmcounter3_64 := mbpmcounter3_64 + 1}
+  when(io.inc_pred_good) {mbpmcounter4_64 := mbpmcounter4_64 + 1}
+
 
   // ============================================
   // Trap related

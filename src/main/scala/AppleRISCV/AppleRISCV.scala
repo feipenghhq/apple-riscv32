@@ -339,6 +339,8 @@ case class AppleRISCV() extends Component {
 
         // csr
         mcsr_inst.io.mcsr_addr := ex2mem.csr_idx
+        mcsr_inst.io.inc_br_cnt := branch_unit_inst.io.is_branch
+        mcsr_inst.io.inc_pred_good := branch_unit_inst.io.is_branch & ~branch_unit_inst.io.branch_taken
         // Note: uimm is the same field as rs1 in instruction so use rs1 here instead
         val mcsr_data          = Mux(ex2mem.csr_sel_imm, ex2mem.rs1_idx.asBits.resized, ex2mem.rs1_value)
         val mcsr_masked_set    = mcsr_inst.io.mcsr_dout | mcsr_data
@@ -348,6 +350,7 @@ case class AppleRISCV() extends Component {
             is(CsrSelEnum.SET) {mcsr_inst.io.mcsr_din  := mcsr_masked_set}
             is(CsrSelEnum.CLEAR) {mcsr_inst.io.mcsr_din  := mcsr_masked_clear}
         }
+
         mcsr_inst.io.mcsr_wen  := ex2mem.csr_wr & mem_stage_valid
         // mem2wb_csr_rd is not used so far
         mcsr_inst.io.mtrap_enter  := trap_ctrl_inst.io.mtrap_enter
