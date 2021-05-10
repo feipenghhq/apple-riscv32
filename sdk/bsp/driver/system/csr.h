@@ -9,7 +9,7 @@
 //
 // ================== Description ==================
 //
-// Defining some common routine
+// Defining common routines for CSR register
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -28,6 +28,7 @@ __tmp;})
 #define rdmcycle()          read_csr(mcycle)
 #define rdmcycleh()         read_csr(mcycleh)
 #define rdmtval()           read_csr(mtval)
+#define rdmcountinhibit()   read_csr(mcountinhibit)
 #define rdmhpmcounter3()    read_csr(mhpmcounter3)
 #define rdmhpmcounter3h()   read_csr(mhpmcounter3h)
 #define rdmhpmcounter4()    read_csr(mhpmcounter4)
@@ -43,3 +44,13 @@ __tmp;})
     asm volatile ("csrw " #reg ", %0" :: "r"(val)); })
 
 #endif
+
+/**
+ * clear and enable branch counter
+ */
+void clr_en_br_cnt(void);
+
+/**
+ * stop branch counter
+ */
+void stp_br_cnt(void);

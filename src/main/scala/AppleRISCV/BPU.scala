@@ -28,8 +28,14 @@ case class BPU() extends Component {
 
   require(isPow2(AppleRISCVCfg.BPU_DEPTH))
   val BPU_ETR_WIDTH = log2Up(AppleRISCVCfg.BPU_DEPTH)
-  val BPU_USE_WIDTH = SOCCfg.INSTR_RAM_ADDR_WIDTH
-  val BPU_TAG_WIDTH = BPU_USE_WIDTH - BPU_ETR_WIDTH
+  val PC_OFFSET     = 2
+  val PC_USED_WIDTH = SOCCfg.INSTR_RAM_ADDR_WIDTH
+  val BPU_TAG_WIDTH = PC_USED_WIDTH - BPU_ETR_WIDTH - PC_OFFSET
+  val BTB_WIDTH     = PC_USED_WIDTH - PC_OFFSET
+  // PC is aligned to 4 bytes lower 2 bits are always zero, so ignore.
+  val IDX_RANGE = BPU_ETR_WIDTH+PC_OFFSET-1 downto PC_OFFSET
+  val TAG_RANGE = PC_USED_WIDTH-1 downto BPU_ETR_WIDTH+PC_OFFSET
+  val TGT_RANGE = PC_USED_WIDTH-1 downto PC_OFFSET
 
 
   val io = new Bundle {
@@ -47,20 +53,20 @@ case class BPU() extends Component {
   val bpb_init    = Array.fill[UInt](AppleRISCVCfg.BPU_DEPTH)(0)
   val bpb_ram     = Mem(UInt(2 bits), bpb_init)                       // branch prediction buffer
   val bpb_tag_ram = Mem(UInt(BPU_TAG_WIDTH bits), AppleRISCVCfg.BPU_DEPTH)  // branch prediction buffer tag
-  val btb_ram     = Mem(UInt(BPU_USE_WIDTH bits), AppleRISCVCfg.BPU_DEPTH)  // branch target buffer
+  val btb_ram     = Mem(UInt(BTB_WIDTH bits), AppleRISCVCfg.BPU_DEPTH)  // branch target buffer
   val entry_valid = Reg(Bits(AppleRISCVCfg.BPU_DEPTH bits)) init 0
 
-  val pc_idx  = io.pc(BPU_ETR_WIDTH-1 downto 0)
-  val pc_tag  = io.pc(BPU_USE_WIDTH-1 downto BPU_ETR_WIDTH)
-  val bpc_idx = io.branch_instr_pc(BPU_ETR_WIDTH-1 downto 0)
-  val bpc_tag = io.branch_instr_pc(BPU_USE_WIDTH-1 downto BPU_ETR_WIDTH)
+  val pc_idx  = io.pc(IDX_RANGE)
+  val pc_tag  = io.pc(TAG_RANGE)
+  val bpc_idx = io.branch_instr_pc(IDX_RANGE)
+  val bpc_tag = io.branch_instr_pc(TAG_RANGE)
 
   // Prediction
   val bpb_ram_pred_out     = bpb_ram.readAsync(address = pc_idx)
   val bpb_tag_ram_pred_out = bpb_tag_ram.readAsync(address = pc_idx)
   val pred_hit = (bpb_tag_ram_pred_out === pc_tag) & entry_valid(pc_idx)
   io.pred_take := (bpb_ram_pred_out === 2 | bpb_ram_pred_out === 3) & pred_hit & io.if_stage_valid
-  io.pred_pc   := btb_ram.readAsync(address = pc_idx).resized
+  io.pred_pc   := (btb_ram.readAsync(address = pc_idx) @@ U"00").resized
 
   // Update
   val bpb_ram_update_out     = bpb_ram.readAsync(address = bpc_idx)
@@ -82,12 +88,12 @@ case class BPU() extends Component {
   )
   bpb_tag_ram.write(
     address = bpc_idx,
-    data    = io.branch_instr_pc(BPU_USE_WIDTH-1 downto BPU_ETR_WIDTH),
+    data    = io.branch_instr_pc(TAG_RANGE),
     enable  = io.branch_update
   )
   btb_ram.write(
     address = bpc_idx,
-    data    = io.branch_target_pc(BPU_USE_WIDTH -1 downto 0),
+    data    = io.branch_target_pc(TGT_RANGE),
     enable  = io.branch_update
   )
 }

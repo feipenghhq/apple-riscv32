@@ -20,6 +20,10 @@ _start:
     // disable all the interrupt
     csrrci x0, mstatus, 0x8
 
+    // clear and enable mcycle counter
+    csrs  mcycle, x0
+    csrsi mcountinhibit, 0x1
+
 .option push
 .option norelax
     // assign address pointed by __global_pointer$ to gp register

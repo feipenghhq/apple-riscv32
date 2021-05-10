@@ -339,20 +339,15 @@ case class AppleRISCV() extends Component {
         // =========================
 
         // csr
-        mcsr_inst.io.mcsr_addr := ex2mem.csr_idx
+        // Note: uimm is the same field as rs1 in instruction so use rs1 here instead
+        mcsr_inst.io.csr_bus.wdata := Mux(ex2mem.csr_sel_imm, ex2mem.rs1_idx.asBits.resized, ex2mem.rs1_value)
+        mcsr_inst.io.csr_bus.addr  := ex2mem.csr_idx.asUInt
+        mcsr_inst.io.csr_bus.wtype := ex2mem.csr_sel
+        mcsr_inst.io.csr_bus.wen   := ex2mem.csr_wr & mem_stage_valid
         mcsr_inst.io.inc_br_cnt := branch_unit_inst.io.is_branch
         mcsr_inst.io.inc_pred_good := branch_unit_inst.io.is_branch & ~branch_unit_inst.io.take_branch 
-        // Note: uimm is the same field as rs1 in instruction so use rs1 here instead
-        val mcsr_data          = Mux(ex2mem.csr_sel_imm, ex2mem.rs1_idx.asBits.resized, ex2mem.rs1_value)
-        val mcsr_masked_set    = mcsr_inst.io.mcsr_dout | mcsr_data
-        val mcsr_masked_clear  = mcsr_inst.io.mcsr_dout & ~mcsr_data
-        switch(ex2mem.csr_sel) {
-            is(CsrSelEnum.DATA) {mcsr_inst.io.mcsr_din  := mcsr_data}
-            is(CsrSelEnum.SET) {mcsr_inst.io.mcsr_din  := mcsr_masked_set}
-            is(CsrSelEnum.CLEAR) {mcsr_inst.io.mcsr_din  := mcsr_masked_clear}
-        }
 
-        mcsr_inst.io.mcsr_wen  := ex2mem.csr_wr & mem_stage_valid
+
         // mem2wb_csr_rd is not used so far
         mcsr_inst.io.mtrap_enter  := trap_ctrl_inst.io.mtrap_enter
         mcsr_inst.io.mtrap_exit   := trap_ctrl_inst.io.mtrap_exit
@@ -363,6 +358,7 @@ case class AppleRISCV() extends Component {
         mcsr_inst.io.timer_interrupt     := io.timer_interrupt
         mcsr_inst.io.software_interrupt  := io.software_interrupt
         mcsr_inst.io.hartId              := B"0".resized
+        mcsr_inst.io.inc_minstret        := wb_stage_valid
 
         // trap controller wire connection
         trap_ctrl_inst.io.external_interrupt := io.external_interrupt
@@ -392,7 +388,7 @@ case class AppleRISCV() extends Component {
         val mem_rd_wdata = ex2mem.alu_out.clone()
         switch(ex2mem.rd_sel){
             is(RdSelEnum.MEM) {mem_rd_wdata := dmem_ctrl_isnt.io.mc2cpu_data}
-            is(RdSelEnum.CSR) {mem_rd_wdata := mcsr_inst.io.mcsr_dout}
+            is(RdSelEnum.CSR) {mem_rd_wdata := mcsr_inst.io.csr_bus.rdata}
             default {mem_rd_wdata := ex2mem.rd_wdata}
         }
 

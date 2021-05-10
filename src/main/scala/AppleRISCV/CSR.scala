@@ -24,13 +24,11 @@
 package AppleRISCV
 
 import spinal.core._
+import spinal.lib._
+import spinal.lib.bus.misc._
 
 case class MCSRIO() extends Bundle {
-  // mcsr sw access
-  val mcsr_addr = in Bits(AppleRISCVCfg.CSR_ADDR_WIDTH bits)
-  val mcsr_din  = in Bits(AppleRISCVCfg.MXLEN bits)
-  val mcsr_wen  = in Bool
-  val mcsr_dout = out Bits(AppleRISCVCfg.MXLEN bits)
+  val csr_bus = slave(CsrBus())
 
   // trap related input
   val mtrap_enter  = in Bool
@@ -54,103 +52,41 @@ case class MCSRIO() extends Bundle {
   val hartId       = in Bits(AppleRISCVCfg.MXLEN bits)
 
   // performance counter
+  val inc_minstret  = in Bool
   val inc_br_cnt    = in Bool
   val inc_pred_good = in Bool
 }
 
 case class MCSR() extends Component {
-
+  val MXLEN = AppleRISCVCfg.MXLEN
   val io = MCSRIO()
   noIoPrefix()
+  val busCtrl = CsrBusSlaveFactory(io.csr_bus)
+  val REG_T = Bits(MXLEN bits)
 
-  // ============================================
-  // Defining Register
-  // ============================================
-
+  // =========================================
   // Machine Information Registers
-  val mvendorid = B(0, AppleRISCVCfg.MXLEN bits) // RO
-  val marchid   = B(0, AppleRISCVCfg.MXLEN bits) // RO
-  val mimpid    = B(0, AppleRISCVCfg.MXLEN bits) // RO
-  val mhartid   = io.hartId                      // RO
+  // =========================================
+  val mvendorid = busCtrl.read(B"0", 0xF11, 0, "Vendor ID")
+  val marchid   = busCtrl.read(B"0", 0xF12, 0, "Architecture ID")
+  val mimpid    = busCtrl.read(B"0", 0xF13, 0, "Implementation ID")
+  val mhartid   = busCtrl.read(io.hartId, 0xF14, 0, "Hardware thread ID")
 
+
+  // =========================================
   // Machine Trap Setup
-  val mstatus   = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
-  val misa      = B(0, AppleRISCVCfg.MXLEN bits)  // RW
-  val mie       = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
-  val mtvec     = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
-
-  // Machine Trap Handling
-  val mscratch  = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
-  val mepc      = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
-  val mcause    = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
-  val mtval     = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
-  val mip       = Reg(Bits(AppleRISCVCfg.MXLEN bits)) init 0  // RW
-
-  // Machine Counter/Timers
-  val mcycle_64    = Reg(UInt(2*AppleRISCVCfg.MXLEN bits)) init 0  // RW
-
-  // optional performance counter
-  // count number of branch instruction
-  val mbpmcounter3_64  = if (AppleRISCVCfg.USE_MHPMC3) Reg(UInt(2*AppleRISCVCfg.MXLEN bits)) init 0 else null
-  // count number of correct predicted instruction
-  val mbpmcounter4_64  = if (AppleRISCVCfg.USE_MHPMC3) Reg(UInt(2*AppleRISCVCfg.MXLEN bits)) init 0 else null
-
-  // ============================================
-  // SW access
-  // ============================================
-
-  // Read Logic
-  switch (io.mcsr_addr) {
-    is(B"h300") {io.mcsr_dout := mstatus}
-    is(B"h301") {io.mcsr_dout := misa}
-    is(B"h304") {io.mcsr_dout := mie}
-    is(B"h305") {io.mcsr_dout := mtvec}
-
-    is(B"h340") {io.mcsr_dout := mscratch}
-    is(B"h341") {io.mcsr_dout := mepc}
-    is(B"h342") {io.mcsr_dout := mcause}
-    is(B"h343") {io.mcsr_dout := mtval}
-    is(B"h344") {io.mcsr_dout := mip}
-
-    is(B"hB00") {io.mcsr_dout := mcycle_64(AppleRISCVCfg.MXLEN-1 downto 0).asBits}
-    is(B"hB80") {io.mcsr_dout := mcycle_64(2*AppleRISCVCfg.MXLEN-1 downto AppleRISCVCfg.MXLEN).asBits}
-
-    is(B"hF11") {io.mcsr_dout := mvendorid}
-    is(B"hF12") {io.mcsr_dout := marchid}
-    is(B"hF13") {io.mcsr_dout := mimpid}
-    is(B"hF14") {io.mcsr_dout := mhartid}
-
-    if (AppleRISCVCfg.USE_MHPMC3) {
-      is(B"hB03") {io.mcsr_dout := mbpmcounter3_64(AppleRISCVCfg.MXLEN-1 downto 0).asBits}
-      is(B"hB83") {io.mcsr_dout := mbpmcounter3_64(2*AppleRISCVCfg.MXLEN-1 downto AppleRISCVCfg.MXLEN).asBits}
-      is(B"hB04") {io.mcsr_dout := mbpmcounter4_64(AppleRISCVCfg.MXLEN-1 downto 0).asBits}
-      is(B"hB84") {io.mcsr_dout := mbpmcounter4_64(2*AppleRISCVCfg.MXLEN-1 downto AppleRISCVCfg.MXLEN).asBits}
-    }
-
-    default {io.mcsr_dout := mvendorid}
-  }
-
-  // Write Logic
-  // Write logic only does write enable decode, the actual write is in HW access section
-  val mstatus_wen = (io.mcsr_addr === B"h300") & io.mcsr_wen
-  val mie_wen     = (io.mcsr_addr === B"h304") & io.mcsr_wen
-  val mtvec_wen   = (io.mcsr_addr === B"h305") & io.mcsr_wen
-
-  val mscratch_wen = (io.mcsr_addr === B"h340") & io.mcsr_wen
-  val mepc_wen    = (io.mcsr_addr === B"h341") & io.mcsr_wen
-  val mcause_wen  = (io.mcsr_addr === B"h342") & io.mcsr_wen
-  val mtval_wen   = (io.mcsr_addr === B"h343") & io.mcsr_wen
-
-  // ============================================
-  // HW access
-  // ============================================
-
-  // == Machine Trap Setup == //
+  // =========================================
+  val misa_val   = B"32'h0"
+  val mstatus    = busCtrl.createReadAndWrite(REG_T, 0x300, 0, "Machine status register") init 0
+  val misa       = busCtrl.read           (misa_val, 0x301, 0, "ISA and extensions")
+  val mie        = busCtrl.createReadAndWrite(REG_T, 0x304, 0, "Machine interrupt-enable register") init 0
+  val mtvec      = busCtrl.createReadAndWrite(REG_T, 0x305, 0, "Machine trap-handler base address")
+  val mcounteren = busCtrl.read          (B"0", 0x306, 0, "Machine counter enable.")
 
   // mstatus register
-  def mstatus_mie:  Bool = mstatus(3)
-  def mstatus_mpie: Bool = mstatus(7)
-  def mstatus_mpp:  Bits = mstatus(12 downto 11)
+  val mstatus_mie  = mstatus(3)
+  val mstatus_mpie = mstatus(7)
+  val mstatus_mpp  = mstatus(12 downto 11)
   mstatus_mpp := B"2'b11" // Since we only support Machine mode, we always set it to 11
   when(io.mtrap_enter) {
     mstatus_mie   := False
@@ -158,76 +94,91 @@ case class MCSR() extends Component {
   }.elsewhen(io.mtrap_exit) {
     mstatus_mie   := mstatus_mpie
     mstatus_mpie  := True
-  }.elsewhen(mstatus_wen) {
-    mstatus       := io.mcsr_din
   }
-
-  // misa register
-  misa(AppleRISCVCfg.MXLEN-1 downto AppleRISCVCfg.MXLEN-2) := 1
-
+  // misa
+  misa_val(AppleRISCVCfg.MXLEN-1 downto AppleRISCVCfg.MXLEN-2) := 1
   // mie register
-  def mie_meie: Bool = mie(11)
-  def mie_mtie: Bool = mie(7)
-  def mie_msie: Bool = mie(3)
-  when(mie_wen) {
-    mie := io.mcsr_din
-  }
-
+  val mie_meie = mie(11)
+  val mie_mtie = mie(7)
+  val mie_msie = mie(3)
   // mtvec register
-  def mtvec_base: Bits = mtvec(AppleRISCVCfg.MXLEN-1 downto 2)
-  def mtvec_mode: Bits = mtvec(1 downto 0)
-  when(mtvec_wen) {
-    mtvec := io.mcsr_din
-  }
+  val mtvec_base = mtvec(MXLEN-1 downto 2)
+  val mtvec_mode = mtvec(1 downto 0)
 
-  // == Machine Trap Handling == //
 
-  // mscratch
-  when(mscratch_wen) {
-    mscratch := io.mcsr_din
-  }
+  // =========================================
+  // Machine Trap Handling
+  // =========================================
+  val mscratch  = busCtrl.createReadAndWrite(REG_T, 0x340, 0, "Scratch register for machine trap handlers.")
+  val mepc      = busCtrl.createReadAndWrite(REG_T, 0x341, 0, "Machine exception program counter.")
+  val mcause    = busCtrl.createReadAndWrite(REG_T, 0x342, 0, "Machine trap cause.r")
+  val mtval     = busCtrl.createReadAndWrite(REG_T, 0x343, 0, "Machine bad address or instruction.")
+  val mip       = busCtrl.createReadAndWrite(REG_T, 0x344, 0, "Machine interrupt pending.") init 0
 
   // mepc
-  def mepc_base: Bits = mepc(AppleRISCVCfg.MXLEN-1 downto 2)
-  def mepc_mode: Bits = mepc(1 downto 0)
-  when(io.mtrap_enter) {
-    mepc  := io.mtrap_mepc
-  }.elsewhen(mepc_wen) {
-    mepc  := io.mcsr_din
-  }
-
+  val mepc_base = mepc(MXLEN-1 downto 2)
+  val mepc_mode = mepc(1 downto 0)
+  when(io.mtrap_enter) {mepc   := io.mtrap_mepc}
   // mcause
-  def mcause_ec:        Bits = mcause(AppleRISCVCfg.MXLEN-2 downto 0)
-  def mcause_interrupt: Bool = mcause(AppleRISCVCfg.MXLEN-1)
-  when(io.mtrap_enter) {
-    mcause  := io.mtrap_mcause
-  }elsewhen(mcause_wen) {
-    mcause  := io.mcsr_din
-  }
-
+  when(io.mtrap_enter) {mcause := io.mtrap_mcause}
   // mtval
-  when(io.mtrap_enter) {
-    mtval  := io.mtrap_mtval
-  }.elsewhen(mtval_wen) {
-    mtval  := io.mcsr_din
-  }
-
+  when(io.mtrap_enter) {mtval  := io.mtrap_mtval}
   // mip register
-  def mip_meip: Bool = mip(11)
-  def mip_mtip: Bool = mip(7)
-  def mip_msip: Bool = mip(3)
+  val mip_meip = mip(11)
+  val mip_mtip = mip(7)
+  val mip_msip = mip(3)
   mip_meip := io.external_interrupt &  mie_meie
   mip_mtip := io.timer_interrupt    &  mie_mtie
   mip_msip := io.software_interrupt &  mie_msie
 
-  // mcycle register
-  mcycle_64 := mcycle_64 + 1
-  when(io.inc_br_cnt)    {mbpmcounter3_64 := mbpmcounter3_64 + 1}
-  when(io.inc_pred_good) {mbpmcounter4_64 := mbpmcounter4_64 + 1}
+  // =========================================
+  // Machine Counter Setup
+  // =========================================
+  val mcountinhbit = if (CsrCfg.USE_MCOUNTINHIBIT) new Area {
+    val value =  busCtrl.createReadAndWrite(REG_T, 0x320, 0, "Machine interrupt pending.") init 0
+    val cy = value(0)
+    val ir = value(2)
+    val hpm = value(31 downto 3)
+  } else null
 
+
+  // =========================================
+  // Machine Counter/Timers
+  // =========================================
+  val mcycle = if (CsrCfg.USE_MCYCLE) new Area
+   {
+    val cnt = Reg(UInt(64 bits)) init 0
+     busCtrl.readAndWrite(cnt(MXLEN-1 downto 0), 0xB00, 0, "Machine cycle counter.")
+     busCtrl.readAndWrite(cnt(63 downto MXLEN) , 0xB80, 0, "Upper 32 bits of mcycle, RV32I only.")
+    when(mcountinhbit.cy) {cnt := cnt + 1}
+  } else null
+
+  val minstret = if (CsrCfg.USE_MINSTRET) new Area {
+    val cnt = Reg(UInt(64 bits)) init 0
+    busCtrl.readAndWrite(cnt(MXLEN-1 downto 0), 0xB02, 0, "Machine cycle counter.")
+    busCtrl.readAndWrite(cnt(63 downto MXLEN) , 0xB82, 0, "Upper 32 bits of mcycle, RV32I only.")
+    when(mcountinhbit.ir & io.inc_minstret) {cnt := cnt + 1}
+  } else null
+
+  val mhpmcounter3 = if (CsrCfg.USE_MHPMC3) new Area {
+    // count number of branch instruction
+    val cnt  = Reg(UInt(64 bits)) init 0
+    busCtrl.readAndWrite(cnt(MXLEN-1 downto 0), 0xB03, 0, "Machine performance-monitoring counter.")
+    busCtrl.readAndWrite(cnt(63 downto MXLEN) , 0xB83, 0, "Upper 32 bits of mhpmcounter3, RV32I only.")
+    when(mcountinhbit.hpm(0) & io.inc_br_cnt) {cnt := cnt + 1}
+
+  } else null
+
+  val mhpmcounter4 = if (CsrCfg.USE_MHPMC4) new Area {
+    // count number of correct predicted instruction
+    val cnt  = Reg(UInt(64 bits)) init 0
+    busCtrl.readAndWrite(cnt(MXLEN-1 downto 0), 0xB04, 0, "Machine performance-monitoring counter.")
+    busCtrl.readAndWrite(cnt(63 downto MXLEN) , 0xB84, 0, "Upper 32 bits of mhpmcounter4, RV32I only.")
+    when(mcountinhbit.hpm(1) & io.inc_pred_good) {cnt := cnt + 1}
+  } else null
 
   // ============================================
-  // Trap related
+  // Trap related Logic
   // ============================================
   io.mtvec       := mtvec
   io.mie_meie    := mie_meie
@@ -235,4 +186,88 @@ case class MCSR() extends Component {
   io.mie_msie    := mie_msie
   io.mstatus_mie := mstatus_mie
   io.mepc        := mepc
+}
+
+
+/**
+ * Csr Bus interface
+ */
+case class CsrBus() extends Bundle with IMasterSlave {
+
+  val addr   = UInt(AppleRISCVCfg.CSR_ADDR_WIDTH bits)
+  val wdata  = Bits(AppleRISCVCfg.MXLEN bits)
+  val wen    = Bool
+  val wtype  = CsrSelEnum()
+  val rdata  = Bits(AppleRISCVCfg.MXLEN bits)
+  val decerr = Bool
+
+  override def asMaster(): Unit = {
+    out(addr, wen, wdata, wtype)
+    in(rdata, decerr)
+  }
+}
+
+object CsrBusSlaveFactory {
+  def apply(bus: CsrBus) = new CsrBusSlaveFactory(bus)
+}
+
+class CsrBusSlaveFactory(bus: CsrBus) extends BusSlaveFactoryDelayed {
+
+  //val askWrite = bus.wen
+  //val askRead  = True
+  val doWrite  = bus.wen
+  val doRead   = True
+  val wdata    = Bits(AppleRISCVCfg.MXLEN bits)
+
+  val mcsr_masked_set    = bus.rdata | bus.wdata
+  val mcsr_masked_clear  = bus.rdata & ~bus.wdata
+  switch(bus.wtype) {
+    is(CsrSelEnum.DATA)  {wdata := bus.wdata}
+    is(CsrSelEnum.SET)   {wdata := mcsr_masked_set}
+    is(CsrSelEnum.CLEAR) {wdata := mcsr_masked_clear}
+  }
+
+  bus.decerr := True
+  bus.rdata  := 0
+
+  override def writeHalt() =  False
+  override def readHalt()  = False
+
+  override def writeAddress() = bus.addr
+  override def readAddress()  = bus.addr
+
+  override def busDataWidth   = AppleRISCVCfg.MXLEN
+  override def wordAddressInc = AppleRISCVCfg.MXLEN
+
+  override def build(): Unit = {
+    super.doNonStopWrite(wdata)
+
+    def doMappedElements(jobs: Seq[BusSlaveFactoryElement]): Unit = super.doMappedElements(
+      jobs = jobs,
+      // askWrite = askWrite,
+      // askRead  = askRead,
+      askWrite = False,
+      askRead  = False,
+      doWrite  = doWrite,
+      doRead   = doRead,
+      writeData = wdata,
+      readData  = bus.rdata
+    )
+
+    switch(bus.addr) {
+      for ((address, jobs) <- elementsPerAddress if address.isInstanceOf[SingleMapping]) {
+        is(address.asInstanceOf[SingleMapping].address) {
+          doMappedElements(jobs)
+          bus.decerr := False
+        }
+      }
+    }
+
+    for ((address, jobs) <- elementsPerAddress if !address.isInstanceOf[SingleMapping]) {
+      when(address.hit(bus.addr)) {
+        doMappedElements(jobs)
+        bus.decerr := False
+      }
+    }
+  }
 }

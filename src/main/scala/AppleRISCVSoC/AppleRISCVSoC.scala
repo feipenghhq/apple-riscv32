@@ -169,13 +169,13 @@ object AppleRISCVSoCMain{
     def main(args: Array[String]) {
         AppleRISCVCfg.USE_RV32M   = true
         AppleRISCVCfg.USE_BPU     = true
-        AppleRISCVCfg.USE_MHPMC3  = true
-        AppleRISCVCfg.USE_MHPMC4  = true
+        CsrCfg.USE_MHPMC3  = true
+        CsrCfg.USE_MHPMC4  = true
         val cfg = SoCCfg(
             gpio0Cfg = new GpioCfg(false, false, false, false, 8),
             gpio1Cfg = new GpioCfg(false, false, false, false, 0),
             uartCfg = UartCfg(UartCtrlGenerics(), 8, 8)
         )
-        SpinalVerilog(InOutWrapper(AppleRISCVSoC(cfg))).printPruned()
+        SpinalVerilog(InOutWrapper(AppleRISCVSoC(cfg)))
     }
 }

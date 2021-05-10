@@ -44,7 +44,16 @@ object AppleRISCVCfg {
     var USE_BPU         = true
     var BPU_DEPTH       = 32    // need to be power of 2
 
-    // CSR
+
+}
+
+object CsrCfg {
+    // Machine Counter Setup
+    val USE_MCOUNTINHIBIT = true
+
+    // Machine Counter/Timers
+    val USE_MCYCLE      = true
+    val USE_MINSTRET    = true
     var USE_MHPMC3      = true
     var USE_MHPMC4      = true
 }

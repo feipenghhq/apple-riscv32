@@ -28,8 +28,8 @@ int main(void) {
     clock_t cpu_time_used;
 
     long long sum = 0;
-    const int ArraySize = 4000;
-    const int loopSize = 100;
+    const int ArraySize = 8000;
+    const int loopSize = 4000;
     const int CLOCKS_PER_SEC = 1000 * 1000 * 100 / 1024;
     //int *L = malloc(sizeof(int) * ArraySize);
     int L[ArraySize];
@@ -62,7 +62,7 @@ int main(void) {
             }
         }
     }
-
+    stp_br_cnt();
     // end
     printf(" == Test End == \n");
     end = clock();
@@ -77,6 +77,7 @@ int main(void) {
     for (int i = 0; i < 10; i++) {
         printf("%d ", L[i]);
     }
+
     printf("\n");
     printf("************************\n");
     printf("Branch Count %u + %u\n", rdmhpmcounter3h(), rdmhpmcounter3());
