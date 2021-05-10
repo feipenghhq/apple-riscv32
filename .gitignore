@@ -42,7 +42,7 @@ tmp/
 null
 
 # generated files
-src/rtl/gen/*/*.v
+*.bin
 
 # tests
 *__pycache__
@@ -63,5 +63,8 @@ fpga/*/.Xil
 fpga/*/.jou
 fpga/*/*.str
 fpga/*/*/output
-fpga/*/*.str
 fpga/*/soc
+
+# vscode scala metals
+.bloop
+.metals

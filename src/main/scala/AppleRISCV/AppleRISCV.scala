@@ -61,7 +61,7 @@ case class AppleRISCV() extends Component {
         ///////////////////////////////////////
         // IF Stage
         val pc_inst = PC()
-        val bpu_inst = if(AppleRISCVCfg.USE_BPB) BPU() else null
+        val bpu_inst = if(AppleRISCVCfg.USE_BPU) BPU() else null
         val imem_ctrl_inst = ImemCtrl()
 
         // ID Stage
@@ -109,11 +109,11 @@ case class AppleRISCV() extends Component {
         // =========================
 
         // PC
-        pc_inst.io.branch := branch_unit_inst.io.branch_taken
+        pc_inst.io.branch := branch_unit_inst.io.take_branch 
         pc_inst.io.stall  := if_pipe_stall
         pc_inst.io.branch_pc_in  := branch_unit_inst.io.target_pc
 
-        if (AppleRISCVCfg.USE_BPB) {
+        if (AppleRISCVCfg.USE_BPU) {
             pc_inst.io.bpu_pred_take := bpu_inst.io.pred_take
             pc_inst.io.bpu_pc_in     := bpu_inst.io.pred_pc
         } else {
@@ -122,11 +122,12 @@ case class AppleRISCV() extends Component {
         }
 
         // BPU
-        val branch_instr_pc = if (AppleRISCVCfg.USE_BPB) UInt(AppleRISCVCfg.XLEN bits) else null // place holder
-        if (AppleRISCVCfg.USE_BPB) {
+        val branch_instr_pc = if (AppleRISCVCfg.USE_BPU) UInt(AppleRISCVCfg.XLEN bits) else null // place holder
+        if (AppleRISCVCfg.USE_BPU) {
             bpu_inst.io.pc            := pc_inst.io.pc_out
             bpu_inst.io.branch_update := branch_unit_inst.io.is_branch
-            bpu_inst.io.branch_taken  := branch_unit_inst.io.branch_taken
+            bpu_inst.io.branch_should_take := branch_unit_inst.io.branch_should_take
+            bpu_inst.io.branch_target_pc := branch_unit_inst.io.target_pc
             bpu_inst.io.branch_instr_pc := branch_instr_pc
             bpu_inst.io.if_stage_valid := if_stage_valid
         }
@@ -143,8 +144,8 @@ case class AppleRISCV() extends Component {
             val stage_valid = RegNextWhen(if_stage_valid,           ~if_pipe_stall) init False
 
             // Optional BPU
-            val pred_take   = if (AppleRISCVCfg.USE_BPB) RegNextWhen(bpu_inst.io.pred_take, ~if_pipe_stall) else null
-            val pred_pc     = if (AppleRISCVCfg.USE_BPB) RegNextWhen(bpu_inst.io.pred_pc, ~if_pipe_stall) else null
+            val pred_take   = if (AppleRISCVCfg.USE_BPU) RegNextWhen(bpu_inst.io.pred_take, ~if_pipe_stall) else null
+            val pred_pc     = if (AppleRISCVCfg.USE_BPU) RegNextWhen(bpu_inst.io.pred_pc, ~if_pipe_stall) else null
         }
 
         // =========================
@@ -226,8 +227,8 @@ case class AppleRISCV() extends Component {
             val div_opcode = if (AppleRISCVCfg.USE_RV32M) RegNextWhen(instr_dec_inst.io.div_opcode, ~id_pipe_stall) else null
 
             // Optional BPU
-            val pred_take  = if (AppleRISCVCfg.USE_BPB) RegNextWhen(if2id.pred_take, ~id_pipe_stall) else null
-            val pred_pc    = if (AppleRISCVCfg.USE_BPB) RegNextWhen(if2id.pred_pc, ~id_pipe_stall) else null
+            val pred_take  = if (AppleRISCVCfg.USE_BPU) RegNextWhen(if2id.pred_take, ~id_pipe_stall) else null
+            val pred_pc    = if (AppleRISCVCfg.USE_BPU) RegNextWhen(if2id.pred_pc, ~id_pipe_stall) else null
         }
 
         // =========================
@@ -286,7 +287,7 @@ case class AppleRISCV() extends Component {
         branch_unit_inst.io.jal_op          := id2ex.jal_op
         branch_unit_inst.io.jalr_op         := id2ex.jalr_op
         branch_unit_inst.io.ex_stage_valid  := ex_stage_valid_final
-        if (AppleRISCVCfg.USE_BPB) {
+        if (AppleRISCVCfg.USE_BPU) {
             branch_unit_inst.io.pred_take   := id2ex.pred_take
             branch_unit_inst.io.pred_pc     := id2ex.pred_pc
             branch_instr_pc                 := id2ex.pc
@@ -340,7 +341,7 @@ case class AppleRISCV() extends Component {
         // csr
         mcsr_inst.io.mcsr_addr := ex2mem.csr_idx
         mcsr_inst.io.inc_br_cnt := branch_unit_inst.io.is_branch
-        mcsr_inst.io.inc_pred_good := branch_unit_inst.io.is_branch & ~branch_unit_inst.io.branch_taken
+        mcsr_inst.io.inc_pred_good := branch_unit_inst.io.is_branch & ~branch_unit_inst.io.take_branch 
         // Note: uimm is the same field as rs1 in instruction so use rs1 here instead
         val mcsr_data          = Mux(ex2mem.csr_sel_imm, ex2mem.rs1_idx.asBits.resized, ex2mem.rs1_value)
         val mcsr_masked_set    = mcsr_inst.io.mcsr_dout | mcsr_data
@@ -446,8 +447,8 @@ case class AppleRISCV() extends Component {
             // Flushing/Bubble Insertion
             val muldiv_stall_req = if (AppleRISCVCfg.USE_RV32M) mul_inst.io.mul_stall_req | div_inst.io.div_stall_req else False
             // Flush
-            if_stage_valid  := ~branch_unit_inst.io.branch_taken & ~trap_ctrl_inst.io.trap_flush
-            id_stage_valid  := if2id.stage_valid  & ~branch_unit_inst.io.branch_taken  & ~trap_ctrl_inst.io.trap_flush
+            if_stage_valid  := ~branch_unit_inst.io.take_branch  & ~trap_ctrl_inst.io.trap_flush
+            id_stage_valid  := if2id.stage_valid  & ~branch_unit_inst.io.take_branch   & ~trap_ctrl_inst.io.trap_flush
             ex_stage_valid  := id2ex.stage_valid  & ~trap_ctrl_inst.io.trap_flush
             mem_stage_valid := ex2mem.stage_valid & ~trap_ctrl_inst.io.trap_flush
             wb_stage_valid  := mem2wb.stage_valid & ~dmem_ctrl_isnt.io.dmem_stall_req

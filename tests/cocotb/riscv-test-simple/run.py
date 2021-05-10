@@ -37,6 +37,7 @@ def process_rom_file(name):
     if os.path.isfile(ROM_FILE):
         os.remove(ROM_FILE)
     os.symlink(SRC_FILE, ROM_FILE)
+    os.system(f"ln -s {REPO_ROOT}/*.bin {os.getcwd()}/.")
 
     FP = open('verilog.rom', "r")
     IRAM_FP = open('instr_ram.rom', "w")

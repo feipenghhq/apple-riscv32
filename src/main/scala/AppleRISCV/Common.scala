@@ -41,8 +41,8 @@ object AppleRISCVCfg {
     var MULSTAGE        = 3
 
     // Branch Prediction
-    var USE_BPB         = true
-    var BPB_DEPTH       = 32    // need to be power of 2
+    var USE_BPU         = true
+    var BPU_DEPTH       = 32    // need to be power of 2
 
     // CSR
     var USE_MHPMC3      = true

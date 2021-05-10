@@ -55,9 +55,6 @@ include $(shell cocotb-config --makefiles)/Makefile.sim
 
 .PONY: clean_all
 
-clean_rom:
-	rm -rf *.rom
-
-clean_all: clean clean_rom
-	rm -rf *vcd results.xml __pycache__ *.pyc */__pycache__ */*.pyc sim_build
+clean_all: clean
+	rm -rf *vcd results.xml __pycache__ *.pyc */__pycache__ */*.pyc sim_build *.rom *.bin
 

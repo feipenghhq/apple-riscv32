@@ -17,6 +17,7 @@
 
 package Board.arty_a7
 
+import AppleRISCV._
 import AppleRISCVSoC.ip._
 import AppleRISCVSoC._
 import spinal.core._
@@ -69,6 +70,10 @@ case class ArtyA7_AppleRISCVSoC(cfg: SoCCfg) extends Component {
 
 object ArtyA7_AppleRISCVSoCMain{
   def main(args: Array[String]) {
+    AppleRISCVCfg.USE_RV32M   = true
+    AppleRISCVCfg.USE_BPU     = true
+    AppleRISCVCfg.USE_MHPMC3  = true
+    AppleRISCVCfg.USE_MHPMC4  = true
     val cfg = SoCCfg (
       gpio0Cfg   = new GpioCfg(false, false, false, false, 8),
       gpio1Cfg   = new GpioCfg(false, false, false, false, 0),

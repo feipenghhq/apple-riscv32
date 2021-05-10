@@ -24,7 +24,7 @@ import shutil
 
 # isa and its run time
 rv32ui_isa = [
-    ['add'   , 5000],
+    ['add'   , 6000],
     ['addi'  , 3000 ],
     ['and'   , 10000],
     ['andi'  , 3000 ],
@@ -51,15 +51,15 @@ rv32ui_isa = [
     ['simple', 2000 ],
     ['sll'   , 10000],
     ['slli'  , 3000 ],
-    ['slt'   , 5000],
+    ['slt'   , 6000],
     ['slti'  , 3000 ],
-    ['sltu'   , 5000],
+    ['sltu'   , 6000],
     ['sltiu'  , 3000 ],
     ['sra'   , 10000],
     ['srai'  , 3000 ],
     ['srl'   , 10000],
     ['srli'  , 10000 ],
-    ['sub'   , 5000],
+    ['sub'   , 6000],
     ['sw'  , 10000 ],
     ['xor'   , 10000],
     ['xori'  , 3000 ],

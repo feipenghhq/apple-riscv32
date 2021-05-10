@@ -126,7 +126,7 @@ import branch1
 @cocotb.test()
 async def test_branch1(dut):
     """ Test the beq/bne logic """
-    await run_test(dut, branch1.imem_data, branch1.expected_register, 300)
+    await run_test(dut, branch1.imem_data, branch1.expected_register, 800)
 
 import branch2
 @cocotb.test()
@@ -169,3 +169,9 @@ import div
 async def test_div(dut):
     """ Test the jalr logic """
     await run_test(dut, div.imem_data, div.expected_register, 2000)
+
+import bpu
+@cocotb.test()
+async def test_bpu(dut):
+    """ Test the jalr logic """
+    await run_test(dut, bpu.imem_data, bpu.expected_register, 2000)
