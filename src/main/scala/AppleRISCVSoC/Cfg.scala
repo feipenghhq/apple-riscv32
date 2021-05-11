@@ -98,6 +98,13 @@ object PeripSibCfg {
   )
 
   // ** On-Chip Peripherals
+  val aonSibCfg = SibConfig(
+    addressWidth = SoCAddrMap.AON_ADDR_WIDTH,
+    dataWidth    = AppleRISCVCfg.XLEN,
+    addr_lo      = SoCAddrMap.AON_BASE,
+    addr_hi      = SoCAddrMap.AON_TOP
+  )
+
   val uart0SibCfg = SibConfig(
     addressWidth = SoCAddrMap.UART0_ADDR_WIDTH,
     dataWidth    = AppleRISCVCfg.XLEN,

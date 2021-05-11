@@ -4,14 +4,36 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: gpio
+// Module Name: Gpio
 //
 // Author: Heqing Huang
 // Date Created: 04/21/2021
+// Version V2: 05/10/2021
 //
 // ================== Description ==================
 //
-// General Purpose IO, currently only supporting output signal
+// General Purpose IO. Compatible with SiFive Freedom E310 SoC
+//
+// Notes: Not all the registers are implemented
+//
+//  ---   GPIO Peripheral Offset Registers   ---
+// Offset   Name        Description                    Implemented
+// 0x000    value       pin value                           Y
+// 0x004    input_en    ∗ pin input enable                 N/A
+// 0x008    output_en   ∗ pin output enable                 Y
+// 0x00C    port        output port value                   Y
+// 0x010    pue         ∗ internal pull-up enable          N/A
+// 0x014    ds          Pin Drive Strength                 N/A
+// 0x018    rise_ie     rise interrupt enable            cfg-able
+// 0x01C    rise_ip     rise interrupt pending           cfg-able
+// 0x020    fall_ie     fall interrupt enable            cfg-able
+// 0x024    fall_ip     fall interrupt pending           cfg-able
+// 0x028    high_ie     high interrupt enable            cfg-able
+// 0x02C    high_ip     high interrupt pending           cfg-able
+// 0x030    low_ie      low interrupt enable             cfg-able
+// 0x034    low_ip      low interrupt pending            cfg-able
+// 0x038    iof_en      ∗ HW I/O Function enable           N/A
+// 0x03C    iof_sel     HW I/O Function select             N/A
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,33 +44,30 @@ import spinal.core._
 import spinal.lib._
 import spinal.lib.io.TriStateArray
 
+
 // GPIO config
-class GpioCfg(
-  val HI_INT: Boolean = true,
-  val LO_INT: Boolean = true,
-  val RISE_INT: Boolean = true,
-  val FALL_INT: Boolean = true,
-  val GPIO_WIDTH : Int  = 32
-)
+case class GpioCfg(
+  val HI_INT: Boolean = false,
+  val LO_INT: Boolean = false,
+  val RISE_INT: Boolean = false,
+  val FALL_INT: Boolean = false,
+  val GPIO_WIDTH: Int = 32)
 
 case class gpio_io(cfg: GpioCfg, sibCfg: SibConfig, useInt: Boolean = true) extends Bundle {
   val gpio         = master(TriStateArray(cfg.GPIO_WIDTH bits))
   val gpio_sib     = slave(Sib(sibCfg))
-  val gpio_int_pe  = if (useInt) out Bool else null
+  val gpio_irq     = out Bits(cfg.GPIO_WIDTH bits)
 }
 
-case class gpio_interrupt_gen(busCtrl: SibSlaveFactory, width: Int, enable: Boolean, addr: Int,
+case class gpio_interrupt(busCtrl: SibSlaveFactory, width: Int, enable: Boolean, addr: Int,
                           intName: String, gpio_value: Vec[Bool], int_op: Bool => Bool) extends Area {
-  val int_aggr = False
-  if (enable) {
     // Interrupt Ctrl and Status Register
-    val int_en = busCtrl.createReadAndWrite(Bits(width bits), addr    , 0, "GPIO" + intName + "Interrupt Enable")
-    val int_pe = busCtrl.createReadAndWrite(Bits(width bits), addr + 4, 0, "GPIO" + intName + "Interrupt Pending")
+    val ie = if (enable) busCtrl.createReadAndWrite(Bits(width bits), addr    , 0, "GPIO" + intName + "Interrupt Enable") init 0 else null
+    val ip = if (enable) busCtrl.createReadAndWrite(Bits(width bits), addr + 4, 0, "GPIO" + intName + "Interrupt Pending") init 0 else null
     // Interrupt Logic
-    int_pe := gpio_value.map(int_op).asBits
-    int_aggr := int_pe.orR
-  }
+    val irq = if (enable) gpio_value.map(int_op).asBits & ie else B(0, width bits)
 }
+
 
 case class Gpio(cfg: GpioCfg, sibCfg: SibConfig) extends Component {
 
@@ -58,15 +77,29 @@ case class Gpio(cfg: GpioCfg, sibCfg: SibConfig) extends Component {
 
   val gpio_value = io.gpio.read.asBools
 
-  // == Register == //
-  busCtrl.read        (io.gpio.read       , 0x0, 0, "GPIO Read Value")
-  busCtrl.drive       (io.gpio.write      , 0x0, 0, "GPIO Write Value")
-  busCtrl.driveAndRead(io.gpio.writeEnable, 0x4, 0, "GPIO Write Enable")
 
-  val hi_int = gpio_interrupt_gen(busCtrl, cfg.GPIO_WIDTH, cfg.HI_INT, 0x8,  "Level HI",    gpio_value, x => x)
-  val lo_int = gpio_interrupt_gen(busCtrl, cfg.GPIO_WIDTH, cfg.LO_INT, 0x10, "Level LO",    gpio_value, x => ~x)
-  val ri_int = gpio_interrupt_gen(busCtrl, cfg.GPIO_WIDTH, cfg.LO_INT, 0x18, "Rising Edge", gpio_value, x => x.rise(False))
-  val fa_int = gpio_interrupt_gen(busCtrl, cfg.GPIO_WIDTH, cfg.LO_INT, 0x20, "Rising Edge", gpio_value, x => x.fall(False))
+  // 0x000    value       pin value
+  busCtrl.read(io.gpio.read, 0x0, 0, "GPIO pin Value")
+  // 0x008    output_en   pin output enable
+  busCtrl.driveAndRead(io.gpio.writeEnable, 0x8, 0, "GPIO Output Enable")
+  // 0x00C    port        output port value
+  busCtrl.drive(io.gpio.write, 0xC, 0, "GPIO Output Port Value")
 
-  io.gpio_int_pe := hi_int.int_aggr | lo_int.int_aggr | ri_int.int_aggr | fa_int.int_aggr
+  // 0x018    rise_ie     rise interrupt enable
+  // 0x01C    rise_ip     rise interrupt pending
+  val rise = gpio_interrupt(busCtrl, cfg.GPIO_WIDTH, cfg.RISE_INT, 0x018,  "Rise", gpio_value, x => x.rise(False))
+
+  // 0x020    fall_ie     fall interrupt enable            cfg-able
+  // 0x024    fall_ip     fall interrupt pending           cfg-able
+  val fall = gpio_interrupt(busCtrl, cfg.GPIO_WIDTH, cfg.FALL_INT, 0x020, "Fall",    gpio_value, x => x.fall(False))
+
+  // 0x028    high_ie     high interrupt enable            cfg-able
+  // 0x02C    high_ip     high interrupt pending           cfg-able
+  val high = gpio_interrupt(busCtrl, cfg.GPIO_WIDTH, cfg.HI_INT, 0x028, "High", gpio_value, x => x)
+
+  // 0x030    low_ie      low interrupt enable             cfg-able
+  // 0x034    low_ip      low interrupt pending            cfg-able
+  val low  = gpio_interrupt(busCtrl, cfg.GPIO_WIDTH, cfg.LO_INT, 0x030, "Low", gpio_value, x => ~x)
+  
+  io.gpio_irq := rise.irq | fall.irq | high.irq | low.irq
 }

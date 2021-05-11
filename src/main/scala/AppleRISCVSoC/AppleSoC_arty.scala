@@ -73,8 +73,7 @@ case class AppleSoCCfg_arty() {
       addr_hi      = DATA_RAM_TOP
     )
 
-    var uartCfg = UartCfg(UartCtrlGenerics())
-    var gpio0Cfg = new GpioCfg(false, false, false, false, 32)
+    var gpio0Cfg = GpioCfg(false, false, false, false, 32)
     var uartDbgBaudRate = 115200
     
     var USE_UART0 = true
@@ -90,8 +89,8 @@ case class AppleSoC_arty() extends Component {
         val clk        = in Bool
         val reset      = in Bool
         val load_imem  = in Bool
-        val gpio0 = if (cfg.USE_GPIO0) master(TriStateArray(32 bits)) else null
-        val uart0 = master(Uart())  // this is needed for debug
+        val gpio0      = if (cfg.USE_GPIO0) master(TriStateArray(32 bits)) else null
+        val uart0      = master(Uart())  // this is needed for debug
     }
     noIoPrefix()
 
@@ -123,10 +122,12 @@ case class AppleSoC_arty() extends Component {
         val rstctrl_inst   = RstCtrl()
         val uart2imem_inst = ip.Uart2imem(cfg.imemSibCfg, cfg.uartDbgBaudRate)
 
-        // Optional Component
+        // Peripherals
         val peripList  = ArrayBuffer[(Component, SibConfig, Sib)]()
+        val aon_inst  = AON(PeripSibCfg.aonSibCfg)
+        peripList.append((aon_inst, PeripSibCfg.aonSibCfg, aon_inst.io.aon_sib))
 
-        val uart0_inst = if (cfg.USE_UART0) SibUart(cfg.uartCfg, PeripSibCfg.uart0SibCfg) else null
+        val uart0_inst = if (cfg.USE_UART0) SibUart(PeripSibCfg.uart0SibCfg) else null
         if (cfg.USE_UART0) peripList.append((uart0_inst, PeripSibCfg.uart0SibCfg, uart0_inst.io.uart_sib))
 
         val gpio0_inst = if (cfg.USE_GPIO0) Gpio(cfg.gpio0Cfg, PeripSibCfg.gpio0SibCfg) else null
@@ -142,9 +143,9 @@ case class AppleSoC_arty() extends Component {
         cpu_core.io.reset   := rstctrl_inst.io.cpu_reset_req
 
         // connect interrupt to cpu core
-        cpu_core.io.external_interrupt  := plic_inst.io.external_interrupt
-        cpu_core.io.timer_interrupt     := clic_inst.io.timer_interrupt
-        cpu_core.io.software_interrupt  := clic_inst.io.software_interrupt
+        cpu_core.io.external_interrupt  := plic_inst.io.external_irq
+        cpu_core.io.timer_interrupt     := clic_inst.io.timer_irq
+        cpu_core.io.software_interrupt  := clic_inst.io.software_irq
         cpu_core.io.debug_interrupt     := False
 
         // ====================================
@@ -220,11 +221,16 @@ case class AppleSoC_arty() extends Component {
         io.uart0.rxd <> uart2imem_inst.io.uart.rxd
         if(cfg.USE_UART0) io.uart0 <> uart0_inst.io.uart
 
-        // connect peripheral interrupt to plic
-        plic_inst.io.gpio0_int := False
-        plic_inst.io.gpio1_int := False
-        plic_inst.io.timer_int := False
-        plic_inst.io.uart_int  := uart0_inst.io.uart_interrupt
+        // connect peripheral interrupt to PLIC
+        val gpio_irq_base = 8
+        plic_inst.io.plic_irq_in(1 downto 0) := 0
+        plic_inst.io.plic_irq_in(2) := aon_inst.io.rtc_irq
+        plic_inst.io.plic_irq_in(3) := uart0_inst.io.rxwm | uart0_inst.io.txwm
+        plic_inst.io.plic_irq_in(gpio_irq_base-1 downto 4) := 0
+        for (idx <- 0 until gpio0_inst.io.gpio_irq.getBitsWidth) {
+            plic_inst.io.plic_irq_in(gpio_irq_base+idx) := gpio0_inst.io.gpio_irq(idx)
+        }
+        plic_inst.io.plic_irq_in(plic_inst.io.plic_irq_in.getBitsWidth-1 downto gpio_irq_base+gpio0_inst.io.gpio_irq.getBitsWidth) := 0
     }
 }
 

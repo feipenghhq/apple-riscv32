@@ -4,17 +4,28 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: plic
+// Module Name: Plic
 //
 // Author: Heqing Huang
 // Date Created: 04/19/2021
 //
 // ================== Description ==================
 //
-// Platform Level Interrupt Controller
+// Platform Level Interrupt Controller. Compatible with SiFive Freedom E310 SoC
 //
-// A very basic and simple PLIC, not interrupt priority and arbitration.
-// Simply oring all the interrupt and generate the external interrupt
+//
+//
+// Address    Width   Attr.   Description Notes                            Implemented
+// 0x0C000004 4B      RW      source 1 priority                                N
+// 0x0C000008 4B      RW      source 2 priority                                N
+// ...                                                                         N
+// 0x0C0000CC 4B      RW      source 51 priority                               N
+// 0x0C001000 4B      RO      Start of pending array                           Y
+// 0x0C001004 4B      RO      Last word of pending array                       Y
+// 0x0C002000 4B      RW      Start Hart 0 M-Mode interrupt enables            Y
+// 0x0C002004 4B      RW      End Hart 0 M-Mode interrupt enables              Y
+// 0x0C200000 4B      RW      Hart 0 M-Mode priority threshold                 N
+// 0x0C200004 4B      RW      Hart 0 M-Mode claim/complete                     N
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -24,37 +35,35 @@ import AppleRISCVSoC.bus._
 import spinal.core._
 import spinal.lib._
 
-case class plic_io(sibCfg: SibConfig) extends Bundle {
-  val plic_sib  = slave(Sib(sibCfg))
-  val timer_int = in Bool
-  val uart_int  = in Bool
-  val gpio0_int = in Bool
-  val gpio1_int = in Bool
-  val external_interrupt = out Bool
-}
-
-case class plic_interrupt_gen(busCtrl: SibSlaveFactory, width: Int, addr: Int, interrupt: Bits, intName: String) extends Area {
-
-  // Interrupt Ctrl and Status Register
-  val int_en = busCtrl.createReadAndWrite(Bits(width bits), addr    , 0, "PLIC" + intName + "Interrupt Enable")
-  val int_pe = busCtrl.createReadAndWrite(Bits(width bits), addr + 4, 0, "PLIC" + intName + "Interrupt Pending")
-  // Interrupt Logic
-  int_pe := interrupt
-  val int_aggr = int_pe.orR
-
-}
 
 case class Plic(sibCfg: SibConfig) extends Component {
 
+  val io = new Bundle {
+    val plic_sib     = slave(Sib(sibCfg))
+    val plic_irq_in  = in Bits(64 bits)
+    val external_irq = out Bool
+  }
   noIoPrefix()
 
-  val io = plic_io(sibCfg)
   val busCtrl  = SibSlaveFactory(io.plic_sib)
 
-  val timer_int = plic_interrupt_gen(busCtrl, 1, 0, io.timer_int.asBits, "Timer")
-  val uart_int  = plic_interrupt_gen(busCtrl, 1, 8, io.uart_int.asBits,   "Uart")
-  val gpio0_int = plic_interrupt_gen(busCtrl, 1, 16, io.gpio0_int.asBits, "GPIO0")
-  val gpio1_int = plic_interrupt_gen(busCtrl, 1, 24, io.gpio1_int.asBits, "GPIO1")
 
-  io.external_interrupt := gpio0_int.int_aggr | gpio1_int.int_aggr | timer_int.int_aggr | uart_int.int_aggr
+  // 0x0C001000 4B      RO      Start of pending array
+  // 0x0C001004 4B      RO      Last word of pending array
+  val pending1 = busCtrl.createReadOnly(Bits(32 bits), 0x1000, 0, "PLIC Interrupt Pending Register 1") init 0
+  val pending2 = busCtrl.createReadOnly(Bits(32 bits), 0x1004, 0, "PLIC Interrupt Pending Register 2") init 0
+
+
+  // 0x0C002000 4B      RW      Start Hart 0 M-Mode interrupt enables
+  // 0x0C002004 4B      RW      End Hart 0 M-Mode interrupt enables
+  val enable1 = busCtrl.createReadAndWrite(Bits(31 bits), 0x2000, 1, "PLIC Interrupt Enable Register 1") init 0
+  val enable2 = busCtrl.createReadAndWrite(Bits(32 bits), 0x2004, 0, "PLIC Interrupt Enable Register 2") init 0
+
+
+  // Interrupt logic
+  pending1(0) := False  // Non-existent global interrupt 0 is hardwired to zero
+  pending1(31 downto 1) := io.plic_irq_in(31 downto 1) & enable1
+  pending2 := io.plic_irq_in(63 downto 32) & enable2
+
+  io.external_irq := pending1.orR | pending2.orR
 }

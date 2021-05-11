@@ -4,14 +4,25 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: clic
+// Module Name: Clic
 //
 // Author: Heqing Huang
 // Date Created: 04/19/2021
+// Revision V2: 05/10/2021
 //
 // ================== Description ==================
 //
-// Core Level Interrupt Controller
+// Core Level Interrupt Controller. Compatible with SiFive Freedom E310 SoC
+//
+// The CLINT block holds memory-mapped control and status registers associated with software
+// and timer interrupts.
+//
+//   ---   CLINT Register Map   ---
+// Address      Width   Attr.   Description Notes
+// 0x02000000   4B      RW      msip for hart 0 MSIP Registers
+// 0x02004000   8B      RW      mtimecmp for hart 0 Timer compare register
+// 0x0200BFF8   8B      RO      mtime Timer register
+// * Other address are all reserved
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -24,25 +35,27 @@ import spinal.lib._
 case class Clic(sibCfg: SibConfig) extends Component {
 
   val io = new Bundle {
-    val clic_sib           = slave(Sib(sibCfg))
-    val software_interrupt = out Bool
-    val timer_interrupt    = out Bool
+    val clic_sib     = slave(Sib(sibCfg))
+    val software_irq = out Bool
+    val timer_irq    = out Bool
   }
   noIoPrefix()
 
   val busCtrl  = SibSlaveFactory(io.clic_sib)
 
-  val msip        = busCtrl.createReadAndWrite(Bool, 0, 0,
-      "MSIP Register, used to trigger software interrupt") init False
-  val mtime       = busCtrl.createWriteAndReadMultiWord(UInt(64 bits), 4,
-      "Free running timer, when value reaches mtimecmp, timer interrupt will be fired") init 0
-  val mtimecmp    = busCtrl.createWriteAndReadMultiWord(UInt(64 bits), 0xC,
-                  "Timer comparison register") init 0
+  // 0x02000000   4B      RW      msip for hart 0 MSIP Registers
+  val msip = busCtrl.createReadAndWrite(Bool, 0, 0, "msip for hart 0 MSIP Registers") init False
+
+  // 0x02004000   8B      RW      mtimecmp for hart 0 Timer compare register
+  val mtimecmp = busCtrl.createWriteAndReadMultiWord(UInt(64 bits), 0x4000, "mtimecmp for hart 0 Timer compare register") init 0
+
+  // 0x0200BFF8   8B      RO      mtime Timer register
+  val mtime = busCtrl.createWriteAndReadMultiWord(UInt(64 bits), 0xBFF8, "mtime Timer register") init 0
 
   // == timer logic == //
   mtime := mtime + 1
 
   // == interrupt generation logic == //
-  io.software_interrupt := msip
-  io.timer_interrupt := (mtime >= mtimecmp) & (mtimecmp =/= 0)
+  io.software_irq := msip
+  io.timer_irq    := (mtime >= mtimecmp) & (mtimecmp =/= 0)
 }
