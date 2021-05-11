@@ -29,7 +29,7 @@ case class BPU() extends Component {
   require(isPow2(AppleRISCVCfg.BPU_DEPTH))
   val BPU_ETR_WIDTH = log2Up(AppleRISCVCfg.BPU_DEPTH)
   val PC_OFFSET     = 2
-  val PC_USED_WIDTH = SOCCfg.INSTR_RAM_ADDR_WIDTH
+  val PC_USED_WIDTH = AppleRISCVCfg.XLEN
   val BPU_TAG_WIDTH = PC_USED_WIDTH - BPU_ETR_WIDTH - PC_OFFSET
   val BTB_WIDTH     = PC_USED_WIDTH - PC_OFFSET
   // PC is aligned to 4 bytes lower 2 bits are always zero, so ignore.
@@ -39,10 +39,10 @@ case class BPU() extends Component {
 
 
   val io = new Bundle {
-    val pc            = in UInt(AppleRISCVCfg.XLEN bits)
+    val pc            = in  UInt(AppleRISCVCfg.XLEN bits)
     val pred_take     = out Bool
     val pred_pc       = out UInt(AppleRISCVCfg.XLEN bits)
-    val branch_update = in Bool
+    val branch_update = in  Bool
     val branch_should_take = in Bool
     val branch_instr_pc  = in UInt(AppleRISCVCfg.XLEN bits)
     val branch_target_pc = in UInt(AppleRISCVCfg.XLEN bits)

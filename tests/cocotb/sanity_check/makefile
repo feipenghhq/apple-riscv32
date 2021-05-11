@@ -18,7 +18,7 @@ RTL_SOC_PATH  = $(REPO_ROOT)
 # Source files
 # -----------------------------------------
 TB_FILES      = $(TB_PATH)/apple_riscv_soc_tb.v
-RTL_FILES     = $(RTL_SOC_PATH)/AppleRISCVSoC.v
+RTL_FILES     = $(RTL_SOC_PATH)/AppleSoC_arty.v
 
 VERILOG_SOURCES += $(TB_FILES)
 VERILOG_SOURCES += $(RTL_FILES)

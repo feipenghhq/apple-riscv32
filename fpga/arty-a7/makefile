@@ -17,7 +17,7 @@ XILINX_RTL_PATH = $(REPO_ROOT)/src/rtl/arty_a7/
 
 _DEVICE = xc7a35ticsg324-1L
 
-_RTL_SRC      += $(REPO_ROOT)/ArtyA7_AppleRISCVSoC.v
+_RTL_SRC      += $(REPO_ROOT)/ArtyA7_top.v
 _RTL_SRC      += $(XILINX_RTL_PATH)/mmcm.v
 _RTL_SRC      += $(XILINX_RTL_PATH)/mmcm_clk_wiz.v
 
@@ -28,7 +28,7 @@ _XDC          += constraints/timing.xdc
 _PROGRAM	  ?= 0
 
 export PRJ_NAME 	= soc
-export TOP 			= ArtyA7_AppleRISCVSoC
+export TOP 			= ArtyA7_top
 export RTL_SRC     	= $(_RTL_SRC)
 export XDC         	= $(_XDC)
 export DEVICE 	    = $(_DEVICE)

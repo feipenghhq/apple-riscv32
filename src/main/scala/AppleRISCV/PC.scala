@@ -35,7 +35,7 @@ case class PC() extends Component {
     }
     noIoPrefix()
 
-    val pc_value = Reg(UInt(AppleRISCVCfg.XLEN bits)) init 0
+    val pc_value = Reg(UInt(AppleRISCVCfg.XLEN bits)) init AppleRISCVCfg.PC_RESET_VAL
     when(!io.stall) {
         when( io.trap) {
             pc_value := io.trap_pc_in

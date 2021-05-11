@@ -13,7 +13,7 @@ reg [7:0] instr_ram [0:DATA_RAM_SIZE-1];
 integer im = 0;
 integer dm = 0;
 
-AppleRISCVSoC DUT_AppleRISCVSoC(.*);
+AppleSoC_arty DUT_AppleRISCVSoC(.*);
 
 `ifdef COCOTB_SIM
 initial begin
@@ -28,7 +28,10 @@ initial begin
   $readmemh("instr_ram.rom", instr_ram);
   $display("[INFO] Loading Instruction RAM Done");
   for (im = 0; im < INSTR_RAM_SIZE; im = im + 4) begin
-    DUT_AppleRISCVSoC.soc_imem_inst.ram[im/4] = {instr_ram[im+3], instr_ram[im+2],instr_ram[im+1],instr_ram[im]};
+    DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol3[im/4] = instr_ram[im+3];
+    DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol2[im/4] = instr_ram[im+2];
+    DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol1[im/4] = instr_ram[im+1];
+    DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol0[im/4] = instr_ram[im];
   end
 end
 `endif
@@ -50,10 +53,9 @@ initial begin
 end
 `endif
 
-  wire     [31:0]   gpio0_port;
-  wire     [31:0]   gpio1_port;
-  wire              uart_port_txd;
-  reg               uart_port_rxd;
+  wire     [31:0]   gpio0;
+  wire              uart0_txd;
+  reg               uart0_rxd;
   reg               load_imem = 'b0;
 
 endmodule

@@ -4,88 +4,88 @@ generated/rv32si-scall:     file format elf32-littleriscv
 
 Disassembly of section .text.init:
 
-00000000 <_start>:
-   0:	00000093          	li	ra,0
-   4:	00000113          	li	sp,0
-   8:	00000193          	li	gp,0
-   c:	00000213          	li	tp,0
-  10:	00000293          	li	t0,0
-  14:	00000313          	li	t1,0
-  18:	00000393          	li	t2,0
-  1c:	00000413          	li	s0,0
-  20:	00000493          	li	s1,0
-  24:	00000513          	li	a0,0
-  28:	00000593          	li	a1,0
-  2c:	00000613          	li	a2,0
-  30:	00000693          	li	a3,0
-  34:	00000713          	li	a4,0
-  38:	00000793          	li	a5,0
-  3c:	00000813          	li	a6,0
-  40:	00000893          	li	a7,0
-  44:	00000913          	li	s2,0
-  48:	00000993          	li	s3,0
-  4c:	00000a13          	li	s4,0
-  50:	00000a93          	li	s5,0
-  54:	00000b13          	li	s6,0
-  58:	00000b93          	li	s7,0
-  5c:	00000c13          	li	s8,0
-  60:	00000c93          	li	s9,0
-  64:	00000d13          	li	s10,0
-  68:	00000d93          	li	s11,0
-  6c:	00000e13          	li	t3,0
-  70:	00000e93          	li	t4,0
-  74:	00000f13          	li	t5,0
-  78:	00000f93          	li	t6,0
-  7c:	00000297          	auipc	t0,0x0
-  80:	08028293          	addi	t0,t0,128 # fc <mtvec_handler>
-  84:	00229293          	slli	t0,t0,0x2
-  88:	30529073          	csrw	mtvec,t0
-  8c:	00200193          	li	gp,2
-  90:	00800313          	li	t1,8
-  94:	000022b7          	lui	t0,0x2
-  98:	80028293          	addi	t0,t0,-2048 # 1800 <mtvec_handler+0x1704>
-  9c:	3002b073          	csrc	mstatus,t0
-  a0:	300023f3          	csrr	t2,mstatus
-  a4:	0072f2b3          	and	t0,t0,t2
-  a8:	00028463          	beqz	t0,b0 <_start+0xb0>
-  ac:	00b00313          	li	t1,11
-  b0:	000022b7          	lui	t0,0x2
-  b4:	80028293          	addi	t0,t0,-2048 # 1800 <mtvec_handler+0x1704>
-  b8:	3002b073          	csrc	mstatus,t0
-  bc:	00000297          	auipc	t0,0x0
-  c0:	01028293          	addi	t0,t0,16 # cc <_start+0xcc>
-  c4:	34129073          	csrw	mepc,t0
-  c8:	30200073          	mret
-  cc:	00100193          	li	gp,1
+20000000 <_start>:
+20000000:	00000093          	li	ra,0
+20000004:	00000113          	li	sp,0
+20000008:	00000193          	li	gp,0
+2000000c:	00000213          	li	tp,0
+20000010:	00000293          	li	t0,0
+20000014:	00000313          	li	t1,0
+20000018:	00000393          	li	t2,0
+2000001c:	00000413          	li	s0,0
+20000020:	00000493          	li	s1,0
+20000024:	00000513          	li	a0,0
+20000028:	00000593          	li	a1,0
+2000002c:	00000613          	li	a2,0
+20000030:	00000693          	li	a3,0
+20000034:	00000713          	li	a4,0
+20000038:	00000793          	li	a5,0
+2000003c:	00000813          	li	a6,0
+20000040:	00000893          	li	a7,0
+20000044:	00000913          	li	s2,0
+20000048:	00000993          	li	s3,0
+2000004c:	00000a13          	li	s4,0
+20000050:	00000a93          	li	s5,0
+20000054:	00000b13          	li	s6,0
+20000058:	00000b93          	li	s7,0
+2000005c:	00000c13          	li	s8,0
+20000060:	00000c93          	li	s9,0
+20000064:	00000d13          	li	s10,0
+20000068:	00000d93          	li	s11,0
+2000006c:	00000e13          	li	t3,0
+20000070:	00000e93          	li	t4,0
+20000074:	00000f13          	li	t5,0
+20000078:	00000f93          	li	t6,0
+2000007c:	00000297          	auipc	t0,0x0
+20000080:	08028293          	addi	t0,t0,128 # 200000fc <mtvec_handler>
+20000084:	00229293          	slli	t0,t0,0x2
+20000088:	30529073          	csrw	mtvec,t0
+2000008c:	00200193          	li	gp,2
+20000090:	00800313          	li	t1,8
+20000094:	000022b7          	lui	t0,0x2
+20000098:	80028293          	addi	t0,t0,-2048 # 1800 <_start-0x1fffe800>
+2000009c:	3002b073          	csrc	mstatus,t0
+200000a0:	300023f3          	csrr	t2,mstatus
+200000a4:	0072f2b3          	and	t0,t0,t2
+200000a8:	00028463          	beqz	t0,200000b0 <_start+0xb0>
+200000ac:	00b00313          	li	t1,11
+200000b0:	000022b7          	lui	t0,0x2
+200000b4:	80028293          	addi	t0,t0,-2048 # 1800 <_start-0x1fffe800>
+200000b8:	3002b073          	csrc	mstatus,t0
+200000bc:	00000297          	auipc	t0,0x0
+200000c0:	01028293          	addi	t0,t0,16 # 200000cc <_start+0xcc>
+200000c4:	34129073          	csrw	mepc,t0
+200000c8:	30200073          	mret
+200000cc:	00100193          	li	gp,1
 
-000000d0 <do_scall>:
-  d0:	00000073          	ecall
-  d4:	0080006f          	j	dc <fail>
-  d8:	00301a63          	bne	zero,gp,ec <pass>
+200000d0 <do_scall>:
+200000d0:	00000073          	ecall
+200000d4:	0080006f          	j	200000dc <fail>
+200000d8:	00301a63          	bne	zero,gp,200000ec <pass>
 
-000000dc <fail>:
-  dc:	00f00093          	li	ra,15
-  e0:	00f00113          	li	sp,15
-  e4:	00f00193          	li	gp,15
+200000dc <fail>:
+200000dc:	00f00093          	li	ra,15
+200000e0:	00f00113          	li	sp,15
+200000e4:	00f00193          	li	gp,15
 
-000000e8 <fail_loop>:
-  e8:	0000006f          	j	e8 <fail_loop>
+200000e8 <fail_loop>:
+200000e8:	0000006f          	j	200000e8 <fail_loop>
 
-000000ec <pass>:
-  ec:	00100093          	li	ra,1
-  f0:	00200113          	li	sp,2
-  f4:	00300193          	li	gp,3
+200000ec <pass>:
+200000ec:	00100093          	li	ra,1
+200000f0:	00200113          	li	sp,2
+200000f4:	00300193          	li	gp,3
 
-000000f8 <pass_loop>:
-  f8:	0000006f          	j	f8 <pass_loop>
+200000f8 <pass_loop>:
+200000f8:	0000006f          	j	200000f8 <pass_loop>
 
-000000fc <mtvec_handler>:
-  fc:	342022f3          	csrr	t0,mcause
- 100:	fc629ee3          	bne	t0,t1,dc <fail>
- 104:	00000397          	auipc	t2,0x0
- 108:	fcc38393          	addi	t2,t2,-52 # d0 <do_scall>
- 10c:	341022f3          	csrr	t0,mepc
- 110:	fc7296e3          	bne	t0,t2,dc <fail>
- 114:	fd9ff06f          	j	ec <pass>
- 118:	c0001073          	unimp
+200000fc <mtvec_handler>:
+200000fc:	342022f3          	csrr	t0,mcause
+20000100:	fc629ee3          	bne	t0,t1,200000dc <fail>
+20000104:	00000397          	auipc	t2,0x0
+20000108:	fcc38393          	addi	t2,t2,-52 # 200000d0 <do_scall>
+2000010c:	341022f3          	csrr	t0,mepc
+20000110:	fc7296e3          	bne	t0,t2,200000dc <fail>
+20000114:	fd9ff06f          	j	200000ec <pass>
+20000118:	c0001073          	unimp
 	...

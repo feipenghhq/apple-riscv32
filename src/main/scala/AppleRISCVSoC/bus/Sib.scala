@@ -21,13 +21,15 @@ import spinal.lib._
 /**
  * Sib configuration
  */
-case class SibConfig(addressWidth: Int, dataWidth: Int, addr_lo: Int = 0, addr_hi: Int = 1) {
+case class SibConfig(addressWidth: Int, dataWidth: Int, addr_lo: Long = 0, addr_hi: Long = 1, XLEN: Int = 32) {
   def addressType  = UInt(addressWidth bits)
   def dataType     = Bits(dataWidth bits)
   def bytePerWord  = dataWidth / 8
   def symboleRange = log2Up(bytePerWord) - 1 downto 0
   def wordRange    = addressWidth - 1 downto log2Up(bytePerWord)
-  assert(addr_lo <= addr_hi, "SIB addr_lo should smaller or equal to addr_hi")
+  assert(addr_lo <= addr_hi, "SIB addr_lo should smaller or equal to addr_hi" + println(addr_lo) + println(addr_hi))
+  def addr_lo_u    = U(addr_lo, XLEN bits)
+  def addr_hi_u    = U(addr_hi, XLEN bits)
 }
 
 /**

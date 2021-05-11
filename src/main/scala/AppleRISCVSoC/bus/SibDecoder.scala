@@ -39,7 +39,7 @@ case class SibDecoder(mainSibCfg: SibConfig, targetSibCfg: Array[SibConfig]) ext
   val dec_good    = dec_sel.orR
 
   for (i <- 0 until num) {
-    dec_sel(i) := (hostSib.addr >= clientSib(i).config.addr_lo) & (hostSib.addr <= clientSib(i).config.addr_hi)
+    dec_sel(i) := (hostSib.addr >= clientSib(i).config.addr_lo_u) & (hostSib.addr <= clientSib(i).config.addr_hi_u)
     clientSib(i).write  := hostSib.write
     clientSib(i).addr   := hostSib.addr(clientSib(i).config.addressWidth - 1 downto 0)
     clientSib(i).wdata  := hostSib.wdata

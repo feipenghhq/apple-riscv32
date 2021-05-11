@@ -44,8 +44,9 @@ def process_rom_file(name):
     DRAM_FP = open('data_ram.rom', "w")
 
     iram = True
+    FP.readline() # get ride of the first address line
     for line in FP.readlines():
-        if line.rstrip() == "@01000000":
+        if line.rstrip() == "@80000000":
             iram = False
             continue
         if iram:

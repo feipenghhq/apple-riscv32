@@ -32,7 +32,10 @@ def clear_imem(dut, imem_size_to_clear):
     """ Clean the instruction ram """
     print("[TB-INFO]: Cleaning Instruction Memory")
     for i in range(imem_size_to_clear):
-        dut.DUT_AppleRISCVSoC.soc_imem_inst.ram[i] = 0
+        dut.DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol0[i] = 0
+        dut.DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol1[i] = 0
+        dut.DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol2[i] = 0
+        dut.DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol3[i] = 0
     print(f"[TB-INFO]: Cleaning the Instruction Memory done")
 
 def load_imem(dut, imem):
@@ -40,7 +43,10 @@ def load_imem(dut, imem):
     print("[TB-INFO]: Loading Instruction Memory")
     size = len(imem)
     for i in range(size):
-        dut.DUT_AppleRISCVSoC.soc_imem_inst.ram[i] = imem[i]
+        dut.DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol0[i] = imem[i] & 0xFF
+        dut.DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol1[i] = (imem[i] >> 8) & 0xFF
+        dut.DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol2[i] = (imem[i] >> 16) & 0xFF
+        dut.DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol3[i] = (imem[i] >> 24) & 0xFF
     print(f"[TB-INFO]: Loading Instruction Memory done. Memory size is {size}")
 
 def print_register(dut, size=32):

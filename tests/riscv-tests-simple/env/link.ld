@@ -3,13 +3,13 @@ ENTRY(_start)
 
 SECTIONS
 {
-  . = 0x00000000;
+  . = 0x20000000;
   .text.init : { *(.text.init) }
-  . = ALIGN(0x01000000);
+  . = ALIGN(0x8000000);
   .tohost : { *(.tohost) }
-  . = ALIGN(0x01000000);
+  . = ALIGN(0x80000000);
   .text : { *(.text) }
-  . = ALIGN(0x01000000);
+  . = ALIGN(0x80000000);
   .data : { *(.data) }
   .bss : { *(.bss) }
   _end = .;
