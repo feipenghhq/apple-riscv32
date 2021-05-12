@@ -29,6 +29,7 @@ case class ArtyA7_top() extends Component {
   val cfg = AppleSoCCfg_arty()
   val io = new Bundle {
     val clk = in Bool
+    val rst = in Bool
     val gpio0 = if (cfg.USE_GPIO0) master(TriStateArray(32 bits)) else null
     val uart0 = master(Uart())  // this is needed for debug
     val load_imem = in Bool
@@ -53,7 +54,7 @@ case class ArtyA7_top() extends Component {
     )
 
     coreClockDomain.clock := mmcm.io.clk_out1
-    coreClockDomain.reset := False
+    coreClockDomain.reset := io.rst
   }
 
   val top = new ClockingArea(clkCtrl.coreClockDomain) {

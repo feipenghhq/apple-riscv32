@@ -94,8 +94,11 @@ case class AppleSoC_arty() extends Component {
     }
     noIoPrefix()
 
-    val socClockDomain = ClockDomain.internal(
-        name = "soc",
+    val cpu_rst = Bool
+
+    val socClkDomain = ClockDomain(
+        clock = io.clk,
+        reset = io.reset,
         frequency = FixedFrequency(100 MHz),
         config = ClockDomainConfig(
             clockEdge        = RISING,
@@ -104,22 +107,29 @@ case class AppleSoC_arty() extends Component {
         )
     )
 
-    socClockDomain.clock := io.clk
-    socClockDomain.reset := io.reset
+    val cpuClkDomain = ClockDomain(
+        clock = io.clk,
+        reset = cpu_rst,
+        frequency = socClkDomain.frequency,
+        config = socClkDomain.config
+    )
 
-    val soc = new ClockingArea(socClockDomain) {
+    val cpu = new ClockingArea(cpuClkDomain) {
+        val core = AppleRISCV()
+    }
+
+    val soc = new ClockingArea(socClkDomain) {
 
         // ====================================
         // soc component instance
         // ====================================
 
         // Fixed Component
-        val cpu_core  = AppleRISCV()
+
         val imem_inst = BlockRAM(usePort2 = true, cfg.imemSibCfg, cfg.imemSibCfg)
         val dmem_inst = BlockRAM(usePort2 = false, cfg.dmemSibCfg)
         val clic_inst = Clic(PeripSibCfg.clicSibCfg)
         val plic_inst = Plic(PeripSibCfg.plicSibCfg)
-        val rstctrl_inst   = RstCtrl()
         val uart2imem_inst = ip.Uart2imem(cfg.imemSibCfg, cfg.uartDbgBaudRate)
 
         // Peripherals
@@ -139,14 +149,13 @@ case class AppleSoC_arty() extends Component {
         // ====================================
 
         // clock and reset
-        cpu_core.io.clk     := socClockDomain.clock
-        cpu_core.io.reset   := rstctrl_inst.io.cpu_reset_req
+        cpu_rst  := aon_inst.io.cpu_rst_out
 
         // connect interrupt to cpu core
-        cpu_core.io.external_interrupt  := plic_inst.io.external_irq
-        cpu_core.io.timer_interrupt     := clic_inst.io.timer_irq
-        cpu_core.io.software_interrupt  := clic_inst.io.software_irq
-        cpu_core.io.debug_interrupt     := False
+        cpu.core.io.external_interrupt  := plic_inst.io.external_irq
+        cpu.core.io.timer_interrupt     := clic_inst.io.timer_irq
+        cpu.core.io.software_interrupt  := clic_inst.io.software_irq
+        cpu.core.io.debug_interrupt     := False
 
         // ====================================
         // SOC Bus Switch instance
@@ -182,14 +191,14 @@ case class AppleSoC_arty() extends Component {
         // ====================================
 
         // imem switch connection
-        imem_switch.hostSib      <> cpu_core.io.imem_sib
+        imem_switch.hostSib      <> cpu.core.io.imem_sib
         imem_switch.clientSib(0) <> imem_inst.io.port1
 
         // imem data mux connection
         imem_inst.io.port2  <> imem_data_mux.outputSib
 
         // dmem switch connection
-        dmem_switch.hostSib      <> cpu_core.io.dmem_sib        // To CPU
+        dmem_switch.hostSib      <> cpu.core.io.dmem_sib        // To CPU
         dmem_switch.clientSib(0) <> imem_data_mux.inputSib(0)   // To imem data mux port 0
         dmem_switch.clientSib(1) <> dmem_inst.io.port1          // To dmem
         dmem_switch.clientSib(2) <> perip_switch.hostSib        // To Peripheral SIB Switch
@@ -209,7 +218,7 @@ case class AppleSoC_arty() extends Component {
         io.load_imem <> uart2imem_inst.io.load_imem
 
         // reset controller
-        rstctrl_inst.io.uart2imem_downloading <> uart2imem_inst.io.downloading
+        aon_inst.io.uart2imem_rst_req <> uart2imem_inst.io.downloading
 
         // Imem debug bus
         uart2imem_inst.io.imem_dbg_sib <> imem_data_mux.inputSib(1)  // To imem data mux port 1

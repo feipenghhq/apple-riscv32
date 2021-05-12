@@ -62,7 +62,7 @@ def print_register(dut, size=32):
     """ Print the register value """
     for i in range(size):
         try:
-            val = dut.DUT_AppleRISCVSoC.soc_cpu_core.core_regfile_inst.ram[i].value.integer
+            val = dut.DUT_AppleRISCVSoC.cpu_core.regfile_inst.ram[i].value.integer
             print(f"Register {i}, {hex(val)}")
         except ValueError:
             print(f"Register {i}, XXXX")
@@ -70,7 +70,7 @@ def print_register(dut, size=32):
 def check_register(dut, expected):
     """ Check the register file with the expected data """
     for key, value in expected.items():
-        val = dut.DUT_AppleRISCVSoC.soc_cpu_core.core_regfile_inst.ram[key].value.integer
+        val = dut.DUT_AppleRISCVSoC.cpu_core.regfile_inst.ram[key].value.integer
         assert value == val, f"RAM1: Register {key}, Expected: {value}, Actual: {val}"
         print(f"RAM1: Register {key}, Expected: {value}, Actual: {val}")
 

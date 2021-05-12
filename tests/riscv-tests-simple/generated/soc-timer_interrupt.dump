@@ -37,7 +37,7 @@ Disassembly of section .text.init:
 20000074:	00000f13          	li	t5,0
 20000078:	00000f93          	li	t6,0
 2000007c:	00000297          	auipc	t0,0x0
-20000080:	06828293          	addi	t0,t0,104 # 200000e4 <mtvec_handler>
+20000080:	06428293          	addi	t0,t0,100 # 200000e0 <mtvec_handler>
 20000084:	00229293          	slli	t0,t0,0x2
 20000088:	30529073          	csrw	mtvec,t0
 2000008c:	00806293          	ori	t0,zero,8
@@ -45,47 +45,45 @@ Disassembly of section .text.init:
 20000094:	08006293          	ori	t0,zero,128
 20000098:	3042a073          	csrs	mie,t0
 2000009c:	06406313          	ori	t1,zero,100
-200000a0:	02000437          	lui	s0,0x2000
-200000a4:	00c40413          	addi	s0,s0,12 # 200000c <MTIMECMP0_ADDR>
-200000a8:	00642023          	sw	t1,0(s0)
-200000ac:	00006393          	ori	t2,zero,0
+200000a0:	02004437          	lui	s0,0x2004
+200000a4:	00642023          	sw	t1,0(s0) # 2004000 <MTIMECMP0_ADDR>
+200000a8:	00006393          	ori	t2,zero,0
 
-200000b0 <Wait>:
-200000b0:	00038063          	beqz	t2,200000b0 <Wait>
-200000b4:	00f06313          	ori	t1,zero,15
-200000b8:	00650e63          	beq	a0,t1,200000d4 <pass>
-200000bc:	0080006f          	j	200000c4 <fail>
-200000c0:	00301a63          	bne	zero,gp,200000d4 <pass>
+200000ac <Wait>:
+200000ac:	00038063          	beqz	t2,200000ac <Wait>
+200000b0:	00f06313          	ori	t1,zero,15
+200000b4:	00650e63          	beq	a0,t1,200000d0 <pass>
+200000b8:	0080006f          	j	200000c0 <fail>
+200000bc:	00301a63          	bne	zero,gp,200000d0 <pass>
 
-200000c4 <fail>:
-200000c4:	00f00093          	li	ra,15
-200000c8:	00f00113          	li	sp,15
-200000cc:	00f00193          	li	gp,15
+200000c0 <fail>:
+200000c0:	00f00093          	li	ra,15
+200000c4:	00f00113          	li	sp,15
+200000c8:	00f00193          	li	gp,15
 
-200000d0 <fail_loop>:
-200000d0:	0000006f          	j	200000d0 <fail_loop>
+200000cc <fail_loop>:
+200000cc:	0000006f          	j	200000cc <fail_loop>
 
-200000d4 <pass>:
-200000d4:	00100093          	li	ra,1
-200000d8:	00200113          	li	sp,2
-200000dc:	00300193          	li	gp,3
+200000d0 <pass>:
+200000d0:	00100093          	li	ra,1
+200000d4:	00200113          	li	sp,2
+200000d8:	00300193          	li	gp,3
 
-200000e0 <pass_loop>:
-200000e0:	0000006f          	j	200000e0 <pass_loop>
+200000dc <pass_loop>:
+200000dc:	0000006f          	j	200000dc <pass_loop>
 
-200000e4 <mtvec_handler>:
-200000e4:	08006313          	ori	t1,zero,128
-200000e8:	344022f3          	csrr	t0,mip
-200000ec:	fc629ce3          	bne	t0,t1,200000c4 <fail>
-200000f0:	342022f3          	csrr	t0,mcause
-200000f4:	80000337          	lui	t1,0x80000
-200000f8:	00730313          	addi	t1,t1,7 # 80000007 <_end+0x7>
-200000fc:	fc6294e3          	bne	t0,t1,200000c4 <fail>
-20000100:	02000437          	lui	s0,0x2000
-20000104:	00c40413          	addi	s0,s0,12 # 200000c <MTIMECMP0_ADDR>
-20000108:	00042023          	sw	zero,0(s0)
-2000010c:	00106393          	ori	t2,zero,1
-20000110:	00f00513          	li	a0,15
-20000114:	30200073          	mret
-20000118:	c0001073          	unimp
+200000e0 <mtvec_handler>:
+200000e0:	08006313          	ori	t1,zero,128
+200000e4:	344022f3          	csrr	t0,mip
+200000e8:	fc629ce3          	bne	t0,t1,200000c0 <fail>
+200000ec:	342022f3          	csrr	t0,mcause
+200000f0:	80000337          	lui	t1,0x80000
+200000f4:	00730313          	addi	t1,t1,7 # 80000007 <_end+0x7>
+200000f8:	fc6294e3          	bne	t0,t1,200000c0 <fail>
+200000fc:	02004437          	lui	s0,0x2004
+20000100:	00042023          	sw	zero,0(s0) # 2004000 <MTIMECMP0_ADDR>
+20000104:	00106393          	ori	t2,zero,1
+20000108:	00f00513          	li	a0,15
+2000010c:	30200073          	mret
+20000110:	c0001073          	unimp
 	...

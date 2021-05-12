@@ -13,7 +13,7 @@
 RVTEST_CODE_BEGIN
 
   .align 2
-  .equ MTIMECMP0_ADDR, 0x0200000C
+  .equ MTIMECMP0_ADDR, 0x02004000
 
   # set the mtvec to interrupt handler address
   la t0, mtvec_handler
