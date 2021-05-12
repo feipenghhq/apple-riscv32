@@ -2,21 +2,23 @@
 //
 // Copyright 2021 by Heqing Huang (feipenghhq@gamil.com)
 //
-// ~~~ Hardware in SpinalHDL ~~~
-//
 // Author: Heqing Huang
-// Date Created: 05/08/2021
+// Date Created: 05/11/2021
 //
 // ================== Description ==================
 //
-// Periphals function header
+// Periphals header file
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef _PERIPHALS_H_
-#define _PERIPHALS_H_
+#ifndef __PERIPHALS_H__
+#define __PERIPHALS_H__
 
 #include "gpio.h"
-#include "uart.h"
+
+void uart_init(uint32_t base);
+char uart_putc(uint32_t base, char c);
+void uart_puts(uint32_t base, char *s);
+void uart_putnc(uint32_t base, char *buf, size_t nbytes);
 
 #endif

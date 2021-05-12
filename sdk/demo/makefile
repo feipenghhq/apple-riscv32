@@ -10,7 +10,7 @@ RISCV_ARCH := rv32im
 RISCV_ABI  := ilp32
 
 # Default target
-PROGRAM ?= demo_uart0
+PROGRAM ?= demo_gpio0
 
 #############################################################
 # Prints help message

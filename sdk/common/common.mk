@@ -5,41 +5,32 @@
 .PHONY: all
 all: $(TARGET)
 
+
+
 #############################################################
 # Path
 #############################################################
 REPO_ROOT   = $(shell git rev-parse --show-toplevel)
 BSP_BASE    = $(REPO_ROOT)/sdk/bsp
-ENV_DIR     = $(BSP_BASE)/env
-DRIVER_DIR  = $(BSP_BASE)/driver
-NEWLIB_DIR  = $(BSP_BASE)/newlib
+COMMON_BASE = $(REPO_ROOT)/sdk/common
+BOARD		?= arty_a7
 
 #############################################################
 # Additional Start up code and newlib stub file
 #############################################################
 
-ASM_SRCS += $(ENV_DIR)/trap_entry.S
-ASM_SRCS += $(ENV_DIR)/start.S
 
-C_SRCS += $(NEWLIB_DIR)/_exit.c
-C_SRCS += $(NEWLIB_DIR)/read.c
-C_SRCS += $(NEWLIB_DIR)/lseek.c
-C_SRCS += $(NEWLIB_DIR)/isatty.c
-C_SRCS += $(NEWLIB_DIR)/fstat.c
-C_SRCS += $(NEWLIB_DIR)/close.c
-C_SRCS += $(NEWLIB_DIR)/write.c
-C_SRCS += $(NEWLIB_DIR)/time.c
-C_SRCS += $(NEWLIB_DIR)/sbrk.c
+ASM_SRCS += $(COMMON_BASE)/boot/trap_entry.S
+ASM_SRCS += $(COMMON_BASE)/boot/start.S
 
-C_SRCS += $(ENV_DIR)/init.c
-C_SRCS += $(ENV_DIR)/trap.c
+C_SRCS 	 += $(COMMON_BASE)/boot/init.c
+C_SRCS 	 += $(COMMON_BASE)/boot/trap.c
 
-LINKER_SCRIPT := $(ENV_DIR)/link_bram.lds
+LINKER_SCRIPT := $(BSP_BASE)/$(BOARD)/link_bram.lds
 
-INCLUDES += -I$(ENV_DIR)
-INCLUDES += -I$(NEWLIB_DIR)
+include $(COMMON_BASE)/newlib/newlib.mk
+include $(COMMON_BASE)/driver/driver.mk
 
-include $(DRIVER_DIR)/driver.mk
 
 #############################################################
 # Compilation Flag

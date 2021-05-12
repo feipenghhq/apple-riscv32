@@ -1,9 +1,8 @@
 TARGET = demo_gpio0
 CFLAGS += -O2
 
-BSP_BASE = ../../bsp
+COMMON_BASE = ../../common
 
 C_SRCS += demo_gpio0.c
-INCLUDES += -I$(BSP_BASE)/chead/devices/gpio
 
-include $(BSP_BASE)/env/common.mk
+include $(COMMON_BASE)/common.mk

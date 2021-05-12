@@ -3,32 +3,26 @@
 // Copyright 2021 by Heqing Huang (feipenghhq@gamil.com)
 //
 // Author: Heqing Huang
-// Date Created: 04/26/2021
+// Date Created: 05/11/2021
 //
 // ================== Description ==================
 //
-// Define files for the SOC
+// Platform specific variable
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-#ifndef _SOC_H_
-#define _SOC_H_
+#ifndef __PLATFORM_H__
+#define __PLATFORM_H__
 
 // Clock Frequency in MHz
 #define CLK_FEQ_MHZ     100
 
 // SOC component address mapping
-#define IMEM_BASE       0x00000000
-#define DMEM_BASE       0x01000000
-
 #define CLIC_BASE       0x02000000
-#define PLIC_BASE       0x02001000
+#define PLIC_BASE       0x0C000000
+#define AON_BASE        0x10000000
 
-#define PERIP_BASE      0x02000000
-#define TIMER_BASE      (PERIP_BASE + 0x2000)
-#define UART_BASE       (PERIP_BASE + 0x3000)
-#define GPIO0_BASE      (PERIP_BASE + 0x4000)
-#define GPIO1_BASE      (PERIP_BASE + 0x5000)
+#define GPIO0_BASE      0x10012000
+#define UART0_BASE      0x10013000
 
 #endif

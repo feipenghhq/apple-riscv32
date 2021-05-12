@@ -20,19 +20,20 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <stdint.h>
-#include <gpio.h>
-#include <soc.h>
+#include "platform.h"
+#include "gpio.h"
 
-#define btn_read(base) ((gpio_read(base) >> 4) & 0xF)
+#define btn_read(base) ((gpio_rd(base) >> 4) & 0xF)
 
 int main(int argc, char **argv)
 {
 
     volatile uint32_t   value;
-    gpio_enable(GPIO0_BASE, 0xF);
+    gpio_en_all(GPIO0_BASE);
+
     while(1) {
         value = btn_read(GPIO0_BASE);
-        gpio_write(GPIO0_BASE, value);
+        gpio_wr(GPIO0_BASE, value);
     }
     return 0;
 }

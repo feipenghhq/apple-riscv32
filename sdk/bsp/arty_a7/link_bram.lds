@@ -5,42 +5,42 @@ ENTRY( _start)
 
 MEMORY
 {
-    irom (rxai!w): ORIGIN = 0x00000000, LENGTH = 64K
-    ram (wxa!ri):  ORIGIN = 0x01000000, LENGTH = 64K
+    rom (rxai!w): ORIGIN = 0x20000000, LENGTH = 128K
+    ram (wxa!ri):  ORIGIN = 0x80000000, LENGTH = 64K
 }
 
 SECTIONS
 {
   __stack_size = DEFINED(__stack_size) ? __stack_size : 2K;
 
-  .init           :
+  .init :
   {
     KEEP (*(SORT_NONE(.init)))
-  } >irom AT>irom
+  } >rom AT>rom
 
-  .ilalign         :
+  .ilalign :
   {
     . = ALIGN(4);
-    PROVIDE( _irom_lma = . );
-  } >irom AT>irom
+    PROVIDE( _rom_lma = . );
+  } >rom AT>rom
 
-  .ialign         :
+  .ialign :
   {
-    PROVIDE( _irom = . );
-  } >irom AT>irom
+    PROVIDE( _rom = . );
+  } >rom AT>rom
 
-  .text           :
+  .text :
   {
     *(.text.unlikely .text.unlikely.*)
     *(.text.startup .text.startup.*)
     *(.text .text.*)
     *(.gnu.linkonce.t.*)
-  } >irom AT>irom
+  } >rom AT>rom
 
-  .fini           :
+  .fini :
   {
     KEEP (*(SORT_NONE(.fini)))
-  } >irom AT>irom
+  } >rom AT>rom
 
   . = ALIGN(4);
 
@@ -55,7 +55,7 @@ SECTIONS
     PROVIDE_HIDDEN (__preinit_array_start = .);
     KEEP (*(.preinit_array))
     PROVIDE_HIDDEN (__preinit_array_end = .);
-  } >irom AT>irom
+  } >rom AT>rom
 
   .init_array     :
   {
@@ -63,7 +63,7 @@ SECTIONS
     KEEP (*(SORT_BY_INIT_PRIORITY(.init_array.*) SORT_BY_INIT_PRIORITY(.ctors.*)))
     KEEP (*(.init_array EXCLUDE_FILE (*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .ctors))
     PROVIDE_HIDDEN (__init_array_end = .);
-  } >irom AT>irom
+  } >rom AT>rom
 
   .fini_array     :
   {
@@ -71,9 +71,9 @@ SECTIONS
     KEEP (*(SORT_BY_INIT_PRIORITY(.fini_array.*) SORT_BY_INIT_PRIORITY(.dtors.*)))
     KEEP (*(.fini_array EXCLUDE_FILE (*crtbegin.o *crtbegin?.o *crtend.o *crtend?.o ) .dtors))
     PROVIDE_HIDDEN (__fini_array_end = .);
-  } >irom AT>irom
+  } >rom AT>rom
 
-  .ctors          :
+  .ctors  :
   {
     /* gcc uses crtbegin.o to find the start of
        the constructors, so we make sure it is
@@ -93,33 +93,33 @@ SECTIONS
     KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o ) .ctors))
     KEEP (*(SORT(.ctors.*)))
     KEEP (*(.ctors))
-  } >irom AT>irom
+  } >rom AT>rom
 
-  .dtors          :
+  .dtors  :
   {
     KEEP (*crtbegin.o(.dtors))
     KEEP (*crtbegin?.o(.dtors))
     KEEP (*(EXCLUDE_FILE (*crtend.o *crtend?.o ) .dtors))
     KEEP (*(SORT(.dtors.*)))
     KEEP (*(.dtors))
-  } >irom AT>irom
+  } >rom AT>rom
 
     . = ALIGN(4);
     PROVIDE( _eirom = . );
 
-  .lalign         :
+  .lalign :
   {
     . = ALIGN(4);
     PROVIDE( _data_lma = . );
-  } >irom AT>irom
+  } >rom AT>rom
 
-  .dalign         :
+  .dalign :
   {
     . = ALIGN(4);
     PROVIDE( _data = . );
-  } >ram AT>irom
+  } >ram AT>rom
 
-  .data          :
+  .data  :
   {
     *(.rdata)
     *(.rodata .rodata.*)
@@ -136,7 +136,7 @@ SECTIONS
     *(.srodata.cst4)
     *(.srodata.cst2)
     *(.srodata .srodata.*)
-  } >ram AT>irom
+  } >ram AT>rom
 
   . = ALIGN(4);
   PROVIDE( _edata = . );
@@ -144,7 +144,7 @@ SECTIONS
 
   PROVIDE( _fbss = . );
   PROVIDE( __bss_start = . );
-  .bss            :
+  .bss  :
   {
     *(.sbss*)
     *(.gnu.linkonce.sb.*)

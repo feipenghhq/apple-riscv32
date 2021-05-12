@@ -7,15 +7,17 @@
 
 #include <errno.h>
 #include <unistd.h>
+#include <stdint.h>
 
-#include "periphals.h"
-#include "system.h"
+#include "platform.h"
+
+extern void uart_putnc(uint32_t base, char *buf, size_t nbytes);
 
 int _write (int file, char *buf, size_t nbytes)
 {
 
   if (isatty(file)) {
-    uart_send_nbyte(UART_BASE, buf, nbytes);
+    uart_putnc(UART0_BASE, buf, nbytes);
     return nbytes;
   }
 
