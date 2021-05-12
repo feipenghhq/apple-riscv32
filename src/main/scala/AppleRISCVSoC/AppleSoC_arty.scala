@@ -73,7 +73,7 @@ case class AppleSoCCfg_arty() {
       addr_hi      = DATA_RAM_TOP
     )
 
-    var gpio0Cfg = GpioCfg(false, false, false, false, 32)
+    var gpio0Cfg = GpioCfg(HI_INT = true, LO_INT = true, RISE_INT = true, FALL_INT = true, 12)
     var uartDbgBaudRate = 115200
     
     var USE_UART0 = true
@@ -89,7 +89,7 @@ case class AppleSoC_arty() extends Component {
         val clk        = in Bool
         val reset      = in Bool
         val load_imem  = in Bool
-        val gpio0      = if (cfg.USE_GPIO0) master(TriStateArray(32 bits)) else null
+        val gpio0      = if (cfg.USE_GPIO0) master(TriStateArray(12 bits)) else null
         val uart0      = master(Uart())  // this is needed for debug
     }
     noIoPrefix()
