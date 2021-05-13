@@ -21,7 +21,8 @@ Original Author: Shay Gal-on
 #include "core_portme.h"
 
 #include "periphals.h"
-#include "system.h"
+#include "sysutils.h"
+#include "platform.h"
 
 #if VALIDATION_RUN
 volatile ee_s32 seed1_volatile = 0x3415;
@@ -53,12 +54,10 @@ barebones_clock()
     // and pad the mcycleh[9:0] and mcycle[31:10] together.
     // the clock is in term of 1024 clock cycle
     ee_u32 clock;
-    ee_u32 clock_lo = (ee_u32) rdmcycle();
-    ee_u32 clock_hi = (ee_u32) rdmcycleh();
-    printf("clock lo = %u, clock hi = %u ", clock_lo, clock_hi);
+    ee_u32 clock_lo = (ee_u32) read_csr(mcycle);
+    ee_u32 clock_hi = (ee_u32) read_csr(mcycleh);
     clock_lo = clock_lo >> 10;
     clock = (clock_hi << (32 - 10)) | clock_lo;
-    printf("clock = %d\n", clock_lo, clock_hi, clock);
     return clock;
 }
 /* Define : TIMER_RES_DIVIDER
