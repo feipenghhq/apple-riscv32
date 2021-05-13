@@ -15,10 +15,12 @@
 #define __PERIPHALS_H__
 
 #include "gpio.h"
+#include "stdint.h"
 
 void uart_init(uint32_t base);
 char uart_putc(uint32_t base, char c);
 void uart_puts(uint32_t base, char *s);
 void uart_putnc(uint32_t base, char *buf, size_t nbytes);
+char uart_getc(uint32_t base);
 
 #endif

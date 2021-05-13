@@ -9,13 +9,10 @@
 //
 // ================== Description ==================
 //
-// A very basic FPGA board demo - Control the LED on the FPGA board through push button.
-// The program use 4 button/switch on FPGA to control the 4 LEDs
+// GPIO demo with blink LED
 //
-// GPIO0 Bit 0~3 should be connected to LED
-// GPIO0 Bit 4~7 should be connected to button or switch
-//
-// Demostrate GPIO read/write function.
+// The 4 switch is used to control the blink speed.
+// When the push button is pressed, the LED will be lighted instead of blinking
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -23,17 +20,24 @@
 #include "platform.h"
 #include "gpio.h"
 
-#define btn_read(base) ((gpio_rd(base) >> 4) & 0xF)
-
 int main(int argc, char **argv)
 {
 
     volatile uint32_t   value;
-    gpio_en_all(GPIO0_BASE);
+    uint8_t             ctrl = 0xF;
+    uint8_t             btn, sw;
+    uint32_t            interval;
+
+    interval = (1 << 20);
+    gpio_en(GPIO0_BASE, 0xF);
 
     while(1) {
-        value = btn_read(GPIO0_BASE);
-        gpio_wr(GPIO0_BASE, value);
+        value = gpio_rd(GPIO0_BASE);
+        btn = (value >> 4) & 0xF;
+        sw  = ((value >> 8) & 0xF) + 1;
+        ctrl = ~ctrl;
+        for (int i = 0; i < (interval * sw); i++);
+        gpio_wr(GPIO0_BASE, ctrl | btn);
     }
     return 0;
 }

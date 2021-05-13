@@ -12,7 +12,7 @@ TOPLEVEL_LANG = verilog
 # -----------------------------------------
 REPO_ROOT     	= $(shell git rev-parse --show-toplevel)
 TB_PATH       	= $(REPO_ROOT)/tests/verilog
-RTL_SOC_PATH  	= $(REPO_ROOT)
+RTL_SOC_PATH  	= $(REPO_ROOT)/
 RISCV_TEST_PATH = $(REPO_ROOT)/tests/riscv-tests-simple
 IMEM_ROM_PATH 	= $(RISCV_TEST_PATH)/generated
 
@@ -20,7 +20,7 @@ IMEM_ROM_PATH 	= $(RISCV_TEST_PATH)/generated
 # Source files
 # -----------------------------------------
 TB_FILES      	= $(TB_PATH)/apple_riscv_soc_tb.v
-RTL_FILES     	= $(RTL_SOC_PATH)/AppleRISCVSoC.v
+RTL_FILES     	= $(RTL_SOC_PATH)/AppleSoC_arty.v
 
 VERILOG_SOURCES += $(TB_FILES)
 VERILOG_SOURCES += $(RTL_FILES)
@@ -43,21 +43,22 @@ endif
 # -----------------------------------------
 # Test config
 # -----------------------------------------
-PROGRAM 	?=
-PROGRAM_TOP ?=
+TESTNAME 	?=
+RISCVARCH 	?= rv32ui
 RUNTIME 	?= 10000
 
-#export PROGRAM 		= $(PROGRAM)
-#export RISCV_ARCH 	= $(PROGRAM_TOP)
+export TEST_NAME 	= $(TESTNAME)
+export RISCV_ARCH 	= $(RISCVARCH)
 export RUN_TIME 	= $(RUNTIME)
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
 .PONY: clean_all
 
-clean_rom:
-	rm -rf *.rom
+clean_all: clean
+	rm -rf *vcd results.xml __pycache__ *.pyc */__pycache__ */*.pyc sim_build *.rom *.bin *.ini .python-version transcript
 
-clean_all: clean clean_rom
-	rm -rf *vcd results.xml __pycache__ *.pyc */__pycache__ */*.pyc sim_build
 
+# Note: to use modelsim
+# pyenv local 3.7.7
+# make RUNTIME=20000 SIM=modelsim ARCH=i686 GUI=1

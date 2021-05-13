@@ -53,9 +53,9 @@ initial begin
 end
 `endif
 
-  wire     [31:0]   gpio0;
+  wire     [11:0]   gpio0;
   wire              uart0_txd;
-  reg               uart0_rxd;
+  reg               uart0_rxd = 'b1;
   reg               load_imem = 'b0;
 
 endmodule

@@ -56,17 +56,17 @@ case class BU() extends Component {
   val current_pc_plus4 = io.current_pc + 4
 
   // check the branch result
-  val take_branch = False
+  val branch_result = False
   val beq  = io.rs1_value === io.rs2_value
   val bge  = io.rs1_value.asSInt >= io.rs2_value.asSInt
   val bgeu = io.rs1_value.asUInt >= io.rs2_value.asUInt
   switch(io.bu_opcode) {
-    is(BranchOpcodeEnum.BEQ)  {take_branch := beq}
-    is(BranchOpcodeEnum.BNE)  {take_branch := !beq}
-    is(BranchOpcodeEnum.BGE)  {take_branch := bge}
-    is(BranchOpcodeEnum.BLT)  {take_branch := !bge}
-    is(BranchOpcodeEnum.BGEU) {take_branch := bgeu}
-    is(BranchOpcodeEnum.BLTU) {take_branch := !bgeu}
+    is(BranchOpcodeEnum.BEQ)  {branch_result := beq}
+    is(BranchOpcodeEnum.BNE)  {branch_result := !beq}
+    is(BranchOpcodeEnum.BGE)  {branch_result := bge}
+    is(BranchOpcodeEnum.BLT)  {branch_result := !bge}
+    is(BranchOpcodeEnum.BGEU) {branch_result := bgeu}
+    is(BranchOpcodeEnum.BLTU) {branch_result := !bgeu}
   }
 
   io.is_branch := io.ex_stage_valid & (io.jal_op | io.jalr_op | io.br_op)
@@ -78,7 +78,7 @@ case class BU() extends Component {
   // For address:
   //     If the branch should take and the address is wrong, then we also predict wrong.
   //     If the branch should not take then we don't need to look at the address because.
-  io.branch_should_take := io.jal_op | io.jalr_op | (io.br_op & take_branch)
+  io.branch_should_take := io.jal_op | io.jalr_op | (io.br_op & branch_result)
   val pred_wrong = if (AppleRISCVCfg.USE_BPU) (io.branch_should_take ^ io.pred_take) | (io.branch_should_take & (io.pred_pc =/= real_target_pc)) else null
 
   // We only need to take the branch/jump if we predict wrong

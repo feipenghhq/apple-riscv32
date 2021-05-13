@@ -9,25 +9,25 @@
 //
 // ================== Description ==================
 //
-// A very basic FPGA board demo - Send data to host machine console through uart port.
+// Blink LED on the FPGA board.
 //
-// This program will send "Hello AppleRISCV ~" to the host machine.
+// This program will blink 4 LED on the FPGA board.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <stdint.h>
-#include <stdio.h>
-#include <soc.h>
-
+#include "periphals.h"
+#include "platform.h"
 
 int main(int argc, char **argv)
 {
-    int b = 100;
-    for (int a = 10; a >= 0; a--) {
-        printf("%d * %d = %d\n", b, a, b * a);
-        printf("%d / %d = %d\n", b, a, b / a);
-        printf("%d mod %d = %d\n\n", b, a, b % a);
-    }
+    volatile uint32_t   value = 0;
 
+    gpio_en(GPIO0_BASE, 0xF);
+    while(1) {
+        gpio_wr(GPIO0_BASE, value);
+        value = value + 1;
+        for (int i = 0; i < 10000000; i++);
+    }
     return 0;
 }

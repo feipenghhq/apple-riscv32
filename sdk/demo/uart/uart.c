@@ -9,29 +9,30 @@
 //
 // ================== Description ==================
 //
-// A very basic FPGA board demo - Flusing LED on the FPGA board.
-// This program will blink 4 LEDs on the FPGA board.
-//
-// GPIO0 Bit 0~3 should be connected to LED
-//
-// Demostrate GPIO write function.
+// Uart read and write test.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <stdint.h>
-#include <gpio.h>
-#include <soc.h>
+#include <stdio.h>
+
+#include "periphals.h"
+#include "sysutils.h"
+#include "platform.h"
 
 int main(int argc, char **argv)
 {
-    int                 i;
-    volatile uint32_t   value = 0;
-
-    gpio_enable_all(GPIO0_BASE);
+    char b;
+    char s[100];
+    printf("Hello RISCV!\n");
+    printf("Please enter something and I will echo back\n");
     while(1) {
-        gpio_write(GPIO0_BASE, value);
-        value = value + 1;
-        for (i = 0; i < 10000000; i++);
+        //b = uart_getc(UART0_BASE);
+        //uart_putc(UART0_BASE, b);
+        //b = getchar();
+        //putchar(b);
+        scanf("%s", s);
+        puts(s);
     }
     return 0;
 }

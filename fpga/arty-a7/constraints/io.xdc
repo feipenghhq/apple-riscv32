@@ -35,15 +35,16 @@ set_property PACKAGE_PIN B9 [get_ports {gpio0[6]}]
 set_property PACKAGE_PIN B8 [get_ports {gpio0[7]}]
 
 # 8 - 11 => Slide Switches
-set_property PACKAGE_PIN A8  [get_ports {gpio0[8]}]
+set_property PACKAGE_PIN A8 [get_ports {gpio0[8]}]
 set_property PACKAGE_PIN C11 [get_ports {gpio0[9]}]
 set_property PACKAGE_PIN C10 [get_ports {gpio0[10]}]
 set_property PACKAGE_PIN A10 [get_ports {gpio0[11]}]
 
 # 12 => 31
-Not used
+# Not used
 
 set_property IOSTANDARD LVCMOS33 [get_ports {gpio0[*]}]
+
 
 
 

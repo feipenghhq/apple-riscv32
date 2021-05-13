@@ -46,7 +46,7 @@ case class AppleSoCCfg_arty() {
 
     val INSTR_RAM_ADDR_WIDTH = 16
     val INSTR_RAM_BASE = SoCAddrMap.QSPI0_BASE
-    val INSTR_RAM_TOP  = SoCAddrMap.QSPI0_BASE + 0xFFFF
+    val INSTR_RAM_TOP  = SoCAddrMap.QSPI0_BASE + 0xFFFF // 64KB
 
     val DATA_RAM_ADDR_WIDTH  = SoCAddrMap.DTIM_ADDR_WIDTH
     val DATA_RAM_BASE = SoCAddrMap.DTIM_BASE
@@ -70,12 +70,12 @@ case class AppleSoCCfg_arty() {
       addressWidth = DATA_RAM_ADDR_WIDTH,
       dataWidth    = AppleRISCVCfg.XLEN,
       addr_lo      = DATA_RAM_BASE,
-      addr_hi      = DATA_RAM_TOP
+      addr_hi      = DATA_RAM_TOP           // 64KB
     )
 
     var gpio0Cfg = GpioCfg(HI_INT = true, LO_INT = true, RISE_INT = true, FALL_INT = true, 12)
     var uartDbgBaudRate = 115200
-    
+
     var USE_UART0 = true
     var USE_GPIO0 = true
 }
@@ -138,7 +138,10 @@ case class AppleSoC_arty() extends Component {
         peripList.append((aon_inst, PeripSibCfg.aonSibCfg, aon_inst.io.aon_sib))
 
         val uart0_inst = if (cfg.USE_UART0) SibUart(PeripSibCfg.uart0SibCfg) else null
-        if (cfg.USE_UART0) peripList.append((uart0_inst, PeripSibCfg.uart0SibCfg, uart0_inst.io.uart_sib))
+        if (cfg.USE_UART0) {
+            peripList.append((uart0_inst, PeripSibCfg.uart0SibCfg, uart0_inst.io.uart_sib))
+            uart0_inst.io.en := ~uart2imem_inst.io.downloading // only enable uart when we are not using uart as debug port
+        }
 
         val gpio0_inst = if (cfg.USE_GPIO0) Gpio(cfg.gpio0Cfg, PeripSibCfg.gpio0SibCfg) else null
         if (cfg.USE_GPIO0) peripList.append((gpio0_inst, PeripSibCfg.gpio0SibCfg, gpio0_inst.io.gpio_sib))

@@ -29,9 +29,10 @@ class UartDownload:
         self.port = '/dev/ttyUSB1'
         self.serPort = None
         self.size = size * 1024
+        self.base = 0x20000000
         self.ram = []
 
-    def readVerilogMem(self, file):
+    def readVerilogMem(self, file, base):
         """
             Function to read verilog memory file and convert it into actual instruction stream
 
@@ -53,7 +54,7 @@ class UartDownload:
         for line in f.readlines():
             line = line.rstrip()
             if line.find('@') != -1: # this is address line
-                addr = int(line[1:], 16)
+                addr = int(line[1:], 16) - base
             else:
                 addr = readFromLine(line, self.ram, addr)
                 if (addr == self.size):
@@ -77,7 +78,7 @@ class UartDownload:
 
     def createData(self, file):
         """ create data stream from verilog memory file """
-        self.readVerilogMem(file)
+        self.readVerilogMem(file, self.base)
         self.addStartStop()
         #self.printRam()
 
@@ -89,9 +90,13 @@ class UartDownload:
         num = self.serPort.write(self.ram)
         print(f"write {num} of bytes")
 
+    def printRam(self, size):
+        for i in range(size):
+            print(hex(self.ram[i]))
 
 if __name__ == "__main__":
     uartDownload = UartDownload(64)
     uartDownload.createData(sys.argv[1])
     uartDownload.setupUart()
     uartDownload.writeRam()
+    #uartDownload.printRam(12)
