@@ -79,8 +79,7 @@ Disassembly of section .text.init:
 200000f4:	00042023          	sw	zero,0(s0)
 200000f8:	00f00513          	li	a0,15
 200000fc:	341022f3          	csrr	t0,mepc
-20000100:	00428293          	addi	t0,t0,4
-20000104:	34129073          	csrw	mepc,t0
-20000108:	30200073          	mret
-2000010c:	c0001073          	unimp
+20000100:	34129073          	csrw	mepc,t0
+20000104:	30200073          	mret
+20000108:	c0001073          	unimp
 	...

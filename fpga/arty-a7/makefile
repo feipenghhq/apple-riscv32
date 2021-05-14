@@ -8,7 +8,6 @@ help:
 	@echo "#############################################"
 	@echo "# make clean    clean all the run result    #"
 	@echo "# make soc      run vivado on soc           #"
-	@echo "# make core     run vivado on core          #"
 	@echo "#############################################"
 
 # Variable
@@ -25,7 +24,7 @@ _XDC          += constraints/constraints.xdc
 _XDC          += constraints/io.xdc
 _XDC          += constraints/timing.xdc
 
-_PROGRAM	  ?= 0
+_PROGRAM	  ?= 1
 
 export PRJ_NAME 	= soc
 export TOP 			= ArtyA7_top

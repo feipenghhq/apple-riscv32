@@ -17,10 +17,11 @@
 #include "periphals.h"
 #include "sysutils.h"
 
-#define MCAUSE_MASK             0xFFFFFFFF
-#define MCAUSE_LD_ADDR_MISALIGN 0x4
+
+
 
 #define ENABLE_BRANCH_COUNT     1
+
 
 extern void trap_entry();
 
@@ -31,24 +32,14 @@ void _init() {
 
     // write the trap handler register
     uint32_t trap_entry_addr = (uint32_t) &trap_entry;
-    trap_entry_addr = trap_entry_addr << 2;
-    write_csr(mtval, trap_entry_addr);
+    write_csr(mtvec, trap_entry_addr);
+
+    // enable global interrupt (mstatus)
+    write_csr(mstatus, 0x8);
+    // enable interrupt (mie)
+    write_csr(mie, 0x888);
 
     #ifdef ENABLE_BRANCH_COUNT
     clr_en_br_cnt();
     #endif
-}
-
-extern void handle_ld_addr_misalign(uintptr_t mepc);
-extern void exit_trap(uintptr_t mepc, uintptr_t mcause);
-
-uintptr_t handle_trap(uintptr_t mcause, uintptr_t mepc) {
-
-    // Load Address Misaligned
-    if((mcause & MCAUSE_MASK ) == MCAUSE_LD_ADDR_MISALIGN) {
-        handle_ld_addr_misalign(mepc);
-    } else {
-        exit_trap(mepc, mcause);
-    }
-    return mepc;
 }

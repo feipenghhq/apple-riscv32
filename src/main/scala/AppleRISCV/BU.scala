@@ -34,7 +34,7 @@ case class BU() extends Component {
     val br_op      = in Bool                           // We get branch instruction
     val jal_op     = in Bool                           // We get jump instruction
     val jalr_op    = in Bool
-    val is_branch  = out Bool
+    val is_branch_instr = out Bool
     val take_branch = out Bool
     val target_pc   = out UInt(AppleRISCVCfg.XLEN bits)
     val ex_stage_valid = in Bool
@@ -69,7 +69,7 @@ case class BU() extends Component {
     is(BranchOpcodeEnum.BLTU) {branch_result := !bgeu}
   }
 
-  io.is_branch := io.ex_stage_valid & (io.jal_op | io.jalr_op | io.br_op)
+  io.is_branch_instr := io.ex_stage_valid & (io.jal_op | io.jalr_op | io.br_op)
   io.exc_instr_addr_ma := (io.take_branch  & (io.target_pc(1 downto 0) =/= 0))
 
   // Branch Prediction Check:
@@ -83,7 +83,7 @@ case class BU() extends Component {
 
   // We only need to take the branch/jump if we predict wrong
   // because we would been already jumped if we predict correct.
-  val branch_taken_final = if (AppleRISCVCfg.USE_BPU) pred_wrong & io.is_branch else io.branch_should_take & io.ex_stage_valid
+  val branch_taken_final = if (AppleRISCVCfg.USE_BPU) pred_wrong & io.is_branch_instr else io.branch_should_take & io.ex_stage_valid
   io.take_branch  := branch_taken_final
 
   // For the target PC address if the branch should take, then we should use the target pc address

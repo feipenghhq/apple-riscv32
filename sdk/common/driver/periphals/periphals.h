@@ -14,8 +14,11 @@
 #ifndef __PERIPHALS_H__
 #define __PERIPHALS_H__
 
+#include <stdint.h>
+
 #include "gpio.h"
-#include "stdint.h"
+#include "clic.h"
+
 
 void uart_init(uint32_t base);
 char uart_putc(uint32_t base, char c);

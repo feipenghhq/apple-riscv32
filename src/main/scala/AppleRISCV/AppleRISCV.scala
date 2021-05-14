@@ -108,7 +108,7 @@ case class AppleRISCV() extends Component {
     val branch_instr_pc = if (AppleRISCVCfg.USE_BPU) UInt(AppleRISCVCfg.XLEN bits) else null // place holder
     if (AppleRISCVCfg.USE_BPU) {
         bpu_inst.io.pc            := pc_inst.io.pc_out
-        bpu_inst.io.branch_update := branch_unit_inst.io.is_branch
+        bpu_inst.io.branch_update := branch_unit_inst.io.is_branch_instr
         bpu_inst.io.branch_should_take := branch_unit_inst.io.branch_should_take
         bpu_inst.io.branch_target_pc := branch_unit_inst.io.target_pc
         bpu_inst.io.branch_instr_pc := branch_instr_pc
@@ -296,6 +296,7 @@ case class AppleRISCV() extends Component {
         val ebreak       = RegNextWhen(id2ex.ebreak  & ex_stage_valid_final, ~ex_pipe_stall) init False
         val csr_wr       = RegNextWhen(id2ex.csr_wr  & ex_stage_valid_final, ~ex_pipe_stall) init False
         val csr_rd       = RegNextWhen(id2ex.csr_rd  & ex_stage_valid_final, ~ex_pipe_stall) init False
+        val is_branch_instr    = RegNextWhen(branch_unit_inst.io.take_branch & ex_stage_valid_final,  ~ex_pipe_stall) init False
 
         // payload
         val rs1_value      = RegNextWhen(ex_rs1_value_forwarded,    ~ex_pipe_stall)
@@ -309,6 +310,7 @@ case class AppleRISCV() extends Component {
         val csr_idx        = RegNextWhen(id2ex.csr_idx,             ~ex_pipe_stall)
         val rd_sel         = RegNextWhen(id2ex.rd_sel,              ~ex_pipe_stall)
         val csr_sel        = RegNextWhen(id2ex.csr_sel,             ~ex_pipe_stall)
+        val target_pc      = RegNextWhen(branch_unit_inst.io.target_pc, ~ex_pipe_stall)
 
         // Exception
         val exc_ill_instr      = RegNextWhen(id2ex.exc_ill_instr                    & ex_stage_valid_final, ~ex_pipe_stall) init False
@@ -327,8 +329,8 @@ case class AppleRISCV() extends Component {
     mcsr_inst.io.csr_bus.addr  := ex2mem.csr_idx.asUInt
     mcsr_inst.io.csr_bus.wtype := ex2mem.csr_sel
     mcsr_inst.io.csr_bus.wen   := ex2mem.csr_wr & mem_stage_valid
-    mcsr_inst.io.inc_br_cnt := branch_unit_inst.io.is_branch
-    mcsr_inst.io.inc_pred_good := branch_unit_inst.io.is_branch & ~branch_unit_inst.io.take_branch
+    mcsr_inst.io.inc_br_cnt := branch_unit_inst.io.is_branch_instr
+    mcsr_inst.io.inc_pred_good := branch_unit_inst.io.is_branch_instr & ~branch_unit_inst.io.take_branch
 
 
     // mem2wb_csr_rd is not used so far
@@ -355,6 +357,8 @@ case class AppleRISCV() extends Component {
     trap_ctrl_inst.io.mret               := ex2mem.mret
     trap_ctrl_inst.io.ecall              := ex2mem.ecall
     trap_ctrl_inst.io.cur_pc             := ex2mem.pc
+    trap_ctrl_inst.io.is_branch_instr    := ex2mem.is_branch_instr
+    trap_ctrl_inst.io.branch_target_pc   := ex2mem.target_pc
     trap_ctrl_inst.io.stage_valid        := ex2mem.stage_valid // no one should flush mem stage right now
     trap_ctrl_inst.io.cur_instr          := ex2mem.instr
     trap_ctrl_inst.io.cur_dmem_addr      := ex2mem.alu_out.asUInt

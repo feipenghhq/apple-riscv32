@@ -96,13 +96,13 @@ trap_entry:
 
     csrr a0, mcause
     csrr a1, mepc
-    call handle_trap
+    call trap_handler
     csrw mepc, a0
 
     TRAP_EXIT
 
-.weak handle_trap
-handle_trap:
+.weak trap_handler
+trap_handler:
 1:
     j 1b
 

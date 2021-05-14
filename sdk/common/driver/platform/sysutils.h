@@ -22,9 +22,9 @@
 #define IORD(base, offset)          (*((volatile uint32_t *) (base + offset)))
 
 /** Write IO device */
-#define IOWR(base, offset, value)   (*((uint32_t *) (base + offset)) = value)
-#define IOWH(base, offset, value)   (*((uint16_t *) (base + offset)) = value)
-#define IOWB(base, offset, value)   (*((uint8_t  *) (base + offset)) = value)
+#define IOWR(base, offset, value)   (*((volatile uint32_t *) (base + offset)) = value)
+#define IOWH(base, offset, value)   (*((volatile uint16_t *) (base + offset)) = value)
+#define IOWB(base, offset, value)   (*((volatile uint8_t  *) (base + offset)) = value)
 
 /**
  * Set Specific bits using the mask

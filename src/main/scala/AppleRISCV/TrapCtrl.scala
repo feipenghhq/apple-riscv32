@@ -48,6 +48,8 @@ case class trap_ctrl_io() extends Bundle {
   val cur_pc         = in UInt(AppleRISCVCfg.XLEN bits)
   val cur_instr      = in Bits(AppleRISCVCfg.XLEN bits)
   val cur_dmem_addr  = in UInt(AppleRISCVCfg.XLEN bits)
+  val is_branch_instr  = in Bool
+  val branch_target_pc = in UInt(AppleRISCVCfg.XLEN bits)
 
   // mcsr input
   val mie_meie    = in Bool
@@ -114,9 +116,12 @@ case class TrapCtrl() extends Component {
   // mcsr
   io.mtrap_enter  := exception | interrupt | io.ecall
   io.mtrap_exit   := io.mret
-  io.mtrap_mepc   := io.cur_pc.asBits
+
   io.mtrap_mcause := interrupt ## trap_code
   io.mtrap_mtval  := Mux(io.exc_ill_instr, io.cur_instr, dmem_addr_extended.asBits)
+
+  val interrupt_mepc = io.is_branch_instr ? io.branch_target_pc | (io.cur_pc + 4)
+  io.mtrap_mepc   := interrupt ? interrupt_mepc.asBits | io.cur_pc.asBits
 
   // update pc
   io.pc_trap      := io.mtrap_enter | io.mtrap_exit
