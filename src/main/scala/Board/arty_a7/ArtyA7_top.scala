@@ -32,6 +32,7 @@ case class ArtyA7_top() extends Component {
     val reset = in Bool
     val gpio0 = master(TriStateArray(12 bits))
     val uart0 = master(Uart())  // this is needed for debug
+    val pwm0cmpgpio = out Bits(4 bits)
   }
   noIoPrefix()
 
@@ -63,6 +64,7 @@ case class ArtyA7_top() extends Component {
     AppleSoC_arty_inst.io.reset  := clkCtrl.coreClockDomain.reset
     AppleSoC_arty_inst.io.uart0  <> io.uart0
     if(cfg.USE_GPIO0) AppleSoC_arty_inst.io.gpio0  <> io.gpio0
+    if(cfg.USE_PWM0) AppleSoC_arty_inst.io.pwm0cmpgpio <> io.pwm0cmpgpio
     AppleSoC_arty_inst.io.load_imem  :=  io.gpio0(8).read
   }
 }

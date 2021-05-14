@@ -78,6 +78,7 @@ case class AppleSoCCfg_arty() {
 
     var USE_UART0 = true
     var USE_GPIO0 = true
+    var USE_PWM0  = true
 }
 
 
@@ -86,11 +87,12 @@ case class AppleSoC_arty() extends Component {
     val cfg = AppleSoCCfg_arty()
 
     val io = new Bundle {
-        val clk        = in Bool
-        val reset      = in Bool
-        val load_imem  = in Bool
-        val gpio0      = if (cfg.USE_GPIO0) master(TriStateArray(12 bits)) else null
-        val uart0      = master(Uart())  // this is needed for debug
+        val clk         = in Bool
+        val reset       = in Bool
+        val load_imem   = in Bool
+        val gpio0       = if (cfg.USE_GPIO0) master(TriStateArray(12 bits)) else null
+        val uart0       = master(Uart())  // this is needed for debug
+        val pwm0cmpgpio = out Bits(4 bits)
     }
     noIoPrefix()
 
@@ -146,6 +148,8 @@ case class AppleSoC_arty() extends Component {
         val gpio0_inst = if (cfg.USE_GPIO0) Gpio(cfg.gpio0Cfg, PeripSibCfg.gpio0SibCfg) else null
         if (cfg.USE_GPIO0) peripList.append((gpio0_inst, PeripSibCfg.gpio0SibCfg, gpio0_inst.io.gpio_sib))
 
+        val pwm0_inst = if (cfg.USE_PWM0) PWM(8, PeripSibCfg.pwm0SibCfg) else null
+        if (cfg.USE_PWM0) peripList.append((pwm0_inst, PeripSibCfg.pwm0SibCfg, pwm0_inst.io.pwm_sib))
 
         // ====================================
         // cpu core signal connection
@@ -233,16 +237,28 @@ case class AppleSoC_arty() extends Component {
         io.uart0.rxd <> uart2imem_inst.io.uart.rxd
         if(cfg.USE_UART0) io.uart0 <> uart0_inst.io.uart
 
+        // PWM0 port
+        if (cfg.USE_PWM0) {io.pwm0cmpgpio <> pwm0_inst.io.pwmcmpgpio}
+
         // connect peripheral interrupt to PLIC
-        val gpio_irq_base = 8
-        plic_inst.io.plic_irq_in(1 downto 0) := 0
-        plic_inst.io.plic_irq_in(2) := aon_inst.io.rtc_irq
-        plic_inst.io.plic_irq_in(3) := uart0_inst.io.rxwm | uart0_inst.io.txwm
-        plic_inst.io.plic_irq_in(gpio_irq_base-1 downto 4) := 0
-        for (idx <- 0 until gpio0_inst.io.gpio_irq.getBitsWidth) {
-            plic_inst.io.plic_irq_in(gpio_irq_base+idx) := gpio0_inst.io.gpio_irq(idx)
+        plic_inst.io.plic_irq_in := 0
+        val rtc_irq_base   = 2
+        val uart0_irq_base = 3
+        val gpio_irq_base  = 8
+        val pwm0_irq_base  = 40
+        plic_inst.io.plic_irq_in(rtc_irq_base) := aon_inst.io.rtc_irq
+        plic_inst.io.plic_irq_in(uart0_irq_base) := uart0_inst.io.rxwm | uart0_inst.io.txwm
+        if (cfg.USE_GPIO0) {
+            val gpio_width = gpio0_inst.io.gpio_irq.getBitsWidth
+            for (idx <- 0 until gpio_width) {
+                plic_inst.io.plic_irq_in(gpio_irq_base+idx) := gpio0_inst.io.gpio_irq(idx)
+            }
         }
-        plic_inst.io.plic_irq_in(plic_inst.io.plic_irq_in.getBitsWidth-1 downto gpio_irq_base+gpio0_inst.io.gpio_irq.getBitsWidth) := 0
+        if (cfg.USE_PWM0) {
+            val pwm_width = pwm0_inst.io.pwmcmpip.getBitsWidth
+            for (idx <- 0 until pwm_width)
+            plic_inst.io.plic_irq_in(pwm0_irq_base+idx) := pwm0_inst.io.pwmcmpip(idx)
+        }
     }
 }
 

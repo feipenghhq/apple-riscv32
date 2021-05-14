@@ -45,6 +45,17 @@ set_property PACKAGE_PIN A10 [get_ports {gpio0[11]}]
 
 set_property IOSTANDARD LVCMOS33 [get_ports {gpio0[*]}]
 
+##############################
+# PWM 0
+##############################
+
+# The first one goes to the Arduino/chipKIT Shield IO0
+set_property PACKAGE_PIN U16 [get_ports {pwm0cmpgpio[0]}]
+set_property PACKAGE_PIN G6  [get_ports {pwm0cmpgpio[1]}]
+set_property PACKAGE_PIN F6  [get_ports {pwm0cmpgpio[2]}]
+set_property PACKAGE_PIN E1  [get_ports {pwm0cmpgpio[3]}]
+
+set_property IOSTANDARD LVCMOS33 [get_ports {pwm0cmpgpio[*]}]
 
 
 

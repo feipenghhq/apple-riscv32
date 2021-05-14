@@ -62,6 +62,11 @@ object SoCAddrMap {
   val UART0_TOP  = 0x10013FFFL
   val UART0_ADDR_WIDTH = 12
 
+  // PWM0
+  val PWM0_BASE = 0x10015000L
+  val PWM0_TOP  = 0x10015FFFL
+  val PWM0_ADDR_WIDTH = 12
+
   // Off-Chip Non-Volatile Memory
   // Notes: We use this part as the Dedicated Instruction RAM
   val QSPI0_BASE = 0x20000000L
@@ -105,6 +110,13 @@ object PeripSibCfg {
     addr_hi      = SoCAddrMap.AON_TOP
   )
 
+  val gpio0SibCfg = SibConfig(
+    addressWidth = SoCAddrMap.GPIO0_ADDR_WIDTH,
+    dataWidth    = AppleRISCVCfg.XLEN,
+    addr_lo      = SoCAddrMap.GPIO0_BASE,
+    addr_hi      = SoCAddrMap.GPIO0_TOP
+  )
+
   val uart0SibCfg = SibConfig(
     addressWidth = SoCAddrMap.UART0_ADDR_WIDTH,
     dataWidth    = AppleRISCVCfg.XLEN,
@@ -112,11 +124,11 @@ object PeripSibCfg {
     addr_hi      = SoCAddrMap.UART0_TOP
   )
 
-  val gpio0SibCfg = SibConfig(
-    addressWidth = SoCAddrMap.GPIO0_ADDR_WIDTH,
+  val pwm0SibCfg = SibConfig(
+    addressWidth = SoCAddrMap.PWM0_ADDR_WIDTH,
     dataWidth    = AppleRISCVCfg.XLEN,
-    addr_lo      = SoCAddrMap.GPIO0_BASE,
-    addr_hi      = SoCAddrMap.GPIO0_TOP
+    addr_lo      = SoCAddrMap.PWM0_BASE,
+    addr_hi      = SoCAddrMap.PWM0_TOP
   )
 }
 

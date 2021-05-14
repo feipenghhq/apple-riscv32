@@ -54,6 +54,7 @@ end
 `endif
 
   wire     [11:0]   gpio0;
+  wire     [3:0]    pwm0cmpgpio;
   wire              uart0_txd;
   reg               uart0_rxd = 'b1;
   reg               load_imem = 'b0;
