@@ -121,7 +121,7 @@ case class TrapCtrl() extends Component {
   // update pc
   io.pc_trap      := io.mtrap_enter | io.mtrap_exit
   val mtvec_base  =  io.mtvec(AppleRISCVCfg.MXLEN-1 downto 2)
-  io.pc_value     := Mux(io.mret, io.mepc.asUInt, mtvec_base.asUInt.resized)
+  io.pc_value     := Mux(io.mret, io.mepc.asUInt, (mtvec_base ## B"2'h0").asUInt)
 
   // request to flush
   io.trap_flush   := io.mtrap_enter | io.mtrap_exit

@@ -37,51 +37,50 @@ Disassembly of section .text.init:
 20000074:	00000f13          	li	t5,0
 20000078:	00000f93          	li	t6,0
 2000007c:	00000297          	auipc	t0,0x0
-20000080:	06028293          	addi	t0,t0,96 # 200000dc <mtvec_handler>
-20000084:	00229293          	slli	t0,t0,0x2
-20000088:	30529073          	csrw	mtvec,t0
-2000008c:	00806293          	ori	t0,zero,8
-20000090:	3002a073          	csrs	mstatus,t0
-20000094:	00806293          	ori	t0,zero,8
-20000098:	3042a073          	csrs	mie,t0
-2000009c:	02000437          	lui	s0,0x2000
-200000a0:	00106313          	ori	t1,zero,1
-200000a4:	00a06513          	ori	a0,zero,10
-200000a8:	00642023          	sw	t1,0(s0) # 2000000 <MSIP_ADDR>
-200000ac:	00f06313          	ori	t1,zero,15
-200000b0:	00650e63          	beq	a0,t1,200000cc <pass>
-200000b4:	0080006f          	j	200000bc <fail>
-200000b8:	00301a63          	bne	zero,gp,200000cc <pass>
+20000080:	05c28293          	addi	t0,t0,92 # 200000d8 <mtvec_handler>
+20000084:	30529073          	csrw	mtvec,t0
+20000088:	00806293          	ori	t0,zero,8
+2000008c:	3002a073          	csrs	mstatus,t0
+20000090:	00806293          	ori	t0,zero,8
+20000094:	3042a073          	csrs	mie,t0
+20000098:	02000437          	lui	s0,0x2000
+2000009c:	00106313          	ori	t1,zero,1
+200000a0:	00a06513          	ori	a0,zero,10
+200000a4:	00642023          	sw	t1,0(s0) # 2000000 <MSIP_ADDR>
+200000a8:	00f06313          	ori	t1,zero,15
+200000ac:	00650e63          	beq	a0,t1,200000c8 <pass>
+200000b0:	0080006f          	j	200000b8 <fail>
+200000b4:	00301a63          	bne	zero,gp,200000c8 <pass>
 
-200000bc <fail>:
-200000bc:	00f00093          	li	ra,15
-200000c0:	00f00113          	li	sp,15
-200000c4:	00f00193          	li	gp,15
+200000b8 <fail>:
+200000b8:	00f00093          	li	ra,15
+200000bc:	00f00113          	li	sp,15
+200000c0:	00f00193          	li	gp,15
 
-200000c8 <fail_loop>:
-200000c8:	0000006f          	j	200000c8 <fail_loop>
+200000c4 <fail_loop>:
+200000c4:	0000006f          	j	200000c4 <fail_loop>
 
-200000cc <pass>:
-200000cc:	00100093          	li	ra,1
-200000d0:	00200113          	li	sp,2
-200000d4:	00300193          	li	gp,3
+200000c8 <pass>:
+200000c8:	00100093          	li	ra,1
+200000cc:	00200113          	li	sp,2
+200000d0:	00300193          	li	gp,3
 
-200000d8 <pass_loop>:
-200000d8:	0000006f          	j	200000d8 <pass_loop>
+200000d4 <pass_loop>:
+200000d4:	0000006f          	j	200000d4 <pass_loop>
 
-200000dc <mtvec_handler>:
-200000dc:	00806313          	ori	t1,zero,8
-200000e0:	344022f3          	csrr	t0,mip
-200000e4:	fc629ce3          	bne	t0,t1,200000bc <fail>
-200000e8:	342022f3          	csrr	t0,mcause
-200000ec:	80000337          	lui	t1,0x80000
-200000f0:	00330313          	addi	t1,t1,3 # 80000003 <_end+0x3>
-200000f4:	fc6294e3          	bne	t0,t1,200000bc <fail>
-200000f8:	00042023          	sw	zero,0(s0)
-200000fc:	00f00513          	li	a0,15
-20000100:	341022f3          	csrr	t0,mepc
-20000104:	00428293          	addi	t0,t0,4
-20000108:	34129073          	csrw	mepc,t0
-2000010c:	30200073          	mret
-20000110:	c0001073          	unimp
+200000d8 <mtvec_handler>:
+200000d8:	00806313          	ori	t1,zero,8
+200000dc:	344022f3          	csrr	t0,mip
+200000e0:	fc629ce3          	bne	t0,t1,200000b8 <fail>
+200000e4:	342022f3          	csrr	t0,mcause
+200000e8:	80000337          	lui	t1,0x80000
+200000ec:	00330313          	addi	t1,t1,3 # 80000003 <_end+0x3>
+200000f0:	fc6294e3          	bne	t0,t1,200000b8 <fail>
+200000f4:	00042023          	sw	zero,0(s0)
+200000f8:	00f00513          	li	a0,15
+200000fc:	341022f3          	csrr	t0,mepc
+20000100:	00428293          	addi	t0,t0,4
+20000104:	34129073          	csrw	mepc,t0
+20000108:	30200073          	mret
+2000010c:	c0001073          	unimp
 	...

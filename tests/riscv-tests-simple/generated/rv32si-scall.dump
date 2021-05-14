@@ -37,55 +37,54 @@ Disassembly of section .text.init:
 20000074:	00000f13          	li	t5,0
 20000078:	00000f93          	li	t6,0
 2000007c:	00000297          	auipc	t0,0x0
-20000080:	08028293          	addi	t0,t0,128 # 200000fc <mtvec_handler>
-20000084:	00229293          	slli	t0,t0,0x2
-20000088:	30529073          	csrw	mtvec,t0
-2000008c:	00200193          	li	gp,2
-20000090:	00800313          	li	t1,8
-20000094:	000022b7          	lui	t0,0x2
-20000098:	80028293          	addi	t0,t0,-2048 # 1800 <_start-0x1fffe800>
-2000009c:	3002b073          	csrc	mstatus,t0
-200000a0:	300023f3          	csrr	t2,mstatus
-200000a4:	0072f2b3          	and	t0,t0,t2
-200000a8:	00028463          	beqz	t0,200000b0 <_start+0xb0>
-200000ac:	00b00313          	li	t1,11
-200000b0:	000022b7          	lui	t0,0x2
-200000b4:	80028293          	addi	t0,t0,-2048 # 1800 <_start-0x1fffe800>
-200000b8:	3002b073          	csrc	mstatus,t0
-200000bc:	00000297          	auipc	t0,0x0
-200000c0:	01028293          	addi	t0,t0,16 # 200000cc <_start+0xcc>
-200000c4:	34129073          	csrw	mepc,t0
-200000c8:	30200073          	mret
-200000cc:	00100193          	li	gp,1
+20000080:	07c28293          	addi	t0,t0,124 # 200000f8 <mtvec_handler>
+20000084:	30529073          	csrw	mtvec,t0
+20000088:	00200193          	li	gp,2
+2000008c:	00800313          	li	t1,8
+20000090:	000022b7          	lui	t0,0x2
+20000094:	80028293          	addi	t0,t0,-2048 # 1800 <_start-0x1fffe800>
+20000098:	3002b073          	csrc	mstatus,t0
+2000009c:	300023f3          	csrr	t2,mstatus
+200000a0:	0072f2b3          	and	t0,t0,t2
+200000a4:	00028463          	beqz	t0,200000ac <_start+0xac>
+200000a8:	00b00313          	li	t1,11
+200000ac:	000022b7          	lui	t0,0x2
+200000b0:	80028293          	addi	t0,t0,-2048 # 1800 <_start-0x1fffe800>
+200000b4:	3002b073          	csrc	mstatus,t0
+200000b8:	00000297          	auipc	t0,0x0
+200000bc:	01028293          	addi	t0,t0,16 # 200000c8 <_start+0xc8>
+200000c0:	34129073          	csrw	mepc,t0
+200000c4:	30200073          	mret
+200000c8:	00100193          	li	gp,1
 
-200000d0 <do_scall>:
-200000d0:	00000073          	ecall
-200000d4:	0080006f          	j	200000dc <fail>
-200000d8:	00301a63          	bne	zero,gp,200000ec <pass>
+200000cc <do_scall>:
+200000cc:	00000073          	ecall
+200000d0:	0080006f          	j	200000d8 <fail>
+200000d4:	00301a63          	bne	zero,gp,200000e8 <pass>
 
-200000dc <fail>:
-200000dc:	00f00093          	li	ra,15
-200000e0:	00f00113          	li	sp,15
-200000e4:	00f00193          	li	gp,15
+200000d8 <fail>:
+200000d8:	00f00093          	li	ra,15
+200000dc:	00f00113          	li	sp,15
+200000e0:	00f00193          	li	gp,15
 
-200000e8 <fail_loop>:
-200000e8:	0000006f          	j	200000e8 <fail_loop>
+200000e4 <fail_loop>:
+200000e4:	0000006f          	j	200000e4 <fail_loop>
 
-200000ec <pass>:
-200000ec:	00100093          	li	ra,1
-200000f0:	00200113          	li	sp,2
-200000f4:	00300193          	li	gp,3
+200000e8 <pass>:
+200000e8:	00100093          	li	ra,1
+200000ec:	00200113          	li	sp,2
+200000f0:	00300193          	li	gp,3
 
-200000f8 <pass_loop>:
-200000f8:	0000006f          	j	200000f8 <pass_loop>
+200000f4 <pass_loop>:
+200000f4:	0000006f          	j	200000f4 <pass_loop>
 
-200000fc <mtvec_handler>:
-200000fc:	342022f3          	csrr	t0,mcause
-20000100:	fc629ee3          	bne	t0,t1,200000dc <fail>
-20000104:	00000397          	auipc	t2,0x0
-20000108:	fcc38393          	addi	t2,t2,-52 # 200000d0 <do_scall>
-2000010c:	341022f3          	csrr	t0,mepc
-20000110:	fc7296e3          	bne	t0,t2,200000dc <fail>
-20000114:	fd9ff06f          	j	200000ec <pass>
-20000118:	c0001073          	unimp
+200000f8 <mtvec_handler>:
+200000f8:	342022f3          	csrr	t0,mcause
+200000fc:	fc629ee3          	bne	t0,t1,200000d8 <fail>
+20000100:	00000397          	auipc	t2,0x0
+20000104:	fcc38393          	addi	t2,t2,-52 # 200000cc <do_scall>
+20000108:	341022f3          	csrr	t0,mepc
+2000010c:	fc7296e3          	bne	t0,t2,200000d8 <fail>
+20000110:	fd9ff06f          	j	200000e8 <pass>
+20000114:	c0001073          	unimp
 	...

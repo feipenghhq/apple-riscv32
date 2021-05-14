@@ -38,102 +38,102 @@ Disassembly of section .text.init:
 20000078:	00000f93          	li	t6,0
 2000007c:	00000297          	auipc	t0,0x0
 20000080:	18428293          	addi	t0,t0,388 # 20000200 <mtvec_handler>
-20000084:	00229293          	slli	t0,t0,0x2
-20000088:	30529073          	csrw	mtvec,t0
-2000008c:	00200193          	li	gp,2
+20000084:	30529073          	csrw	mtvec,t0
+20000088:	00200193          	li	gp,2
 
-20000090 <bad2>:
-20000090:	0000                	unimp
-20000092:	0000                	unimp
-20000094:	0e40006f          	j	20000178 <fail>
-20000098:	000022b7          	lui	t0,0x2
-2000009c:	80028293          	addi	t0,t0,-2048 # 1800 <_start-0x1fffe800>
-200000a0:	3002b073          	csrc	mstatus,t0
-200000a4:	00001337          	lui	t1,0x1
-200000a8:	80030313          	addi	t1,t1,-2048 # 800 <_start-0x1ffff800>
-200000ac:	30032073          	csrs	mstatus,t1
-200000b0:	300023f3          	csrr	t2,mstatus
-200000b4:	0053f3b3          	and	t2,t2,t0
-200000b8:	0c731863          	bne	t1,t2,20000188 <pass>
+2000008c <bad2>:
+2000008c:	0000                	unimp
+2000008e:	0000                	unimp
+20000090:	0e40006f          	j	20000174 <fail>
+20000094:	000022b7          	lui	t0,0x2
+20000098:	80028293          	addi	t0,t0,-2048 # 1800 <_start-0x1fffe800>
+2000009c:	3002b073          	csrc	mstatus,t0
+200000a0:	00001337          	lui	t1,0x1
+200000a4:	80030313          	addi	t1,t1,-2048 # 800 <_start-0x1ffff800>
+200000a8:	30032073          	csrs	mstatus,t1
+200000ac:	300023f3          	csrr	t2,mstatus
+200000b0:	0053f3b3          	and	t2,t2,t0
+200000b4:	0c731863          	bne	t1,t2,20000184 <pass>
 
-200000bc <test_vectored_interrupts>:
-200000bc:	34415073          	csrwi	mip,2
-200000c0:	30415073          	csrwi	mie,2
-200000c4:	00000297          	auipc	t0,0x0
-200000c8:	13d28293          	addi	t0,t0,317 # 20000201 <mtvec_handler+0x1>
-200000cc:	30529473          	csrrw	s0,mtvec,t0
-200000d0:	305022f3          	csrr	t0,mtvec
-200000d4:	0012f293          	andi	t0,t0,1
-200000d8:	00028663          	beqz	t0,200000e4 <msip>
-200000dc:	30046073          	csrsi	mstatus,8
-200000e0:	0000006f          	j	200000e0 <test_vectored_interrupts+0x24>
+200000b8 <test_vectored_interrupts>:
+200000b8:	34415073          	csrwi	mip,2
+200000bc:	30415073          	csrwi	mie,2
+200000c0:	00000297          	auipc	t0,0x0
+200000c4:	14128293          	addi	t0,t0,321 # 20000201 <mtvec_handler+0x1>
+200000c8:	30529473          	csrrw	s0,mtvec,t0
+200000cc:	305022f3          	csrr	t0,mtvec
+200000d0:	0012f293          	andi	t0,t0,1
+200000d4:	00028663          	beqz	t0,200000e0 <msip>
+200000d8:	30046073          	csrsi	mstatus,8
+200000dc:	0000006f          	j	200000dc <test_vectored_interrupts+0x24>
 
-200000e4 <msip>:
-200000e4:	30541073          	csrw	mtvec,s0
-200000e8:	30315073          	csrwi	mideleg,2
-200000ec:	00000297          	auipc	t0,0x0
-200000f0:	02828293          	addi	t0,t0,40 # 20000114 <msip+0x30>
-200000f4:	34129073          	csrw	mepc,t0
-200000f8:	000022b7          	lui	t0,0x2
-200000fc:	80028293          	addi	t0,t0,-2048 # 1800 <_start-0x1fffe800>
-20000100:	3002b073          	csrc	mstatus,t0
-20000104:	00001337          	lui	t1,0x1
-20000108:	80030313          	addi	t1,t1,-2048 # 800 <_start-0x1ffff800>
-2000010c:	30032073          	csrs	mstatus,t1
-20000110:	30200073          	mret
-20000114:	10500073          	wfi
-20000118:	12000073          	sfence.vma
-2000011c:	180022f3          	csrr	t0,satp
+200000e0 <msip>:
+200000e0:	30541073          	csrw	mtvec,s0
+200000e4:	30315073          	csrwi	mideleg,2
+200000e8:	00000297          	auipc	t0,0x0
+200000ec:	02828293          	addi	t0,t0,40 # 20000110 <msip+0x30>
+200000f0:	34129073          	csrw	mepc,t0
+200000f4:	000022b7          	lui	t0,0x2
+200000f8:	80028293          	addi	t0,t0,-2048 # 1800 <_start-0x1fffe800>
+200000fc:	3002b073          	csrc	mstatus,t0
+20000100:	00001337          	lui	t1,0x1
+20000104:	80030313          	addi	t1,t1,-2048 # 800 <_start-0x1ffff800>
+20000108:	30032073          	csrs	mstatus,t1
+2000010c:	30200073          	mret
+20000110:	10500073          	wfi
+20000114:	12000073          	sfence.vma
+20000118:	180022f3          	csrr	t0,satp
 
-20000120 <bad5>:
-20000120:	0000                	unimp
-20000122:	0000                	unimp
-20000124:	0540006f          	j	20000178 <fail>
+2000011c <bad5>:
+2000011c:	0000                	unimp
+2000011e:	0000                	unimp
+20000120:	0540006f          	j	20000174 <fail>
 
-20000128 <bad6>:
-20000128:	12000073          	sfence.vma
-2000012c:	04c0006f          	j	20000178 <fail>
+20000124 <bad6>:
+20000124:	12000073          	sfence.vma
+20000128:	04c0006f          	j	20000174 <fail>
 
-20000130 <bad7>:
-20000130:	180022f3          	csrr	t0,satp
-20000134:	0440006f          	j	20000178 <fail>
-20000138:	00000297          	auipc	t0,0x0
-2000013c:	02028293          	addi	t0,t0,32 # 20000158 <bad8>
-20000140:	14129073          	csrw	sepc,t0
-20000144:	10000293          	li	t0,256
-20000148:	1002a073          	csrs	sstatus,t0
-2000014c:	02000293          	li	t0,32
-20000150:	1002b073          	csrc	sstatus,t0
-20000154:	10200073          	sret
+2000012c <bad7>:
+2000012c:	180022f3          	csrr	t0,satp
+20000130:	0440006f          	j	20000174 <fail>
+20000134:	00000297          	auipc	t0,0x0
+20000138:	02028293          	addi	t0,t0,32 # 20000154 <bad8>
+2000013c:	14129073          	csrw	sepc,t0
+20000140:	10000293          	li	t0,256
+20000144:	1002a073          	csrs	sstatus,t0
+20000148:	02000293          	li	t0,32
+2000014c:	1002b073          	csrc	sstatus,t0
+20000150:	10200073          	sret
 
-20000158 <bad8>:
-20000158:	0000                	unimp
-2000015a:	0000                	unimp
-2000015c:	01c0006f          	j	20000178 <fail>
-20000160:	00000297          	auipc	t0,0x0
-20000164:	01028293          	addi	t0,t0,16 # 20000170 <bad9+0x4>
-20000168:	14129073          	csrw	sepc,t0
+20000154 <bad8>:
+20000154:	0000                	unimp
+20000156:	0000                	unimp
+20000158:	01c0006f          	j	20000174 <fail>
+2000015c:	00000297          	auipc	t0,0x0
+20000160:	01028293          	addi	t0,t0,16 # 2000016c <bad9+0x4>
+20000164:	14129073          	csrw	sepc,t0
 
-2000016c <bad9>:
-2000016c:	10200073          	sret
-20000170:	0080006f          	j	20000178 <fail>
-20000174:	00301a63          	bne	zero,gp,20000188 <pass>
+20000168 <bad9>:
+20000168:	10200073          	sret
+2000016c:	0080006f          	j	20000174 <fail>
+20000170:	00301a63          	bne	zero,gp,20000184 <pass>
 
-20000178 <fail>:
-20000178:	00f00093          	li	ra,15
-2000017c:	00f00113          	li	sp,15
-20000180:	00f00193          	li	gp,15
+20000174 <fail>:
+20000174:	00f00093          	li	ra,15
+20000178:	00f00113          	li	sp,15
+2000017c:	00f00193          	li	gp,15
 
-20000184 <fail_loop>:
-20000184:	0000006f          	j	20000184 <fail_loop>
+20000180 <fail_loop>:
+20000180:	0000006f          	j	20000180 <fail_loop>
 
-20000188 <pass>:
-20000188:	00100093          	li	ra,1
-2000018c:	00200113          	li	sp,2
-20000190:	00300193          	li	gp,3
+20000184 <pass>:
+20000184:	00100093          	li	ra,1
+20000188:	00200113          	li	sp,2
+2000018c:	00300193          	li	gp,3
 
-20000194 <pass_loop>:
-20000194:	0000006f          	j	20000194 <pass_loop>
+20000190 <pass_loop>:
+20000190:	0000006f          	j	20000190 <pass_loop>
+20000194:	00000013          	nop
 20000198:	00000013          	nop
 2000019c:	00000013          	nop
 200001a0:	00000013          	nop
@@ -163,26 +163,26 @@ Disassembly of section .text.init:
 
 20000200 <mtvec_handler>:
 20000200:	0400006f          	j	20000240 <synchronous_exception>
-20000204:	ee1ff06f          	j	200000e4 <msip>
-20000208:	f71ff06f          	j	20000178 <fail>
-2000020c:	f6dff06f          	j	20000178 <fail>
-20000210:	f69ff06f          	j	20000178 <fail>
-20000214:	f65ff06f          	j	20000178 <fail>
-20000218:	f61ff06f          	j	20000178 <fail>
-2000021c:	f5dff06f          	j	20000178 <fail>
-20000220:	f59ff06f          	j	20000178 <fail>
-20000224:	f55ff06f          	j	20000178 <fail>
-20000228:	f51ff06f          	j	20000178 <fail>
-2000022c:	f4dff06f          	j	20000178 <fail>
-20000230:	f49ff06f          	j	20000178 <fail>
-20000234:	f45ff06f          	j	20000178 <fail>
-20000238:	f41ff06f          	j	20000178 <fail>
-2000023c:	f3dff06f          	j	20000178 <fail>
+20000204:	eddff06f          	j	200000e0 <msip>
+20000208:	f6dff06f          	j	20000174 <fail>
+2000020c:	f69ff06f          	j	20000174 <fail>
+20000210:	f65ff06f          	j	20000174 <fail>
+20000214:	f61ff06f          	j	20000174 <fail>
+20000218:	f5dff06f          	j	20000174 <fail>
+2000021c:	f59ff06f          	j	20000174 <fail>
+20000220:	f55ff06f          	j	20000174 <fail>
+20000224:	f51ff06f          	j	20000174 <fail>
+20000228:	f4dff06f          	j	20000174 <fail>
+2000022c:	f49ff06f          	j	20000174 <fail>
+20000230:	f45ff06f          	j	20000174 <fail>
+20000234:	f41ff06f          	j	20000174 <fail>
+20000238:	f3dff06f          	j	20000174 <fail>
+2000023c:	f39ff06f          	j	20000174 <fail>
 
 20000240 <synchronous_exception>:
 20000240:	00200313          	li	t1,2
 20000244:	342022f3          	csrr	t0,mcause
-20000248:	f26298e3          	bne	t0,t1,20000178 <fail>
+20000248:	f26296e3          	bne	t0,t1,20000174 <fail>
 2000024c:	341022f3          	csrr	t0,mepc
 20000250:	343023f3          	csrr	t2,mtval
 20000254:	00038e63          	beqz	t2,20000270 <synchronous_exception+0x30>
@@ -191,26 +191,26 @@ Disassembly of section .text.init:
 20000260:	0022d303          	lhu	t1,2(t0)
 20000264:	01031313          	slli	t1,t1,0x10
 20000268:	0063c3b3          	xor	t2,t2,t1
-2000026c:	f00396e3          	bnez	t2,20000178 <fail>
+2000026c:	f00394e3          	bnez	t2,20000174 <fail>
 20000270:	00000317          	auipc	t1,0x0
-20000274:	e2030313          	addi	t1,t1,-480 # 20000090 <bad2>
+20000274:	e1c30313          	addi	t1,t1,-484 # 2000008c <bad2>
 20000278:	04628263          	beq	t0,t1,200002bc <synchronous_exception+0x7c>
 2000027c:	00000317          	auipc	t1,0x0
-20000280:	ea430313          	addi	t1,t1,-348 # 20000120 <bad5>
+20000280:	ea030313          	addi	t1,t1,-352 # 2000011c <bad5>
 20000284:	04628263          	beq	t0,t1,200002c8 <synchronous_exception+0x88>
 20000288:	00000317          	auipc	t1,0x0
-2000028c:	ea030313          	addi	t1,t1,-352 # 20000128 <bad6>
+2000028c:	e9c30313          	addi	t1,t1,-356 # 20000124 <bad6>
 20000290:	02628663          	beq	t0,t1,200002bc <synchronous_exception+0x7c>
 20000294:	00000317          	auipc	t1,0x0
-20000298:	e9c30313          	addi	t1,t1,-356 # 20000130 <bad7>
+20000298:	e9830313          	addi	t1,t1,-360 # 2000012c <bad7>
 2000029c:	02628063          	beq	t0,t1,200002bc <synchronous_exception+0x7c>
 200002a0:	00000317          	auipc	t1,0x0
-200002a4:	eb830313          	addi	t1,t1,-328 # 20000158 <bad8>
+200002a4:	eb430313          	addi	t1,t1,-332 # 20000154 <bad8>
 200002a8:	02628663          	beq	t0,t1,200002d4 <synchronous_exception+0x94>
 200002ac:	00000317          	auipc	t1,0x0
-200002b0:	ec030313          	addi	t1,t1,-320 # 2000016c <bad9>
+200002b0:	ebc30313          	addi	t1,t1,-324 # 20000168 <bad9>
 200002b4:	02628663          	beq	t0,t1,200002e0 <synchronous_exception+0xa0>
-200002b8:	ec1ff06f          	j	20000178 <fail>
+200002b8:	ebdff06f          	j	20000174 <fail>
 200002bc:	00828293          	addi	t0,t0,8
 200002c0:	34129073          	csrw	mepc,t0
 200002c4:	30200073          	mret

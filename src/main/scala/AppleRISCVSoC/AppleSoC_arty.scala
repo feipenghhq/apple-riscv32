@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: apple_riscv_soc
+// Module Name: AppleSoC_arty
 //
 // Author: Heqing Huang
 // Date Created: 03/30/2021
@@ -152,7 +152,7 @@ case class AppleSoC_arty() extends Component {
         // ====================================
 
         // clock and reset
-        cpu_rst  := aon_inst.io.cpu_rst_out
+        cpu_rst  := aon_inst.io.corerst
 
         // connect interrupt to cpu core
         cpu.core.io.external_interrupt  := plic_inst.io.external_irq
@@ -221,7 +221,7 @@ case class AppleSoC_arty() extends Component {
         io.load_imem <> uart2imem_inst.io.load_imem
 
         // reset controller
-        aon_inst.io.uart2imem_rst_req <> uart2imem_inst.io.downloading
+        aon_inst.io.uartdbgrst_req <> uart2imem_inst.io.downloading
 
         // Imem debug bus
         uart2imem_inst.io.imem_dbg_sib <> imem_data_mux.inputSib(1)  // To imem data mux port 1

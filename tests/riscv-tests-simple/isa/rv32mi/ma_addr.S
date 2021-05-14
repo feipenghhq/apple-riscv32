@@ -18,7 +18,7 @@ RVTEST_CODE_BEGIN
 
   # Added by me: set the mtvec to interrupt handler address
   la t0, mtvec_handler
-  slli t0, t0, 2 # left shift t bit to add the mode field
+  #slli t0, t0, 2 # left shift t bit to add the mode field
   csrw	mtvec,t0
 
   la s0, data
