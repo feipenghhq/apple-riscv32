@@ -54,8 +54,8 @@ barebones_clock()
     // and pad the mcycleh[9:0] and mcycle[31:10] together.
     // the clock is in term of 1024 clock cycle
     ee_u32 clock;
-    ee_u32 clock_lo = (ee_u32) read_csr(mcycle);
-    ee_u32 clock_hi = (ee_u32) read_csr(mcycleh);
+    ee_u32 clock_lo = (ee_u32) _read_csr(mcycle);
+    ee_u32 clock_hi = (ee_u32) _read_csr(mcycleh);
     clock_lo = clock_lo >> 10;
     clock = (clock_hi << (32 - 10)) | clock_lo;
     return clock;

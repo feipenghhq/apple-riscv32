@@ -53,7 +53,7 @@ object SoCAddrMap {
   val AON_ADDR_WIDTH = 15
 
   // GPIO0
-  val GPIO0_BASE = 0x10012000L
+  val GPIO_BASE = 0x10012000L
   val GPIO0_TOP  = 0x10012FFFL
   val GPIO0_ADDR_WIDTH = 12
 
@@ -113,7 +113,7 @@ object PeripSibCfg {
   val gpio0SibCfg = SibConfig(
     addressWidth = SoCAddrMap.GPIO0_ADDR_WIDTH,
     dataWidth    = AppleRISCVCfg.XLEN,
-    addr_lo      = SoCAddrMap.GPIO0_BASE,
+    addr_lo      = SoCAddrMap.GPIO_BASE,
     addr_hi      = SoCAddrMap.GPIO0_TOP
   )
 

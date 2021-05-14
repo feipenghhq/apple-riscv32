@@ -21,8 +21,9 @@
 #define CLIC_BASE       0x02000000
 #define PLIC_BASE       0x0C000000
 #define AON_BASE        0x10000000
+#define RTC_BASE        AON_BASE
 
-#define GPIO0_BASE      0x10012000
+#define GPIO_BASE       0x10012000
 #define UART0_BASE      0x10013000
 
 #endif

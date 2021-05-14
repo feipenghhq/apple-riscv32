@@ -15,8 +15,8 @@ _times (struct tms *buf)
   // and pad the mcycleh[9:0] and mcycle[31:10] together.
   // the clock is in term of 1024 clock cycle
   clock_t clock;
-  uint32_t clock_lo = (uint32_t) read_csr(mcycle);
-  uint32_t clock_hi = (uint32_t) read_csr(mcycleh);
+  uint32_t clock_lo = (uint32_t) _read_csr(mcycle);
+  uint32_t clock_hi = (uint32_t) _read_csr(mcycleh);
   clock = clock_hi << (32 - 10) | (clock_lo >> 10);
 
   buf->tms_utime = 0;

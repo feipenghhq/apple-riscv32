@@ -22,22 +22,19 @@
 #define CLIC_MTIMELO        0xBFF8
 #define CLIC_MTIMEHI        0xBFFC
 
-#define _clic_write_reg(base, offset, data) \
-*((volatile uint32_t*) (base + offset)) = data
+#define _set_msip(base)     IOWR(base, CLIC_MSIP, 0x1)
+#define _clr_msip(base)     IOWR(base, CLIC_MSIP, 0x0)
 
-#define set_msip(base)      _clic_write_reg(base, CLIC_MSIP, 0x1)
-#define clr_msip(base)      _clic_write_reg(base, CLIC_MSIP, 0x0)
+#define _set_mtimecmplo(base, value) \
+    IOWR(base, CLIC_MTIMECMPLO, value)
 
-#define set_mtimecmplo(base, value) \
-_clic_write_reg(base, CLIC_MTIMECMPLO, value)
+#define _set_mtimecmphi(base, value) \
+    IOWR(base, CLIC_MTIMECMPHI, value)
 
-#define set_mtimecmphi(base, value) \
-_clic_write_reg(base, CLIC_MTIMECMPHI, value)
+#define _set_mtimelo(base, value) \
+    IOWR(base, CLIC_MTIMELO, value)
 
-#define set_mtimelo(base, value) \
-_clic_write_reg(base, CLIC_MTIMELO, value)
-
-#define set_mtimehi(base, value) \
-_clic_write_reg(base, CLIC_MTIMEHI, value)
+#define _set_mtimehi(base, value) \
+    IOWR(base, CLIC_MTIMEHI, value)
 
 #endif

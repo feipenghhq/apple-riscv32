@@ -10,14 +10,16 @@
 #include <stdint.h>
 
 #include "platform.h"
+#include "periphals.h"
 
 extern void uart_putnc(uint32_t base, char *buf, size_t nbytes);
+extern int isatty (int file);
 
 int _write (int file, char *buf, size_t nbytes)
 {
 
   if (isatty(file)) {
-    uart_putnc(UART0_BASE, buf, nbytes);
+    _uart_putnc(UART0_BASE, buf, nbytes);
     return nbytes;
   }
 

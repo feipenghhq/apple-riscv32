@@ -29,15 +29,15 @@ int main(int argc, char **argv)
     uint32_t            interval;
 
     interval = (1 << 20);
-    gpio_en(GPIO0_BASE, 0xF);
+    gpio_en(GPIO_BASE, 0xF);
 
     while(1) {
-        value = gpio_rd(GPIO0_BASE);
+        value = gpio_rd(GPIO_BASE);
         btn = (value >> 4) & 0xF;
         sw  = ((value >> 8) & 0xF) + 1;
         ctrl = ~ctrl;
         for (int i = 0; i < (interval * sw); i++);
-        gpio_wr(GPIO0_BASE, ctrl | btn);
+        gpio_wr(GPIO_BASE, ctrl | btn);
     }
     return 0;
 }

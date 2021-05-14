@@ -10,6 +10,8 @@
 #include "platform.h"
 #include "periphals.h"
 
+extern int isatty (int file);
+
 int _read (int file, char *ptr, int len)
 {
   int i;
@@ -17,7 +19,7 @@ int _read (int file, char *ptr, int len)
   // if the file is tty, we read from uart
   if (isatty(file)) {
     for (i = 0; i < len; i++) {
-      ptr[i] = uart_getc(UART0_BASE);
+      ptr[i] = _uart_getc(UART0_BASE);
 
       // return partial value if we get EOL
       if ('\n' == ptr[i]) {

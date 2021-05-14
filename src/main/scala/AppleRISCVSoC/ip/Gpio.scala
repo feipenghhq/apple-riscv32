@@ -66,6 +66,9 @@ case class gpio_interrupt(busCtrl: SibSlaveFactory, width: Int, enable: Boolean,
     val ip = if (enable) busCtrl.createReadAndWrite(Bits(width bits), addr + 4, 0, "GPIO" + intName + "Interrupt Pending") init 0 else null
     // Interrupt Logic
     val irq = if (enable) gpio_value.map(int_op).asBits & ie else B(0, width bits)
+    for (i <- 0 until ip.getBitsWidth) {
+      when (~ip(i) & irq(i)) {ip(i) := True}
+    }
 }
 
 
@@ -100,6 +103,6 @@ case class Gpio(cfg: GpioCfg, sibCfg: SibConfig) extends Component {
   // 0x030    low_ie      low interrupt enable             cfg-able
   // 0x034    low_ip      low interrupt pending            cfg-able
   val low  = gpio_interrupt(busCtrl, cfg.GPIO_WIDTH, cfg.LO_INT, 0x030, "Low", gpio_value, x => ~x)
-  
-  io.gpio_irq := rise.irq | fall.irq | high.irq | low.irq
+
+  io.gpio_irq := rise.ip | fall.ip | high.ip | low.ip
 }

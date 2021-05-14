@@ -40,12 +40,12 @@
 #define IOCLEAR(base, offset, mask) IOWR(base, offset, (IORD(base, offset) ^ mask));
 
 /** Read CSR register */
-#define read_csr(reg) ({ uint32_t __tmp; \
+#define _read_csr(reg) ({ uint32_t __tmp; \
 asm volatile ("csrr %0, " #reg:"=r"(__tmp)); \
 __tmp;})
 
 /** Write CSR register */
-#define write_csr(reg, val) ({ \
+#define _write_csr(reg, val) ({ \
   if (__builtin_constant_p(val) && (unsigned long)(val) < 32) \
     asm volatile ("csrw " #reg ", %0" :: "i"(val)); \
   else \

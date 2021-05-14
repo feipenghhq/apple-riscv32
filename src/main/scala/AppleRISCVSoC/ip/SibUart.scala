@@ -92,8 +92,8 @@ case class SibUart(sibCfg: SibConfig) extends Component {
   val rxwmen  = busCtrl.createReadAndWrite(Bool, 0x010, 1, "Receive watermark interrupt enable") init False
 
   // 0x014    ip        UART Interrupt pending
-  val txwm_int = (tx_avail < txcnt) & txwmen
-  val rxwm_int = (rx_occup > rxcnt) & rxwmen
+  val txwm_int = (tx_avail <= txcnt) & txwmen
+  val rxwm_int = (rx_occup >= rxcnt) & rxwmen
   busCtrl.read(txwm_int, 0x014, 0, "Transmit watermark interrupt pending")
   busCtrl.read(rxwm_int, 0x014, 1, "Receive watermark interrupt pending")
 

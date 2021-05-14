@@ -65,11 +65,12 @@ case class AON(sibCfg: SibConfig) extends Component {
     // RTC Configuration Register (rtccfg) - 0x40
     val rtcscale = busCtrl.createReadAndWrite(UInt(4 bits), 0x040, 0, "RTC clock rate scale")
     val rtcenalways = busCtrl.createReadAndWrite(Bool, 0x040, 12, "RTC counter enable") init False
-    val rtcmpip = busCtrl.createReadOnly(Bool, 0x040, 28, "RTC comparator interrupt pending") init False
+    val rtcmpip = RegInit(False)
+    busCtrl.read(rtcmpip, 0x040, 28, "RTC comparator interrupt pending")
     // RTC Counter Register Low (rtclo) - 0x48
-    busCtrl.read(rtcfull(31 downto 0), 0x048, 0, "RTC counter register, low bits")
+    busCtrl.readAndWrite(rtcfull(31 downto 0), 0x048, 0, "RTC counter register, low bits")
     // RTC Counter Register High (rtchi) - 0x4C
-    busCtrl.read(rtcfull(47 downto 32), 0x04C, 0, "RTC counter register, high bits")
+    busCtrl.readAndWrite(rtcfull(47 downto 32), 0x04C, 0, "RTC counter register, high bits")
     // RTC Counter Register Selected - 0x50
     busCtrl.read(rtcs, 0x050, 0, "RTC Counter Register Selected")
     // RTC Counter Compare Register (rtccmp) - 0x60
@@ -79,7 +80,7 @@ case class AON(sibCfg: SibConfig) extends Component {
     // Logic
     // ===================
     rtcs    := (rtcfull >> rtcscale).resized
-    rtcmpip := rtcs > rtccmp
+    rtcmpip := (rtcs > rtccmp) & rtcenalways
     when(rtcenalways & clk_div_tick) {rtcfull := rtcfull + 1}
     io.rtc_irq := rtcmpip & rtcenalways
   }

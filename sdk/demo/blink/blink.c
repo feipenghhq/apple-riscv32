@@ -23,9 +23,9 @@ int main(int argc, char **argv)
 {
     volatile uint32_t   value = 0;
 
-    gpio_en(GPIO0_BASE, 0xF);
+    gpio_en(GPIO_BASE, 0xF);
     while(1) {
-        gpio_wr(GPIO0_BASE, value);
+        gpio_wr(GPIO_BASE, value);
         value = value + 1;
         for (int i = 0; i < 10000000; i++);
     }

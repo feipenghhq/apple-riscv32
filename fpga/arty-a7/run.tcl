@@ -69,4 +69,4 @@ if {$PROGRAM == 1} {
     program_hw_device [current_hw_device]
 }
 
-
+close_design
