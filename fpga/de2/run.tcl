@@ -11,8 +11,10 @@ set TOP         $::env(TOP)
 set DEVICE      $::env(DEVICE)
 set FAMILY      $::env(FAMILY)
 
-set SOC_RTL_PATH gen/rtl
+
 set REPO_ROOT [exec git rev-parse --show-toplevel]
+
+set SOC_RTL_PATH $REPO_ROOT
 set OUTPUT output
 #exec mkdir -p $OUTPUT
 
@@ -26,6 +28,7 @@ project_new $PRJ_NAME -revision $TOP -overwrite -part $DEVICE -family $FAMILY
 # ========================================
 
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY $OUTPUT
+set_global_assignment -name VERILOG_MACRO "SYNTHESIS=1"
 
 # Commit assignments
 export_assignments
@@ -34,7 +37,7 @@ export_assignments
 # Step 3: Read in RTL
 # ========================================
 
-set SOC_RTL  $REPO_ROOT/$SOC_RTL_PATH/apple_riscv_soc.v
+set SOC_RTL  $SOC_RTL_PATH/$TOP.v
 set_global_assignment -name VERILOG_FILE $SOC_RTL
 export_assignments
 

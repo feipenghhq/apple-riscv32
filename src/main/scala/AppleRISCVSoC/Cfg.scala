@@ -76,7 +76,7 @@ object SoCAddrMap {
   // On-Chip Volatile Memory
   val DTIM_BASE  = 0x80000000L
   val DTIM_TOP   = 0x8000FFFFL
-  val DTIM_ADDR_WIDTH = 14  // 64K Byte RAM
+  val DTIM_ADDR_WIDTH = 32  // 64K Byte RAM
 }
 
 object PeripSibCfg {

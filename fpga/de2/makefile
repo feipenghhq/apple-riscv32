@@ -18,30 +18,14 @@ _FAMILY = Cyclone II
 
 # run vivado at SOC level
 soc: export PRJ_NAME 	= soc
-soc: export TOP 		= apple_riscv_soc
+soc: export TOP 		= DE2_top
 soc: export DEVICE 	    = $(_DEVICE)
 soc: export FAMILY 	    = $(_FAMILY)
-soc: clean_soc
+soc: clean
 	mkdir -p $(PRJ_NAME)
 	cd $(PRJ_NAME) && ln -s ../run.tcl
-	cd $(PRJ_NAME) && ln -s ../run.sh
-	cd $(PRJ_NAME) && quartus_sh --64bit -t run.tcl
+	cd $(PRJ_NAME) && quartus_sh --64bit -t run.tcl | tee run.log
 
-# run vivado at SOC level
-core: export PRJ_NAME 	= core
-core: export TOP 		= apple_riscv
-core: export DEVICE 	= $(_DEVICE)
-core: export FAMILY 	= $(_FAMILY)
-core: clean_core
-	mkdir -p $(PRJ_NAME)
-	cd $(PRJ_NAME) && ln -s ../run.tcl
-	cd $(PRJ_NAME) && ln -s ../run.sh
-	cd $(PRJ_NAME) && quartus_sh --64bit -t run.tcl
+clean:
+	rm -rf $(PRJ_NAME)
 
-clean: clean_soc clean_core
-
-clean_soc:
-	rm -rf soc
-
-clean_core:
-	rm -rf core

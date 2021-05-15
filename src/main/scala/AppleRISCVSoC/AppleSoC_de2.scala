@@ -37,20 +37,20 @@ import scala.collection.mutable.ArrayBuffer
  * Configuration for this SoC
  */
 
-case class AppleSoCCfg_arty() {
+case class AppleSoCCfg_de2() {
 
     val NAME = "AppleSoC"
 
     val CLIC_TIMER_WIDTH = 64
     val TIMER_TIMER_WIDTH = 64
 
-    val INSTR_RAM_ADDR_WIDTH = 16
+    val INSTR_RAM_ADDR_WIDTH = 12
     val INSTR_RAM_BASE = SoCAddrMap.QSPI0_BASE
-    val INSTR_RAM_TOP  = SoCAddrMap.QSPI0_BASE + 0xFFFF // 64KB
+    val INSTR_RAM_TOP  = SoCAddrMap.QSPI0_BASE + 0xFFF // 32KB
 
-    val DATA_RAM_ADDR_WIDTH  = 16
+    val DATA_RAM_ADDR_WIDTH  = 19
     val DATA_RAM_BASE = SoCAddrMap.DTIM_BASE
-    val DATA_RAM_TOP  = SoCAddrMap.DTIM_BASE + 0xFFFF // 64KB
+    val DATA_RAM_TOP  = SoCAddrMap.DTIM_BASE + 0x7FFFF // 512KB
 
     val cpuSibCfg = SibConfig(
         addressWidth = AppleRISCVCfg.XLEN,
@@ -70,7 +70,7 @@ case class AppleSoCCfg_arty() {
       addressWidth = DATA_RAM_ADDR_WIDTH,
       dataWidth    = AppleRISCVCfg.XLEN,
       addr_lo      = DATA_RAM_BASE,
-      addr_hi      = DATA_RAM_TOP           // 64KB
+      addr_hi      = DATA_RAM_TOP
     )
 
     var gpio0Cfg = GpioCfg(HI_INT = true, LO_INT = true, RISE_INT = true, FALL_INT = true, 12)
@@ -82,14 +82,14 @@ case class AppleSoCCfg_arty() {
 }
 
 
-case class AppleSoC_arty() extends Component {
+case class AppleSoC_de2() extends Component {
 
-    val cfg = AppleSoCCfg_arty()
-
+    val cfg = AppleSoCCfg_de2()
     val io = new Bundle {
         val clk         = in Bool
         val reset       = in Bool
         val load_imem   = in Bool
+        val sram        = master(SRAMIO())
         val uart0       = master(Uart())  // this is needed for debug
         val gpio0       = if (cfg.USE_GPIO0) master(TriStateArray(12 bits)) else null
         val pwm0cmpgpio = if (cfg.USE_PWM0) out Bits(4 bits) else null
@@ -129,7 +129,7 @@ case class AppleSoC_arty() extends Component {
         // Fixed Component
 
         val imem_inst = BlockRAM(usePort2 = true, cfg.imemSibCfg, cfg.imemSibCfg)
-        val dmem_inst = BlockRAM(usePort2 = false, cfg.dmemSibCfg)
+        val SRAMCtrl_inst = SRAMCtrl(cfg.dmemSibCfg)
         val clic_inst = Clic(PeripSibCfg.clicSibCfg)
         val plic_inst = Plic(PeripSibCfg.plicSibCfg)
         val uart2imem_inst = ip.Uart2imem(cfg.imemSibCfg, cfg.uartDbgBaudRate)
@@ -207,7 +207,7 @@ case class AppleSoC_arty() extends Component {
         // dmem switch connection
         dmem_switch.hostSib      <> cpu.core.io.dmem_sib        // To CPU
         dmem_switch.clientSib(0) <> imem_data_mux.inputSib(0)   // To imem data mux port 0
-        dmem_switch.clientSib(1) <> dmem_inst.io.port1          // To dmem
+        dmem_switch.clientSib(1) <> SRAMCtrl_inst.io.sram_sib   // To SRAM ctrl
         dmem_switch.clientSib(2) <> perip_switch.hostSib        // To Peripheral SIB Switch
 
         // peripheral switch connection
@@ -226,6 +226,9 @@ case class AppleSoC_arty() extends Component {
 
         // reset controller
         aon_inst.io.uartdbgrst_req <> uart2imem_inst.io.downloading
+
+        // SRAM port
+        SRAMCtrl_inst.io.sram <> io.sram
 
         // Imem debug bus
         uart2imem_inst.io.imem_dbg_sib <> imem_data_mux.inputSib(1)  // To imem data mux port 1
@@ -262,12 +265,12 @@ case class AppleSoC_arty() extends Component {
     }
 }
 
-object AppleSoC_artyMain{
+object AppleSoC_de2Main{
     def main(args: Array[String]) {
         AppleRISCVCfg.USE_RV32M   = true
         AppleRISCVCfg.USE_BPU     = true
         CsrCfg.USE_MHPMC3  = true
         CsrCfg.USE_MHPMC4  = true
-        SpinalVerilog(InOutWrapper(AppleSoC_arty()))
+        SpinalVerilog(InOutWrapper(AppleSoC_de2()))
     }
 }
