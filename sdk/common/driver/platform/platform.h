@@ -25,5 +25,6 @@
 
 #define GPIO_BASE       0x10012000
 #define UART0_BASE      0x10013000
+#define PWM0_BASE       0x10015000
 
 #endif

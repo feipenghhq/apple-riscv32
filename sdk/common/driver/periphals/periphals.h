@@ -21,7 +21,7 @@
 #include "plic.h"
 #include "rtc.h"
 #include "uart.h"
-
+#include "pwm.h"
 
 
 #endif
