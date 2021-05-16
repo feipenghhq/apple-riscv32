@@ -17,13 +17,13 @@ TB_PATH       	= $(REPO_ROOT)/tests/verilog
 # -----------------------------------------
 # Source files
 # -----------------------------------------
-TB_FILES      	= $(TB_PATH)/apple_riscv_soc_tb.v
+TB_FILES      	= $(TB_PATH)/arty_tb.v
 RTL_FILES     	= $(RTL_SOC_PATH)/apple_riscv_soc.v
 
 VERILOG_SOURCES += $(TB_FILES)
 VERILOG_SOURCES += $(RTL_FILES)
 
-TOPLEVEL 	= apple_riscv_soc_tb
+TOPLEVEL 	= arty_tb
 
 
 # -----------------------------------------

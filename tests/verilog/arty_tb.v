@@ -1,4 +1,4 @@
-module apple_riscv_soc_tb ();
+module arty_tb ();
 
 parameter DATA_RAM_ADDR_WIDTH = 16;
 parameter DATA_RAM_SIZE = 1 << (DATA_RAM_ADDR_WIDTH);
@@ -17,7 +17,7 @@ AppleSoC_arty DUT_AppleRISCVSoC(.*);
 
 `ifdef COCOTB_SIM
 initial begin
-  $dumpfile ("DUT_AppleRISCVSoC.vcd");
+  $dumpfile ("DUT_arty.vcd");
   $dumpvars (0, DUT_AppleRISCVSoC);
 end
 `endif
@@ -47,9 +47,6 @@ initial begin
     DUT_AppleRISCVSoC.soc_dmem_inst.ram_symbol0[dm/4] = data_ram[dm];
   end
   $display("[INFO] Loading Data RAM Done");
-  //for (dm = 0; dm < 20; dm = dm + 1) begin
-  //  $dumpvars(0, data_ram[dm]);
-  //end
 end
 `endif
 

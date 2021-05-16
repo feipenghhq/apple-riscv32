@@ -59,8 +59,9 @@ case class SRAMCtrl(sibCfg: SibConfig) extends Component {
     def newReq(): Any = new Area{
       write_ff := io.sram_sib.write
       mask_ff  := io.sram_sib.mask
-      // ignore the lower bit as the since the sram address is aligned to 2 bytes
-      addr_ff  := io.sram_sib.addr(18 downto 1)
+      // ignore the lower two bit as we need to align the address to 4 byte and
+      // twick the lb/ub_n to enable byte access
+      addr_ff  := io.sram_sib.addr(18 downto 2) @@ False
       wdata_ff := io.sram_sib.wdata
       io.sram_sib.ready := False
     }
@@ -77,7 +78,7 @@ case class SRAMCtrl(sibCfg: SibConfig) extends Component {
     io.sram.ub_n := True
     io.sram.addr := addr_ff
     io.sram.data.write := wdata_ff(15 downto 0)
-    io.sram.data.writeEnable := write_ff.asBits.resized
+    io.sram.data.writeEnable.setAllTo(write_ff)
 
     IDLE.whenIsActive {
       when(io.sram_sib.sel) {
@@ -94,8 +95,9 @@ case class SRAMCtrl(sibCfg: SibConfig) extends Component {
       io.sram.oe_n := write_ff
       io.sram.addr := addr_ff
       io.sram.data.write := wdata_ff(15 downto 0)
-      io.sram.data.writeEnable := write_ff.asBits.resized
-      addr_ff      := addr_ff + 2 // Advance the address by 2
+      // Advance the address by 1, this is the next address in the sram
+      // which is 2 byte aligned.
+      addr_ff      := addr_ff + 1
       rdatalo_ff   := io.sram.data.read
       io.sram_sib.ready := True
       goto(DONE)
@@ -109,7 +111,6 @@ case class SRAMCtrl(sibCfg: SibConfig) extends Component {
       io.sram.oe_n := write_ff
       io.sram.addr := addr_ff
       io.sram.data.write := wdata_ff(31 downto 16)
-      io.sram.data.writeEnable := write_ff.asBits.resized
       when(io.sram_sib.sel) {
         newReq()
         goto(ACCESS)

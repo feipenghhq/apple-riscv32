@@ -76,11 +76,13 @@ case class AppleRISCV() extends Component {
     // The stage prefix indicate if the instruction in the current stage is valid
     val if_stage_valid  = Bool
     val id_stage_valid  = Bool
-    val id_stage_valid_final  = Bool
     val ex_stage_valid  = Bool
-    val ex_stage_valid_final  = Bool
     val mem_stage_valid = Bool
     val wb_stage_valid  = Bool
+
+    val id_stage_valid_final  = Bool
+    val ex_stage_valid_final  = Bool
+    val mem_stage_valid_final = Bool
 
     val if_pipe_stall  = Bool
     val id_pipe_stall  = Bool
@@ -328,7 +330,7 @@ case class AppleRISCV() extends Component {
     mcsr_inst.io.csr_bus.wdata := Mux(ex2mem.csr_sel_imm, ex2mem.rs1_idx.asBits.resized, ex2mem.rs1_value)
     mcsr_inst.io.csr_bus.addr  := ex2mem.csr_idx.asUInt
     mcsr_inst.io.csr_bus.wtype := ex2mem.csr_sel
-    mcsr_inst.io.csr_bus.wen   := ex2mem.csr_wr & mem_stage_valid
+    mcsr_inst.io.csr_bus.wen   := ex2mem.csr_wr & mem_stage_valid_final
     mcsr_inst.io.inc_br_cnt := branch_unit_inst.io.is_branch_instr
     mcsr_inst.io.inc_pred_good := branch_unit_inst.io.is_branch_instr & ~branch_unit_inst.io.take_branch
 
@@ -382,12 +384,12 @@ case class AppleRISCV() extends Component {
     // Mem/WB stage pipeline
     val mem2wb = new Area {
         // control signal
-        val stage_valid  = RegNextWhen(mem_stage_valid,           ~mem_pipe_stall) init False
-        val rd_wr   = RegNextWhen(ex2mem.rd_wr & mem_stage_valid, ~mem_pipe_stall) init False
+        val stage_valid  = RegNextWhen(mem_stage_valid_final,           ~mem_pipe_stall) init False
+        val rd_wr   = RegNextWhen(ex2mem.rd_wr & mem_stage_valid_final, ~mem_pipe_stall) init False
 
         // payload
-        val rd_wdata = RegNextWhen(mem_rd_wdata,                  ~mem_pipe_stall)
-        val rd_idx   = RegNextWhen(ex2mem.rd_idx,                 ~mem_pipe_stall)
+        val rd_wdata = RegNextWhen(mem_rd_wdata,  ~mem_pipe_stall)
+        val rd_idx   = RegNextWhen(ex2mem.rd_idx, ~mem_pipe_stall)
     }
 
     // =========================
@@ -431,20 +433,21 @@ case class AppleRISCV() extends Component {
         val muldiv_stall_req = if (AppleRISCVCfg.USE_RV32M) mul_inst.io.mul_stall_req | div_inst.io.div_stall_req else False
         // Flush
         if_stage_valid  := ~branch_unit_inst.io.take_branch  & ~trap_ctrl_inst.io.trap_flush
-        id_stage_valid  := if2id.stage_valid  & ~branch_unit_inst.io.take_branch   & ~trap_ctrl_inst.io.trap_flush
+        id_stage_valid  := if2id.stage_valid  & ~branch_unit_inst.io.take_branch  & ~trap_ctrl_inst.io.trap_flush
         ex_stage_valid  := id2ex.stage_valid  & ~trap_ctrl_inst.io.trap_flush
         mem_stage_valid := ex2mem.stage_valid & ~trap_ctrl_inst.io.trap_flush
-        wb_stage_valid  := mem2wb.stage_valid & ~dmem_ctrl_isnt.io.dmem_stall_req
+        wb_stage_valid  := mem2wb.stage_valid
         // flush plus bubble insertion
-        id_stage_valid_final := id_stage_valid & ~id_stall_on_load_dep & ~id_stall_on_csr_dep
+        id_stage_valid_final := id_stage_valid  & ~id_stall_on_csr_dep & ~(id_stall_on_load_dep & ~dmem_ctrl_isnt.io.dmem_stall_req)
         ex_stage_valid_final := ex_stage_valid & ~muldiv_stall_req
+        mem_stage_valid_final := mem_stage_valid
 
         // Stall
         if_pipe_stall  := if_stage_valid &
           (id_stall_on_load_dep | id_stall_on_csr_dep | dmem_ctrl_isnt.io.dmem_stall_req | muldiv_stall_req)
-        id_pipe_stall  := id_stage_valid_final & muldiv_stall_req
+        id_pipe_stall  := id_stage_valid_final & (dmem_ctrl_isnt.io.dmem_stall_req | muldiv_stall_req)
         ex_pipe_stall  := ex_stage_valid_final & dmem_ctrl_isnt.io.dmem_stall_req
-        mem_pipe_stall := mem_stage_valid & dmem_ctrl_isnt.io.dmem_stall_req
+        mem_pipe_stall := mem_stage_valid_final & dmem_ctrl_isnt.io.dmem_stall_req
     }
 }
 

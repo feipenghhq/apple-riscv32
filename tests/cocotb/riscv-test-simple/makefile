@@ -19,13 +19,21 @@ IMEM_ROM_PATH 	= $(RISCV_TEST_PATH)/generated
 # -----------------------------------------
 # Source files
 # -----------------------------------------
-TB_FILES      	= $(TB_PATH)/apple_riscv_soc_tb.v
-RTL_FILES     	= $(RTL_SOC_PATH)/AppleSoC_arty.v
+SOC	?=arty
+
+ifeq ($(SOC), arty)
+	TB_FILES      = $(TB_PATH)/arty_tb.v
+	RTL_FILES     = $(RTL_SOC_PATH)/AppleSoC_arty.v
+	TOPLEVEL 	  = arty_tb
+else ifeq ($(SOC), de2)
+	TB_FILES      = $(TB_PATH)/de2_tb.v
+	RTL_FILES     = $(RTL_SOC_PATH)/AppleSoC_de2.v
+	TOPLEVEL 	  = de2_tb
+endif
 
 VERILOG_SOURCES += $(TB_FILES)
 VERILOG_SOURCES += $(RTL_FILES)
 
-TOPLEVEL 	= apple_riscv_soc_tb
 MODULE   	= run
 
 # -----------------------------------------

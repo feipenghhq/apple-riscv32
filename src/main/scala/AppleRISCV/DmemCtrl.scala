@@ -39,6 +39,8 @@ case class DmemCtrl() extends Component {
     val cpu2mc_mem_LS_byte     = in Bool
     val cpu2mc_mem_LS_halfword = in Bool
     val cpu2mc_mem_LW_unsigned = in Bool
+    // Stall should stall the entire pipeline including the mem/wb stage
+    // this is due to we might have data forwarding to calculate the address
     val dmem_stall_req = out Bool
     // Exception
     val exc_ld_addr_ma = out Bool
