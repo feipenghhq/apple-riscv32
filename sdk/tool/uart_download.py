@@ -84,7 +84,10 @@ class UartDownload:
 
     def setupUart(self):
         """ Setup uart port """
-        self.serPort = serial.Serial(self.port, self.baudrate)
+        try:
+            self.serPort = serial.Serial(self.port, self.baudrate)
+        except serial.serialutil.SerialException:
+            self.serPort = serial.Serial('/dev/ttyUSB0', self.baudrate)
 
     def writeRam(self):
         num = self.serPort.write(self.ram)
@@ -95,7 +98,10 @@ class UartDownload:
             print(hex(self.ram[i]))
 
 if __name__ == "__main__":
-    uartDownload = UartDownload(64)
+    size = 64
+    if len(sys.argv) == 3:
+        size = int(sys.argv[2])
+    uartDownload = UartDownload(size)
     uartDownload.createData(sys.argv[1])
     uartDownload.setupUart()
     uartDownload.writeRam()

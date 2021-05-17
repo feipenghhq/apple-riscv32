@@ -15,6 +15,8 @@ set FAMILY      $::env(FAMILY)
 set REPO_ROOT [exec git rev-parse --show-toplevel]
 
 set SOC_RTL_PATH $REPO_ROOT
+set DE2_RTL_PATH $REPO_ROOT/src/rtl/de2
+set DE2_SDC_PATH $REPO_ROOT/fpga/de2/constraints
 set OUTPUT output
 #exec mkdir -p $OUTPUT
 
@@ -37,9 +39,16 @@ export_assignments
 # Step 3: Read in RTL
 # ========================================
 
-set SOC_RTL  $SOC_RTL_PATH/$TOP.v
-set_global_assignment -name VERILOG_FILE $SOC_RTL
+set_global_assignment -name VERILOG_FILE $SOC_RTL_PATH/$TOP.v
+set_global_assignment -name VERILOG_FILE $DE2_RTL_PATH/intelram_2rw_32kb.v
+set_global_assignment -name SDC_FILE     $DE2_SDC_PATH/DE2_top.sdc
 export_assignments
+
+# ========================================
+# Step 3: read IO constraint
+# ========================================
+
+source $REPO_ROOT/fpga/de2/constraints/DE2_pin_assignments.tcl
 
 # ========================================
 # Step 4: Synthesis
@@ -53,7 +62,7 @@ execute_module -tool map
 execute_module -tool fit
 
 # ========================================
-# Step 5: Reporting
+# Step 5: Reporting Utilization
 # ========================================
 package require ::quartus::report
 load_report
@@ -80,5 +89,11 @@ for { set i 0 } { $i < $num_rows } { incr i } {
 }
 close $fh
 unload_report
+
+# ========================================
+# Step 6: Generate bit stream
+# ========================================
+
+execute_module -tool asm
 
 project_close
