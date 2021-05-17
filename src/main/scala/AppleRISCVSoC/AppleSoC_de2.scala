@@ -44,9 +44,9 @@ case class AppleSoCCfg_de2() {
     val CLIC_TIMER_WIDTH = 64
     val TIMER_TIMER_WIDTH = 64
 
-    val INSTR_RAM_ADDR_WIDTH = 12
+    val INSTR_RAM_ADDR_WIDTH = 15
     val INSTR_RAM_BASE = SoCAddrMap.QSPI0_BASE
-    val INSTR_RAM_TOP  = SoCAddrMap.QSPI0_BASE + 0xFFF // 32KB
+    val INSTR_RAM_TOP  = SoCAddrMap.QSPI0_BASE + 0x7FFF // 32KB
 
     val DATA_RAM_ADDR_WIDTH  = 19
     val DATA_RAM_BASE = SoCAddrMap.DTIM_BASE
@@ -73,7 +73,7 @@ case class AppleSoCCfg_de2() {
       addr_hi      = DATA_RAM_TOP
     )
 
-    var gpio0Cfg = GpioCfg(HI_INT = true, LO_INT = true, RISE_INT = true, FALL_INT = true, 12)
+    var gpio0Cfg = GpioCfg(HI_INT = true, LO_INT = true, RISE_INT = true, FALL_INT = true, 32)
     var uartDbgBaudRate = 115200
 
     var USE_UART0 = true
@@ -91,7 +91,7 @@ case class AppleSoC_de2() extends Component {
         val load_imem   = in Bool
         val sram        = master(SRAMIO())
         val uart0       = master(Uart())  // this is needed for debug
-        val gpio0       = if (cfg.USE_GPIO0) master(TriStateArray(12 bits)) else null
+        val gpio0       = if (cfg.USE_GPIO0) master(TriStateArray(32 bits)) else null
         val pwm0cmpgpio = if (cfg.USE_PWM0) out Bits(4 bits) else null
     }
     noIoPrefix()
@@ -101,7 +101,7 @@ case class AppleSoC_de2() extends Component {
     val socClkDomain = ClockDomain(
         clock = io.clk,
         reset = io.reset,
-        frequency = FixedFrequency(100 MHz),
+        frequency = FixedFrequency(50 MHz),
         config = ClockDomainConfig(
             clockEdge        = RISING,
             resetKind        = SYNC,
@@ -128,7 +128,7 @@ case class AppleSoC_de2() extends Component {
 
         // Fixed Component
 
-        val imem_inst = BlockRAM(usePort2 = true, cfg.imemSibCfg, cfg.imemSibCfg)
+        val imem_inst = IntelRam_2rw_32kb(cfg.imemSibCfg, cfg.imemSibCfg)
         val SRAMCtrl_inst = SRAMCtrl(cfg.dmemSibCfg)
         val clic_inst = Clic(PeripSibCfg.clicSibCfg)
         val plic_inst = Plic(PeripSibCfg.plicSibCfg)
@@ -268,7 +268,7 @@ case class AppleSoC_de2() extends Component {
 object AppleSoC_de2Main{
     def main(args: Array[String]) {
         AppleRISCVCfg.USE_RV32M   = true
-        AppleRISCVCfg.USE_BPU     = true
+        AppleRISCVCfg.USE_BPU     = false
         CsrCfg.USE_MHPMC3  = true
         CsrCfg.USE_MHPMC4  = true
         SpinalVerilog(InOutWrapper(AppleSoC_de2()))

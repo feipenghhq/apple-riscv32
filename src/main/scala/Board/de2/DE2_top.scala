@@ -32,9 +32,12 @@ case class DE2_top() extends Component {
     val clk = in Bool
     val reset = in Bool
     val sram  = master(SRAMIO())
-    val gpio0 = master(TriStateArray(12 bits))
-    val uart0 = master(Uart())  // this is needed for debug
-    val pwm0cmpgpio = out Bits(4 bits)
+    val KEY   = in Bits(4 bits)     // GPIO 0-3
+    val SW    = in Bits(16 bits)    // GPIO 4-19
+    val LEDR  = out Bits(12 bits)   // GPIO 20-31
+    val LEDG  = out Bits(4 bits)    // PWM
+    val LD    = in Bool
+    val uart0 = master(Uart())
   }
   noIoPrefix()
 
@@ -43,7 +46,7 @@ case class DE2_top() extends Component {
     //Create a new clock domain named 'core'
     val coreClockDomain = ClockDomain.internal(
       name = "soc",
-      frequency = FixedFrequency(100 MHz),
+      frequency = FixedFrequency(50 MHz),
       config = ClockDomainConfig(
         clockEdge        = RISING,
         resetKind        = SYNC,
@@ -58,14 +61,28 @@ case class DE2_top() extends Component {
 
 
   val top = new ClockingArea(clkCtrl.coreClockDomain) {
+
     val AooleSoC_de2_inst = AppleSoC_de2()
     AooleSoC_de2_inst.io.clk    := clkCtrl.coreClockDomain.clock
     AooleSoC_de2_inst.io.reset  := clkCtrl.coreClockDomain.reset
     AooleSoC_de2_inst.io.sram   <> io.sram
     AooleSoC_de2_inst.io.uart0  <> io.uart0
-    if(cfg.USE_GPIO0) AooleSoC_de2_inst.io.gpio0  <> io.gpio0
-    if(cfg.USE_PWM0) AooleSoC_de2_inst.io.pwm0cmpgpio <> io.pwm0cmpgpio
-    AooleSoC_de2_inst.io.load_imem  :=  io.gpio0(8).read
+    AooleSoC_de2_inst.io.load_imem  <>  io.LD
+    if(cfg.USE_PWM0)  AooleSoC_de2_inst.io.pwm0cmpgpio <> io.LEDG
+
+    // GPIO connection
+    for (i <- 0 until 4) {
+      if(cfg.USE_GPIO0) AooleSoC_de2_inst.io.gpio0(i).read := io.KEY(i)
+    }
+    val SW_base = 4
+    for (i <- 0 until 16) {
+      if(cfg.USE_GPIO0) AooleSoC_de2_inst.io.gpio0(i+SW_base).read := io.SW(i)
+    }
+    val LEDR_base = 20
+    for (i <- 0 until 12) {
+      if(cfg.USE_GPIO0) io.LEDR(i) := AooleSoC_de2_inst.io.gpio0(i+LEDR_base).write
+      if(cfg.USE_GPIO0) AooleSoC_de2_inst.io.gpio0(i+LEDR_base).read := False
+    }
   }
 }
 
@@ -73,9 +90,9 @@ object DE2_AppleRISCVSoCMain{
   def main(args: Array[String]) {
     // CPU Configuration
     AppleRISCVCfg.USE_RV32M   = true
-    AppleRISCVCfg.USE_BPU     = true
+    AppleRISCVCfg.USE_BPU     = false
     CsrCfg.USE_MHPMC3         = true
     CsrCfg.USE_MHPMC4         = true
-    SpinalVerilog(InOutWrapper(DE2_top())).printPruned()
+    SpinalVerilog(InOutWrapper(DE2_top()))
   }
 }

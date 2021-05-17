@@ -28,10 +28,8 @@ initial begin
   $readmemh("instr_ram.rom", instr_ram);
   $display("[INFO] Loading Instruction RAM Done");
   for (im = 0; im < INSTR_RAM_SIZE; im = im + 4) begin
-    DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol3[im/4] = instr_ram[im+3];
-    DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol2[im/4] = instr_ram[im+2];
-    DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol1[im/4] = instr_ram[im+1];
-    DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol0[im/4] = instr_ram[im];
+    DUT_AppleRISCVSoC.soc_imem_inst.ram.altsyncram_component.mem_data[im/4] = {instr_ram[im+3],instr_ram[im+2],instr_ram[im+1],instr_ram[im+0]};
+    DUT_AppleRISCVSoC.soc_imem_inst.ram.altsyncram_component.mem_data_b[im/4] = {instr_ram[im+3],instr_ram[im+2],instr_ram[im+1],instr_ram[im+0]};
   end
 end
 `endif
