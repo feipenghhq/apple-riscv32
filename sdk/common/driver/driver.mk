@@ -7,5 +7,7 @@ DIRVER_PATH = $(REPO_ROOT)/sdk/common/driver
 
 INCLUDES 	+= -I$(DIRVER_PATH)/periphals
 INCLUDES 	+= -I$(DIRVER_PATH)/platform
+INCLUDES 	+= -I$(DIRVER_PATH)/platform
+INCLUDES 	+= -I$(BSP_BASE)/$(BOARD)
 
 C_SRCS   	+= $(DIRVER_PATH)/periphals/uart.c

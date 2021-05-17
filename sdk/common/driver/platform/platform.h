@@ -14,8 +14,7 @@
 #ifndef __PLATFORM_H__
 #define __PLATFORM_H__
 
-// Clock Frequency in MHz
-#define CLK_FEQ_MHZ     100
+#include "board.h"
 
 // SOC component address mapping
 #define CLIC_BASE       0x02000000

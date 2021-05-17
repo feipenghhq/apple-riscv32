@@ -21,12 +21,12 @@
 
 int main(int argc, char **argv)
 {
-    volatile uint32_t   value = 0;
+    volatile uint32_t   value = 0xFFFFFFFF;
 
-    gpio_en(GPIO_BASE, 0xF);
+    gpio_en(GPIO_BASE, 0xFFFFFFFF);
     while(1) {
         gpio_wr(GPIO_BASE, value);
-        value = value + 1;
+        value = ~value;
         for (int i = 0; i < 10000000; i++);
     }
     return 0;

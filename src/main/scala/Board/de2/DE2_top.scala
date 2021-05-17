@@ -62,26 +62,26 @@ case class DE2_top() extends Component {
 
   val top = new ClockingArea(clkCtrl.coreClockDomain) {
 
-    val AooleSoC_de2_inst = AppleSoC_de2()
-    AooleSoC_de2_inst.io.clk    := clkCtrl.coreClockDomain.clock
-    AooleSoC_de2_inst.io.reset  := clkCtrl.coreClockDomain.reset
-    AooleSoC_de2_inst.io.sram   <> io.sram
-    AooleSoC_de2_inst.io.uart0  <> io.uart0
-    AooleSoC_de2_inst.io.load_imem  <>  io.LD
-    if(cfg.USE_PWM0)  AooleSoC_de2_inst.io.pwm0cmpgpio <> io.LEDG
+    val AppleSoC_de2_inst = AppleSoC_de2()
+    AppleSoC_de2_inst.io.clk    := clkCtrl.coreClockDomain.clock
+    AppleSoC_de2_inst.io.reset  := clkCtrl.coreClockDomain.reset
+    AppleSoC_de2_inst.io.sram   <> io.sram
+    AppleSoC_de2_inst.io.uart0  <> io.uart0
+    AppleSoC_de2_inst.io.load_imem  <>  io.LD
+    if(cfg.USE_PWM0)  AppleSoC_de2_inst.io.pwm0cmpgpio <> io.LEDG
 
     // GPIO connection
     for (i <- 0 until 4) {
-      if(cfg.USE_GPIO0) AooleSoC_de2_inst.io.gpio0(i).read := io.KEY(i)
+      if(cfg.USE_GPIO0) AppleSoC_de2_inst.io.gpio0(i).read := io.KEY(i)
     }
     val SW_base = 4
     for (i <- 0 until 16) {
-      if(cfg.USE_GPIO0) AooleSoC_de2_inst.io.gpio0(i+SW_base).read := io.SW(i)
+      if(cfg.USE_GPIO0) AppleSoC_de2_inst.io.gpio0(i+SW_base).read := io.SW(i)
     }
     val LEDR_base = 20
     for (i <- 0 until 12) {
-      if(cfg.USE_GPIO0) io.LEDR(i) := AooleSoC_de2_inst.io.gpio0(i+LEDR_base).write
-      if(cfg.USE_GPIO0) AooleSoC_de2_inst.io.gpio0(i+LEDR_base).read := False
+      if(cfg.USE_GPIO0) io.LEDR(i) := AppleSoC_de2_inst.io.gpio0(i+LEDR_base).write
+      if(cfg.USE_GPIO0) AppleSoC_de2_inst.io.gpio0(i+LEDR_base).read := False
     }
   }
 }

@@ -280,8 +280,8 @@ case class AppleRISCV() extends Component {
 
     // Memory Controller Input
     dmem_ctrl_isnt.dmem_sib                     <> io.dmem_sib
-    dmem_ctrl_isnt.io.cpu2mc_wr                 := id2ex.dmem_wr & ex_stage_valid_final
-    dmem_ctrl_isnt.io.cpu2mc_rd                 := id2ex.dmem_rd & ex_stage_valid_final
+    dmem_ctrl_isnt.io.cpu2mc_wr                 := id2ex.dmem_wr & ex_stage_valid
+    dmem_ctrl_isnt.io.cpu2mc_rd                 := id2ex.dmem_rd & ex_stage_valid
     dmem_ctrl_isnt.io.cpu2mc_addr               := id2ex.imm_value.asUInt + ex_rs1_value_forwarded.asUInt
     dmem_ctrl_isnt.io.cpu2mc_data               := ex_rs2_value_forwarded
     dmem_ctrl_isnt.io.cpu2mc_mem_LS_byte        := id2ex.dmem_ld_byte
@@ -330,7 +330,7 @@ case class AppleRISCV() extends Component {
     mcsr_inst.io.csr_bus.wdata := Mux(ex2mem.csr_sel_imm, ex2mem.rs1_idx.asBits.resized, ex2mem.rs1_value)
     mcsr_inst.io.csr_bus.addr  := ex2mem.csr_idx.asUInt
     mcsr_inst.io.csr_bus.wtype := ex2mem.csr_sel
-    mcsr_inst.io.csr_bus.wen   := ex2mem.csr_wr & mem_stage_valid_final
+    mcsr_inst.io.csr_bus.wen   := ex2mem.csr_wr & mem_stage_valid
     mcsr_inst.io.inc_br_cnt := branch_unit_inst.io.is_branch_instr
     mcsr_inst.io.inc_pred_good := branch_unit_inst.io.is_branch_instr & ~branch_unit_inst.io.take_branch
 
@@ -429,25 +429,36 @@ case class AppleRISCV() extends Component {
         val id_rs2_depends_on_csr = (Bypassing.id_rs2_match_ex_rd & id2ex.csr_rd) | (Bypassing.id_rs2_match_mem_rd & ex2mem.csr_rd)
         val id_stall_on_csr_dep = id_rs2_depends_on_csr | id_rs1_depends_on_csr
 
+        // Memory requested pipeline stall should not stall the entire pipeline, it should let the MEM/WB stage go.
+        // This is to handle the situation when we have back-to-back memory read access request. it should let the
+        // read data flow into WB stage.
+        // However, there is one exception, that is when the address calculation depends on the data in WB stage
+        // In this case, we should stall the MEM/WB stage and once the memory access complete, we should release MEM/WB stall
+        val mem_stall_on_addr_dep = dmem_ctrl_isnt.io.dmem_stall_req & (id2ex.rs1_dep_mem | id2ex.rs1_dep_wb)
+
+        // ================================
         // Flushing/Bubble Insertion
+        // ================================
         val muldiv_stall_req = if (AppleRISCVCfg.USE_RV32M) mul_inst.io.mul_stall_req | div_inst.io.div_stall_req else False
-        // Flush
+        // Flush - regular control signal should use this valid signal
         if_stage_valid  := ~branch_unit_inst.io.take_branch  & ~trap_ctrl_inst.io.trap_flush
         id_stage_valid  := if2id.stage_valid  & ~branch_unit_inst.io.take_branch  & ~trap_ctrl_inst.io.trap_flush
         ex_stage_valid  := id2ex.stage_valid  & ~trap_ctrl_inst.io.trap_flush
         mem_stage_valid := ex2mem.stage_valid & ~trap_ctrl_inst.io.trap_flush
         wb_stage_valid  := mem2wb.stage_valid
-        // flush plus bubble insertion
-        id_stage_valid_final := id_stage_valid  & ~id_stall_on_csr_dep & ~(id_stall_on_load_dep & ~dmem_ctrl_isnt.io.dmem_stall_req)
-        ex_stage_valid_final := ex_stage_valid & ~muldiv_stall_req
+        // flush plus bubble insertion - only the pipeline stage should use this valid signal
+        id_stage_valid_final := id_stage_valid   & ~id_stall_on_csr_dep & ~(id_stall_on_load_dep & ~dmem_ctrl_isnt.io.dmem_stall_req)
+        ex_stage_valid_final := ex_stage_valid   & ~muldiv_stall_req & ~dmem_ctrl_isnt.io.dmem_stall_req
         mem_stage_valid_final := mem_stage_valid
 
+        // ================================
         // Stall
+        // ================================
         if_pipe_stall  := if_stage_valid &
           (id_stall_on_load_dep | id_stall_on_csr_dep | dmem_ctrl_isnt.io.dmem_stall_req | muldiv_stall_req)
-        id_pipe_stall  := id_stage_valid_final & (dmem_ctrl_isnt.io.dmem_stall_req | muldiv_stall_req)
-        ex_pipe_stall  := ex_stage_valid_final & dmem_ctrl_isnt.io.dmem_stall_req
-        mem_pipe_stall := mem_stage_valid_final & dmem_ctrl_isnt.io.dmem_stall_req
+        id_pipe_stall  := id_stage_valid & (dmem_ctrl_isnt.io.dmem_stall_req | muldiv_stall_req)
+        ex_pipe_stall  := ex_stage_valid & mem_stall_on_addr_dep
+        mem_pipe_stall := mem_stage_valid & mem_stall_on_addr_dep
     }
 }
 

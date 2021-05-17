@@ -20,13 +20,13 @@ import serial
 
 class UartDownload:
 
-    def __init__(self, size, baudrate=115200):
+    def __init__(self, size, port=1, baudrate=115200):
         """
             @param size: instruction rom size in KB
             @param baudrate: uart baudrate
         """
         self.baudrate = baudrate
-        self.port = '/dev/ttyUSB1'
+        self.port = f'/dev/ttyUSB{port}'
         self.serPort = None
         self.size = size * 1024
         self.base = 0x20000000
@@ -99,9 +99,12 @@ class UartDownload:
 
 if __name__ == "__main__":
     size = 64
-    if len(sys.argv) == 3:
+    port = -1
+    if len(sys.argv) >= 3:
         size = int(sys.argv[2])
-    uartDownload = UartDownload(size)
+    if len(sys.argv) >= 4:
+        port = int(sys.argv[3])
+    uartDownload = UartDownload(size, port)
     uartDownload.createData(sys.argv[1])
     uartDownload.setupUart()
     uartDownload.writeRam()

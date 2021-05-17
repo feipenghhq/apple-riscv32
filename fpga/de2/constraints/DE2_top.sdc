@@ -19,7 +19,7 @@
 ## PROGRAM "Quartus II"
 ## VERSION "Version 13.0.1 Build 232 06/12/2013 Service Pack 1 SJ Web Edition"
 
-## DATE    "Sat May 15 22:13:11 2021"
+## DATE    "Sun May 16 22:31:11 2021"
 
 ##
 ## DEVICE  "EP2C35F672C7"
@@ -63,13 +63,20 @@ create_clock -name {clk} -period 20.000 -waveform { 0.000 10.000 } [get_ports {c
 # Set Input Delay
 #**************************************************************
 
+set_input_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_data[*]}]
 
 
 #**************************************************************
 # Set Output Delay
 #**************************************************************
 
-
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_data[*]}]
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_addr[*]}]
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_lb_n}]
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_hb_n}]
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_ce_n}]
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_oe_n}]
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_we_n}]
 
 #**************************************************************
 # Set Clock Groups
@@ -104,4 +111,3 @@ create_clock -name {clk} -period 20.000 -waveform { 0.000 10.000 } [get_ports {c
 #**************************************************************
 # Set Input Transition
 #**************************************************************
-
