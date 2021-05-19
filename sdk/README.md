@@ -10,13 +10,13 @@
 
 ## Introduction
 
-This folder contains the SDK (Software Development Kit) for the AppleRISCV CPU and mainly the AppleRISCV SOC.
+This folder contains the SDK (Software Development Kit) for the cpu and the SoC.
 
-It contains the necessary drivers, code to run C program in the target FPGA Development board as well as some program.
+It contains the drivers for the cpu, drivers for the peripherals, some demo program and benchmark.
 
 ## Dependency
 
-Fhe following environment are required to run the flow.
+Following environment are required to run the flow.
 
 1. Scala and SBT (To generate verilog source code from SpinalHDL)
 2. The xPack GNU RISC-V Embedded GCC (To compile C program)

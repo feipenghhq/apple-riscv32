@@ -24,13 +24,11 @@ int main(int argc, char **argv)
 {
     char b;
     char s[100];
-    printf("Hello RISCV!\n");
+    for (int i = 0; i < 10; i++) {
+        printf("Hello RISCV!\n");
+    }
     printf("Please enter something and I will echo back\n");
     while(1) {
-        //b = uart_getc(UART0_BASE);
-        //uart_putc(UART0_BASE, b);
-        //b = getchar();
-        //putchar(b);
         scanf("%s", s);
         puts(s);
     }

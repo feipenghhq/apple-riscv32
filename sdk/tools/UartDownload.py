@@ -10,29 +10,37 @@
 #
 # Python program to download instructions into instruction rom
 #
-# Usage:
-# sudo ./uart_download.py <Path to the Instruction ROM image>
+# Revsion 1: 05/18/2021
+#   Added command line parser
 #
 ##################################################################
 
 import sys
+import argparse
 import serial
+from serial.tools.list_ports import comports
+
+PORT_NAME = {
+    "arty": "Digilent USB Device",
+    "de2" : "USB-Serial Controller"
+}
+
 
 class UartDownload:
 
-    def __init__(self, size, port=1, baudrate=115200):
+    def __init__(self, size, port, file, baudrate=115200):
         """
             @param size: instruction rom size in KB
             @param baudrate: uart baudrate
         """
         self.baudrate = baudrate
-        self.port = f'/dev/ttyUSB{port}'
-        self.serPort = None
+        self.port = port
+        self.file = file
         self.size = size * 1024
         self.base = 0x20000000
         self.ram = []
 
-    def readVerilogMem(self, file, base):
+    def readVerilogMem(self, base):
         """
             Function to read verilog memory file and convert it into actual instruction stream
 
@@ -50,7 +58,7 @@ class UartDownload:
         self.ram = [ 0 for _ in range(self.size)]
         addr = 0
 
-        f = open(file)
+        f = open(self.file)
         for line in f.readlines():
             line = line.rstrip()
             if line.find('@') != -1: # this is address line
@@ -76,18 +84,15 @@ class UartDownload:
         for byte in self.ram:
             print(byte, end='')
 
-    def createData(self, file):
+    def createData(self):
         """ create data stream from verilog memory file """
-        self.readVerilogMem(file, self.base)
+        self.readVerilogMem(self.base)
         self.addStartStop()
         #self.printRam()
 
     def setupUart(self):
         """ Setup uart port """
-        try:
-            self.serPort = serial.Serial(self.port, self.baudrate)
-        except serial.serialutil.SerialException:
-            self.serPort = serial.Serial('/dev/ttyUSB0', self.baudrate)
+        self.serPort = serial.Serial(self.port, self.baudrate)
 
     def writeRam(self):
         num = self.serPort.write(self.ram)
@@ -97,15 +102,31 @@ class UartDownload:
         for i in range(size):
             print(hex(self.ram[i]))
 
+    def all(self):
+        self.createData()
+        self.setupUart()
+        self.writeRam()
+
+def cmdParser():
+    parser = argparse.ArgumentParser(description='Upload Instruction ROM through Uart')
+    parser.add_argument('-size', type=int, required=True, nargs='?', help='Size of the Instruction ROM in KByte')
+    parser.add_argument('-file', type=str, required=True, nargs='?', help='The Instruction ROM file')
+    parser.add_argument('-board', type=str, required=True, nargs='?', help='The FPGA board')
+    return parser.parse_args()
+
+def getComport(board):
+    all_port_info = comports()
+    for p, des, _ in all_port_info:
+        if PORT_NAME[board] in des:
+            print("Found Com Ports: " + p)
+            print(des)
+            return p
+
 if __name__ == "__main__":
-    size = 64
-    port = -1
-    if len(sys.argv) >= 3:
-        size = int(sys.argv[2])
-    if len(sys.argv) >= 4:
-        port = int(sys.argv[3])
-    uartDownload = UartDownload(size, port)
-    uartDownload.createData(sys.argv[1])
-    uartDownload.setupUart()
-    uartDownload.writeRam()
-    #uartDownload.printRam(12)
+    args = cmdParser()
+    size = args.size
+    file = args.file
+    board = args.board
+    port = getComport(board)
+    uartDownload = UartDownload(size, port, file)
+    uartDownload.all()

@@ -2,30 +2,20 @@
 # makefile for running Quartus
 ############################################################
 
-help:
-	@echo "#############################################"
-	@echo "#        Make flow for running Quartus      #"
-	@echo "#############################################"
-	@echo "# make clean    clean all the run result    #"
-	@echo "# make soc      run quartus on soc          #"
-	@echo "#############################################"
-
-
 # Variable
-_DEVICE = EP2C35F672C7
-_FAMILY = Cyclone II
+REPO_ROOT   = $(shell git rev-parse --show-toplevel)
+TOP_RTL		= DE2_top.v
 
-# run vivado at SOC level
-export PRJ_NAME 	= soc
+export PRJ_NAME 	= de2
 export TOP 			= DE2_top
-export DEVICE 	    = $(_DEVICE)
-export FAMILY 	    = $(_FAMILY)
+export DEVICE 	    = EP2C35F672C7
+export FAMILY 	    = Cyclone II
 
-PRJ_SOF				= $(PRJ_NAME)/output/$(TOP).sof
+PRJ_SOF				= de2/output/DE2_top.sof
 
-all: build sta pgm
+all: clean build sta pgm
 
-build: clean
+build: $(TOP_RTL)
 	mkdir -p $(PRJ_NAME)
 	cd $(PRJ_NAME) && ln -s ../scripts/build.tcl
 	cd $(PRJ_NAME) && quartus_sh --64bit -t build.tcl | tee build.log
@@ -35,9 +25,10 @@ sta:
 	cd $(PRJ_NAME) && quartus_sta --64bit -t sta.tcl | tee sta.log
 
 pgm:
-	quartus_pgm -m jtag -o "p;soc/output/DE2_top.sof"
+	quartus_pgm -m jtag -o "p;$(PRJ_SOF)"
 
-$(PRJ_SOF): build
+$(TOP_RTL):
+	cd $(REPO_ROOT) && sbt "runMain Board.de2.DE2_topMain"
 
 clean:
 	rm -rf $(PRJ_NAME)

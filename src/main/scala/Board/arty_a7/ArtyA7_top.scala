@@ -69,7 +69,7 @@ case class ArtyA7_top() extends Component {
   }
 }
 
-object ArtyA7_AppleRISCVSoCMain{
+object ArtyA7_topMain{
   def main(args: Array[String]) {
     // CPU Configuration
     AppleRISCVCfg.USE_RV32M   = true

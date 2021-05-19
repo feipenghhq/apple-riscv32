@@ -14,11 +14,9 @@ set RTL_SRC  $::env(RTL_SRC)
 set XDC      $::env(XDC)
 set DEVICE   $::env(DEVICE)
 set PROGRAM  $::env(PROGRAM)
+set OUTPUT   $PRJ_NAME/output
 
-set OUTPUT $PRJ_NAME/output
-#exec mkdir -p $OUTPUT
-
-create_project $PRJ_NAME -dir $PRJ_NAME -part $DEVICE
+create_project $PRJ_NAME -dir $PRJ_NAME -part $DEVICE -force
 
 # ========================================
 # Step 2: Read in source files
@@ -55,18 +53,6 @@ report_utilization -hierarchical -file $OUTPUT/pnr/pnr_utilization_hier.rpt
 
 write_bitstream -force -file $OUTPUT/$TOP
 
-# ========================================
-# Step 6: Program Device
-# ========================================
-
-if {$PROGRAM == 1} {
-    open_hw_manager
-    connect_hw_server
-    current_hw_target
-    open_hw_target
-    current_hw_device
-    set_property PROGRAM.FILE "$OUTPUT/$TOP.bit" [current_hw_device]
-    program_hw_device [current_hw_device]
-}
-
 close_design
+
+exit

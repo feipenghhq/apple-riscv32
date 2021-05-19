@@ -86,7 +86,7 @@ case class DE2_top() extends Component {
   }
 }
 
-object DE2_AppleRISCVSoCMain{
+object DE2_topMain{
   def main(args: Array[String]) {
     // CPU Configuration
     AppleRISCVCfg.USE_RV32M   = true

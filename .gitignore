@@ -56,15 +56,6 @@ tests/cocotb/*/*rom
 *.vvp
 
 
-# xilinx
-*.Xil
-*.jou
-fpga/*/.Xil
-fpga/*/.jou
-fpga/*/*.str
-fpga/*/*/output
-fpga/*/soc
-
 # vscode scala metals
 .bloop
 .metals
