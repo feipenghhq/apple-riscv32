@@ -10,7 +10,7 @@
 #include <stdint.h>
 
 #include "platform.h"
-#include "periphals.h"
+#include "peripherals.h"
 
 extern void uart_putnc(uint32_t base, char *buf, size_t nbytes);
 extern int isatty (int file);

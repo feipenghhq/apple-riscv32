@@ -16,7 +16,7 @@
 #include <stdio.h>
 
 #include "platform.h"
-#include "periphals.h"
+#include "peripherals.h"
 #include "sysutils.h"
 
 struct time_s {

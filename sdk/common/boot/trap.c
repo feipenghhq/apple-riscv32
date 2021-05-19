@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 #include "platform.h"
-#include "periphals.h"
+#include "peripherals.h"
 #include "sysutils.h"
 
 #define MCAUSE_MASK             0x7FFFFFFF

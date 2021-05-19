@@ -8,7 +8,7 @@
 //
 
 #include "platform.h"
-#include "periphals.h"
+#include "peripherals.h"
 
 extern int isatty (int file);
 

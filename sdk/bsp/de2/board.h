@@ -11,8 +11,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __BOARD_H__
-#define __BOARD_H__
+#ifndef __BOARD_DE2_H__
+#define __BOARD_DE2_H__
 
 // Clock Frequency in MHz
 #define CLK_FEQ_MHZ     50

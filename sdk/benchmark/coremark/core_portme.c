@@ -20,7 +20,7 @@ Original Author: Shay Gal-on
 #include "coremark.h"
 #include "core_portme.h"
 
-#include "periphals.h"
+#include "peripherals.h"
 #include "sysutils.h"
 #include "platform.h"
 

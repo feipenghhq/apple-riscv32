@@ -34,7 +34,7 @@ AR			  = $(RISCV_AR)
 REPO_ROOT   = $(shell git rev-parse --show-toplevel)
 BSP_BASE    = $(REPO_ROOT)/sdk/bsp
 COMMON_BASE = $(REPO_ROOT)/sdk/common
-BOARD		?= arty_a7
+BOARD		?=
 
 #############################################################
 # Additional Start up code and newlib stub file
@@ -82,32 +82,23 @@ CFLAGS += -ffunction-sections -fdata-sections -fno-common
 # Command
 #############################################################
 
-$(TARGET): $(LINK_OBJS) $(LINK_DEPS)
+CHECK:
+ifeq ($(BOARD), )
+	$(error variable BOARD not set)
+endif
+
+$(TARGET): $(LINK_OBJS) $(LINK_DEPS) CHECK
 	$(CC) $(CFLAGS) $(INCLUDES) $(LINK_OBJS) -o $@ $(LDFLAGS)
 	$(RISCV_SIZE) $@
 
-$(ASM_OBJS): %.o: %.S
+$(ASM_OBJS): %.o: %.S CHECK
 	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
-$(C_OBJS): %.o: %.c
+$(C_OBJS): %.o: %.c CHECK
 	$(CC) $(CFLAGS) $(INCLUDES) -include sys/cdefs.h -c -o $@ $<
 
 clean:
 	rm -f $(TARGET) $(CLEAN_OBJS)
-
-
-#############################################################
-# Prints help message
-#############################################################
-
-help:
-	@echo "Usage:"
-	@echo "make software"
-	@echo "- Build the executable for program:"
-	@echo "make dasm"
-	@echo "- Build the executable for the program and also generate the instruction rom"
-
-
 
 #############################################################
 # This Section is for Software Compilation

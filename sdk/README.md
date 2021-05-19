@@ -3,8 +3,8 @@
 - [SDK](#sdk)
   - [Introduction](#introduction)
   - [Dependency](#dependency)
-  - [Getting Started](#getting-started)
   - [Structures](#structures)
+  - [Getting Started](#getting-started)
   - [Supported FPGA Board](#supported-fpga-board)
   - [Acknowledgement](#acknowledgement)
 
@@ -16,103 +16,67 @@ It contains the drivers for the cpu, drivers for the peripherals, some demo prog
 
 ## Dependency
 
-Following environment are required to run the flow.
+**GNU MCU Eclipse RISC-V Embedded GCC** is used to compile C code.
 
-1. Scala and SBT (To generate verilog source code from SpinalHDL)
-2. The xPack GNU RISC-V Embedded GCC (To compile C program)
-3. Xilinx Vivado/Intel Quartus (To generate bitstream from verilog and program FPGA)
-4. Python3 with pyserial package (To download instruction rom image to FPGA)
-
-## Getting Started
-
-Here is the steps to run the coremark program on Arty A7 FPGA Board. All the command start from the repo root directory.
-
-- Step 1: Create verilog source file from SpinalHDL Scala Code.
-
-```bash
-sbt "runMain Board.arty_a7.ArtyA7_AppleRISCVSoCMain
-```
-
-- Step 2: Generate FPGA bit stream and program the Arty A7 Board. Make sure you have the board connected to you host machine. Or you can do the FPGA program later by hand.
-
-```bash
-cd fpga/arty-a7
-# To generate bitstream and program FPGA at the same time
-make soc PROGRAM=1
-# Or to generate the bitstream only, the generated bit stream is under
-make soc
-```
-
-- Step 3: Compile the coremark software and dump the Instruction ROM file.
-
-```bash
-cd sdk/software
-make dasm PROGRAM=coremark
-```
-The generated instruction rom file is is `coremark/coremark.verilog`
-
-- Step 4: Download the instruction rom image into the CPU instruction rom.
-
-  Make sure the the SW0 is in the ON position (this is to enable Introduction rom downloading.) Remember to open a serial port monitor program to receive the output from CPU.
-
-```bash
-cd sdk/tool
-sudo ./uart_download.py ../software/coremark/coremark.verilog
-```
-
-It will take around 40 seconds for the program to complete and send output to the screen under the current configuration.
+<https://gnu-mcu-eclipse.github.io/blog/2019/05/21/riscv-none-gcc-v8-2-0-2-2-20190521-released>
 
 ## Structures
 
 Here is the structure of the SDK package
 
 ```text
-├── bsp
-│   ├── driver
-│   ├── env
-│   └── newlib
-├── demo
-│   ├── demo_gpio0
-│   ├── demo_led
-|   ...
-├── software
-│   ├── coremark
-│   ...
-└── tool
-    └── ...
+├── benchmark             -> Containing benchmark program
+│   └── coremark            -> coremark benchmark
+├── bsp                   -> Board Support Package
+│   ├── arty                -> arty A7 board
+│   └── de2                 -> de2 board
+├── common                -> Common library
+│   ├── boot                -> boot related code
+│   ├── common.mk           -> makefile for compilation
+│   ├── driver              -> driver
+│   │   ├── driver.mk         -> makefile for driver
+│   │   ├── peripherals       -> peripherals driver
+│   │   └── platform          -> platform driver
+│   └── newlib              -> ported newlib stub function
+├── demo                  -> demo program
+│   ├── blink               -> blink LED program
+    ...
+└── tools                 -> containing useful scripts/tools
+    ...
 ```
 
-### BSP
+## Getting Started
 
-This folder contains Board Support Package.
+All the compilation is makefile based flow and is quite simple. Just simply cd into the code directory and run:
 
-- driver: contains C driver code for the soc and different peripherals
-- env: contains cpu start-up code, init code, gcc linker script and a makefile to compile the C program
-- newlib: continas the soc platform specific implementation for newlib library.
+```bash
+make BOARD=<board>
+```
 
-### Demo
+Use `make clean` to clean up the directory
 
-This folder contains some demo program running on the FPGA development board. It is also used to tests some HW/SW functions. Check the description in the C program to find out more details for each program.
+For example, to compile the blink demo program for Arty board:
 
-### Software
+```bash
+cd sdk/demo/blink
+make BOARD=arty
+```
 
-This folder contains some ported software running on the FPGA development board.
+Same make command applies to both demo program and benchmark program.
 
-- coremark: contains the ported coremark benchmark program.
 
 ## Supported FPGA Board
 
 - Arty A7
+- DE2
 
 ## Acknowledgement
 
-Some parts of the software are mainly taken from the following repo/documents with some modification made by myself.
-
-The code in env folder:
+The software design are referenced from the following repo:
 
 - [e200_opensource](https://github.com/SI-RISCV/e200_opensource)
 - [hbird-e-sdk](https://github.com/SI-RISCV/hbird-e-sdk)
 
-The newlib porting:
+The newlib porting is referenced from:
 
 - [Howto: Porting newlib A Simple Guide](https://www.embecosm.com/appnotes/ean9/ean9-howto-newlib-1.0.html#id2719973)

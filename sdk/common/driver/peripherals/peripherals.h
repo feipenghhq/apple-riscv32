@@ -7,12 +7,12 @@
 //
 // ================== Description ==================
 //
-// Periphals header file
+// Peripherals header file
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef __PERIPHALS_H__
-#define __PERIPHALS_H__
+#ifndef __PERIPHERALS_H__
+#define __PERIPHERALS_H__
 
 #include <stdint.h>
 

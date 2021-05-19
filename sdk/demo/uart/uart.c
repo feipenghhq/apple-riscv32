@@ -16,7 +16,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include "periphals.h"
+#include "peripherals.h"
 #include "sysutils.h"
 #include "platform.h"
 

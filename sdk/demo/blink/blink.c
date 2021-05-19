@@ -16,7 +16,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #include <stdint.h>
-#include "periphals.h"
+#include "peripherals.h"
 #include "platform.h"
 
 int main(int argc, char **argv)
