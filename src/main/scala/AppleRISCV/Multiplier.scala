@@ -20,6 +20,7 @@ package AppleRISCV
 
 import spinal.core._
 
+/** Multiplier specific to AppleRISCV */
 case class AppleRISCVCMultiplier() extends Component {
   val io = new Bundle {
     val stage_valid   = in Bool
@@ -37,7 +38,7 @@ case class AppleRISCVCMultiplier() extends Component {
 
   // Process the signed and unsigned bits
   // Note: We always use signed multiplier here to save DSP resource
-  // In make unsigned bit looks like signed, we add addition 1 bit to the
+  // To make unsigned bit looks like signed, we add addition 1 bit to the
   // top as the new signed bit for both signed and unsigned value
   // For signed value, we will add 1, for unsigned value we will add 0
   // Now the multiplier become 33 * 33 bit this is OK for FPGA because
@@ -68,8 +69,8 @@ case class AppleRISCVCMultiplier() extends Component {
 }
 
 /**
- * Multiplier
- * Use product_valid if you take the ouyput to the downstream pipeline
+ * A generic Multiplier
+ * Use product_valid if you take the output to the downstream pipeline
  * Use product_early_valid if you use the DSP output register as the pipeline stage (to reduce latency)
  */
 case class Multiplier(_type: String, stages: Int, multiplierSize: Int, multiplicandSize: Int) extends Component {
@@ -91,9 +92,9 @@ case class Multiplier(_type: String, stages: Int, multiplierSize: Int, multiplic
     val new_op = io.mul_valid & io.mul_ready
 
     // pipeline stages except the first stage
-    val stage = Vec(Reg(SInt(multiplierSize+multiplicandSize bits)), AppleRISCVCfg.MULSTAGE - 1)
+    val stage = Vec(Reg(SInt(multiplierSize+multiplicandSize bits)), AppleRISCVCfg.MUL_STAGE - 1)
     // pipeline valid stage, including the fist stage
-    val stage_valid = Vec(RegInit(False), AppleRISCVCfg.MULSTAGE)
+    val stage_valid = Vec(RegInit(False), AppleRISCVCfg.MUL_STAGE)
 
     // Stage 0 - flop the input operand
     val multiplier_s0 = RegNext(io.multiplier)
@@ -117,9 +118,9 @@ case class Multiplier(_type: String, stages: Int, multiplierSize: Int, multiplic
       busy := False
     }
 
-    io.product := stage(AppleRISCVCfg.MULSTAGE-2)
-    io.product_valid := stage_valid(AppleRISCVCfg.MULSTAGE-1)
-    io.product_early_valid := stage_valid(AppleRISCVCfg.MULSTAGE-2)
+    io.product := stage(AppleRISCVCfg.MUL_STAGE-2)
+    io.product_valid := stage_valid(AppleRISCVCfg.MUL_STAGE-1)
+    io.product_early_valid := stage_valid(AppleRISCVCfg.MUL_STAGE-2)
     io.mul_ready := ~busy | io.product_valid
   }
 

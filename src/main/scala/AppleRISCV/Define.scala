@@ -19,9 +19,12 @@ package AppleRISCV
 
 import spinal.core._
 
+/** Defines for Instruction decode */
 object InstrDefine {
 
-  // == opcode == //
+  // ===================
+  // opcode
+  // ===================
   // RV32I Basic Instruction
   val OP_LOGIC_ARITH      = Integer.parseInt("0110011", 2) // Logic and arithmetic operation
   val OP_LOGIC_ARITH_IMM  = Integer.parseInt("0010011", 2) // Logic and arithmetic with immediate number
@@ -39,7 +42,9 @@ object InstrDefine {
   // val OP_RV32M            = Integer.parseInt("0110011", 2) // RV32M Standard Extension
   // => Same as Logic and arithmetic
 
-  // == func3 == //
+  // ===================
+  // func3 fiedl
+  // ===================
   // Logic arithmetic func3 field
   val LA_F3_AND  = Integer.parseInt("111", 2) // AND
   val LA_F3_OR   = Integer.parseInt("110", 2) // OR
@@ -88,19 +93,26 @@ object InstrDefine {
   val RV32M_REM    = Integer.parseInt("110", 2)
   val RV32M_REMU   = Integer.parseInt("111", 2)
 
-  // == func7 == //
+  // ===================
+  // func7 field
+  // ===================
   // Logic arithmetic func7 field
   val LA_F7_SRL = Integer.parseInt("0000000", 2) // SRL, SRLT
   val LA_F7_SRA = Integer.parseInt("0100000", 2) // SRA, SRAT
   val LA_F7_ADD = Integer.parseInt("0000000", 2) // ADD
   val LA_F7_SUB = Integer.parseInt("0100000", 2) // SUB
 
-  // == func12 == //
+  // ===================
+  // func12 field
+  // ===================
   val F12_MRET   = Integer.parseInt("001100000010", 2) // MRET
   val F12_ECALL  = Integer.parseInt("000000000000", 2) // ECALL
   val F12_EBREAK = Integer.parseInt("000000000001", 2) // EBREAK
 }
 
+// ==========================================
+// Enum type for different control signal
+// ==========================================
 object AluOpcodeEnum extends SpinalEnum(binaryOneHot) {
   val NOP, ADD, SUB, AND, OR, XOR, SRA, SRL, SLL, SLT, SLTU, PC4 = newElement()
 }
@@ -122,9 +134,9 @@ object DivOpcodeEnum extends SpinalEnum(){
 }
 
 // IMPORTANT: We Need to use binaryOneHot encoding here
-// If we use natural encoding (0, 1, 2, ...), there is a weird bug in the Vivado.
-// It put a not used value for DIV instruction hence create a wrong rd wdata for DIV.
-// Using onehot encoding will fix this issue.
+// If we use natural encoding (0, 1, 2, ...), there is a bug in the Vivado.
+// It put a not used value for DIV instruction hence create a wrong rd wdata for DIV instruction.
+// Using one-hot encoding will fix this issue.
 object RdSelEnum extends SpinalEnum(binaryOneHot){
   val MEM, CSR, ALU = newElement()
   val MUL, DIV = if (AppleRISCVCfg.USE_RV32M) newElement() else null
@@ -134,8 +146,10 @@ object CsrSelEnum extends SpinalEnum(){
   val DATA, SET, CLEAR = newElement()
 }
 
+// ==========================================
+// Exception Code
+// ==========================================
 object ExcCode {
-  // == Exception Code == //
   val EXC_CODE_INSTR_ADDR_MA  = 0
   val EXC_CODE_ILL_INSTR      = 2
   val EXC_CODE_LD_ADDR_MA     = 4

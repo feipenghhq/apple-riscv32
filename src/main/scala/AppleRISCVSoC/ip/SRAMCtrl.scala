@@ -4,14 +4,14 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: SibSRAM
+// Module Name: SRAMCtrl
 //
 // Author: Heqing Huang
 // Date Created: 05/14/2021
 //
 // ================== Description ==================
 //
-// DE2 SRAM Model
+// DE2 Off-Chip SRAM Controller
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 

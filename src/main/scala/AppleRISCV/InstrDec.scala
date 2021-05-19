@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: instr_dec
+// Module Name: InstrDec
 //
 // Author: Heqing Huang
 // Date Created: 03/27/2021
@@ -19,17 +19,18 @@ package AppleRISCV
 
 import spinal.core._
 
-case class InstrDecIO() extends Bundle{
-    val instr     = in Bits(AppleRISCVCfg.XLEN bits)   // instruction input
+case class InstrDecIO() extends Bundle {
+    // instruction input
+    val instr     = in Bits(AppleRISCVCfg.XLEN bits)
     val instr_vld = in Bool
 
-    // Instruction field
+    // Instruction field output
     val rd_idx  = out UInt(5 bits)
     val rs1_idx = out UInt(5 bits)
     val rs2_idx = out UInt(5 bits)
-    val imm_value = out SInt(AppleRISCVCfg.XLEN bits)   // Immediate value
+    val imm_value = out SInt(AppleRISCVCfg.XLEN bits)
 
-    // Register file control
+    // Register file control signal
     val rd_wr  = out Bool
     val rs1_rd = out Bool
     val rs2_rd = out Bool
@@ -67,9 +68,9 @@ case class InstrDecIO() extends Bundle{
     val ecall        = out Bool
     val ebreak       = out Bool
 
-    // data selection
+    // data selection for register write back and CSR
     val rd_sel = out(RdSelEnum())
-    val csr_sel  = out(CsrSelEnum())
+    val csr_sel = out(CsrSelEnum())
 
     // Other control signal
     val op2_sel_imm  = out Bool
@@ -82,11 +83,11 @@ case class InstrDecIO() extends Bundle{
 
 case class InstrDec() extends Component {
 
-    noIoPrefix()
     val io = InstrDecIO()
+    noIoPrefix()
 
     // ============================================
-    // Extract each field from the instruction
+    // Extract fields from the instruction
     // ============================================
     val opcode  = io.instr(6 downto 0)
     val func3   = io.instr(14 downto 12)
@@ -102,20 +103,20 @@ case class InstrDec() extends Component {
     // Main Decoder Logic
     // ============================================
 
-    object alu_imm_type_e extends SpinalEnum {
+    object AluImmTypeE extends SpinalEnum {
         val ITYPE, STYPE, UTYPE, JTYPE, BTYPE = newElement()
     }
 
-    val alu_imm_type = alu_imm_type_e()
-    alu_imm_type := alu_imm_type_e.ITYPE
+    val alu_imm_type = AluImmTypeE()
+    alu_imm_type := AluImmTypeE.ITYPE
 
     // intermediate logic
     val func7_0000000 = func7 === 0
     val func7_0000001 = func7 === 1
     val func7_0100000 = func7 === B"7'b0100000"
-    val rd_isnot_x0         = io.rd_idx =/= 0
-    val rs1_isnot_x0        = io.rs1_idx =/= 0
-    val ill_instr           = False
+    val rd_isnot_x0   = io.rd_idx =/= 0
+    val rs1_isnot_x0  = io.rs1_idx =/= 0
+    val ill_instr     = False
 
     io.exc_ill_instr := ill_instr & io.instr_vld
 
@@ -159,21 +160,21 @@ case class InstrDec() extends Component {
             io.op2_sel_imm := True
             io.op1_sel_zero := True
             io.rd_wr       := rd_isnot_x0
-            alu_imm_type   := alu_imm_type_e.UTYPE
+            alu_imm_type   := AluImmTypeE.UTYPE
         }
         is(InstrDefine.OP_AUIPC) {
             io.alu_opcode  := AluOpcodeEnum.ADD
             io.op2_sel_imm := True
             io.op1_sel_pc  := True
             io.rd_wr       := rd_isnot_x0
-            alu_imm_type   := alu_imm_type_e.UTYPE
+            alu_imm_type   := AluImmTypeE.UTYPE
         }
         is(InstrDefine.OP_JAL) {
             io.alu_opcode  := AluOpcodeEnum.PC4
             io.op2_sel_imm := True
             io.rd_wr       := rd_isnot_x0
             io.jal_op      := True
-            alu_imm_type   := alu_imm_type_e.JTYPE
+            alu_imm_type   := AluImmTypeE.JTYPE
         }
         is(InstrDefine.OP_JALR) {
             io.jalr_op      := True
@@ -181,14 +182,14 @@ case class InstrDec() extends Component {
             io.op2_sel_imm  := True
             io.rd_wr        := rd_isnot_x0
             io.rs1_rd       := True
-            alu_imm_type    := alu_imm_type_e.ITYPE
+            alu_imm_type    := AluImmTypeE.ITYPE
         }
         // Branch Instruction
         is(InstrDefine.OP_BRANCH) {
             io.branch_op    := True
             io.rs1_rd       := True
             io.rs2_rd       := True
-            alu_imm_type    := alu_imm_type_e.BTYPE
+            alu_imm_type    := AluImmTypeE.BTYPE
             switch(func3) {
                 is(InstrDefine.BR_F3_BEQ)  {io.bu_opcode := BranchOpcodeEnum.BEQ}
                 is(InstrDefine.BR_F3_BNE)  {io.bu_opcode := BranchOpcodeEnum.BNE}
@@ -208,7 +209,7 @@ case class InstrDec() extends Component {
             io.rd_wr       := rd_isnot_x0
             io.alu_opcode  := AluOpcodeEnum.ADD
             io.rd_sel      := RdSelEnum.MEM
-            alu_imm_type   := alu_imm_type_e.ITYPE
+            alu_imm_type   := AluImmTypeE.ITYPE
             switch(func3) {
                 is(InstrDefine.LW_F3_LB) {io.dmem_ld_byte := True}
                 is(InstrDefine.LW_F3_LH) {io.dmem_ld_hword := True}
@@ -232,7 +233,7 @@ case class InstrDec() extends Component {
             io.rs1_rd       := True
             io.rs2_rd       := True
             io.dmem_wr      := True
-            alu_imm_type    := alu_imm_type_e.STYPE
+            alu_imm_type    := AluImmTypeE.STYPE
             switch(func3) {
                 is(InstrDefine.SW_F3_SB) {io.dmem_ld_byte := True}
                 is(InstrDefine.SW_F3_SH) {io.dmem_ld_hword := True}
@@ -244,7 +245,7 @@ case class InstrDec() extends Component {
         // I-Type Logic/Arithmetic  Instruction
         is(InstrDefine.OP_LOGIC_ARITH_IMM) {
             io.op2_sel_imm  := True
-            alu_imm_type    := alu_imm_type_e.ITYPE
+            alu_imm_type    := AluImmTypeE.ITYPE
             io.rs1_rd       := True
             io.rd_wr        := rd_isnot_x0
             switch(func3) {
@@ -411,10 +412,10 @@ case class InstrDec() extends Component {
     val j_type_imm = (io.instr(31) ## io.instr(19 downto 12) ## io.instr(20) ## io.instr(30 downto 21) ## False).asSInt.resize(AppleRISCVCfg.XLEN)
 
     switch(alu_imm_type) {
-        is(alu_imm_type_e.ITYPE) {io.imm_value := i_type_imm}
-        is(alu_imm_type_e.STYPE) {io.imm_value := s_type_imm}
-        is(alu_imm_type_e.UTYPE) {io.imm_value := u_type_imm}
-        is(alu_imm_type_e.JTYPE) {io.imm_value := j_type_imm}
-        is(alu_imm_type_e.BTYPE) {io.imm_value := b_type_imm}
+        is(AluImmTypeE.ITYPE) {io.imm_value := i_type_imm}
+        is(AluImmTypeE.STYPE) {io.imm_value := s_type_imm}
+        is(AluImmTypeE.UTYPE) {io.imm_value := u_type_imm}
+        is(AluImmTypeE.JTYPE) {io.imm_value := j_type_imm}
+        is(AluImmTypeE.BTYPE) {io.imm_value := b_type_imm}
     }
 }

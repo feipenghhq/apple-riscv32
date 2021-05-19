@@ -12,12 +12,7 @@
 //
 // ================== Description ==================
 //
-// The Arty A7 SoC top level
-//
-// Fixed Component:
-// - AppleRISCV Core
-// - On-chip Instruction RAM and Data RAM
-// - CLIC/PLIC
+// The DE2 SoC top level
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -28,7 +23,7 @@ import ip._
 import bus._
 import spinal.core._
 import spinal.lib._
-import spinal.lib.com.uart.{Uart, UartCtrlGenerics}
+import spinal.lib.com.uart._
 import spinal.lib.io.{InOutWrapper, TriStateArray}
 
 import scala.collection.mutable.ArrayBuffer
@@ -92,7 +87,7 @@ case class AppleSoC_de2() extends Component {
         val sram        = master(SRAMIO())
         val uart0       = master(Uart())  // this is needed for debug
         val gpio0       = if (cfg.USE_GPIO0) master(TriStateArray(32 bits)) else null
-        val pwm0cmpgpio = if (cfg.USE_PWM0) out Bits(4 bits) else null
+        val pwm0cmpgpio = if (cfg.USE_PWM0)  out Bits(4 bits) else null
     }
     noIoPrefix()
 
@@ -132,7 +127,7 @@ case class AppleSoC_de2() extends Component {
         val SRAMCtrl_inst = SRAMCtrl(cfg.dmemSibCfg)
         val clic_inst = Clic(PeripSibCfg.clicSibCfg)
         val plic_inst = Plic(PeripSibCfg.plicSibCfg)
-        val uart2imem_inst = ip.Uart2imem(cfg.imemSibCfg, cfg.uartDbgBaudRate)
+        val uart2imem_inst = ip.Uart2Imem(cfg.imemSibCfg, cfg.uartDbgBaudRate)
 
         // Peripherals
         val peripList  = ArrayBuffer[(Component, SibConfig, Sib)]()
@@ -269,8 +264,8 @@ object AppleSoC_de2Main{
     def main(args: Array[String]) {
         AppleRISCVCfg.USE_RV32M   = true
         AppleRISCVCfg.USE_BPU     = false
-        CsrCfg.USE_MHPMC3  = true
-        CsrCfg.USE_MHPMC4  = true
+        CsrCfg.USE_MHPMC3         = true
+        CsrCfg.USE_MHPMC4         = true
         SpinalVerilog(InOutWrapper(AppleSoC_de2()))
     }
 }

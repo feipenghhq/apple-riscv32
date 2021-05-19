@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: CPU_AppleRISCVCfg
+// Module Name: NA
 //
 // Author: Heqing Huang
 // Date Created: 03/27/2021
@@ -39,8 +39,8 @@ object AppleRISCVCfg {
 
     // RV32M Extension Configuration
     var USE_RV32M       = true
-    var MULTYPE         = "DSP" // Or Comb for combinational logic
-    var MULSTAGE        = 3
+    var MUL_TYPE        = "DSP"
+    var MUL_STAGE       = 3
 
     // Branch Prediction
     var USE_BPU         = true

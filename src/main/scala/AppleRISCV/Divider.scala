@@ -1,11 +1,29 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright 2021 by Heqing Huang (feipenghhq@gamil.com)
+//
+// ~~~ Hardware in SpinalHDL ~~~
+//
+// Module Name: Divider
+//
+// Author: Heqing Huang
+// Date Created: 05/06/2021
+//
+// ================== Description ==================
+//
+// Hardware Divider.
+//
+// This divider is a serial divider. It take 33 clocks to complete.
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 package AppleRISCV
 
 import spinal.core._
-import spinal.core.sim._
 import spinal.lib.fsm._
 
-import scala.util.Random
-
+/**  */
 case class AppleRISCVDivider() extends Component {
   val io = new Bundle {
     val stage_valid = in Bool
@@ -35,6 +53,7 @@ case class AppleRISCVDivider() extends Component {
   io.div_stall_req := io.div_req & io.stage_valid & ~divider_inst.io.div_done
 }
 
+/** Mixed signed Divider */
 case class MixedDivider(WIDTH: Int) extends Component {
   val io = new Bundle {
     val flush     = in Bool
@@ -69,7 +88,7 @@ case class MixedDivider(WIDTH: Int) extends Component {
   io.remainder := divider.io.remainder.twoComplement(remainder_is_negative).asBits.resized
 }
 
-
+/** Unsigned Divider */
 case class UnsignedDivider(WIDTH: Int) extends Component{
 
   val io = new Bundle {
@@ -88,10 +107,8 @@ case class UnsignedDivider(WIDTH: Int) extends Component{
   val divisor_ff = Reg(io.divisor.clone())
   val quotient_ff = Reg(io.quotient.clone())
 
-
   val extended_dividend = U"32'h0" @@ dividend_ff
   val extended_divisor = divisor_ff @@ U"32'h0"
-
 
   val divCtrl = new StateMachine {
     val idle = new State with EntryPoint
@@ -137,9 +154,12 @@ case class UnsignedDivider(WIDTH: Int) extends Component{
 
   io.quotient  := quotient_ff
   io.remainder := dividend_ff
-
 }
 
+// ===================================================================== //
+
+import spinal.core.sim._
+import scala.util.Random
 
 object SimDivider {
   def main(args: Array[String]): Unit = {

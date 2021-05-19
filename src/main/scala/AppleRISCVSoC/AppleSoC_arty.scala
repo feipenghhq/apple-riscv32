@@ -14,11 +14,6 @@
 //
 // The Arty A7 SoC top level
 //
-// Fixed Component:
-// - AppleRISCV Core
-// - On-chip Instruction RAM and Data RAM
-// - CLIC/PLIC
-//
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 package AppleRISCVSoC
@@ -28,7 +23,7 @@ import ip._
 import bus._
 import spinal.core._
 import spinal.lib._
-import spinal.lib.com.uart.{Uart, UartCtrlGenerics}
+import spinal.lib.com.uart._
 import spinal.lib.io.{InOutWrapper, TriStateArray}
 
 import scala.collection.mutable.ArrayBuffer
@@ -70,7 +65,7 @@ case class AppleSoCCfg_arty() {
       addressWidth = DATA_RAM_ADDR_WIDTH,
       dataWidth    = AppleRISCVCfg.XLEN,
       addr_lo      = DATA_RAM_BASE,
-      addr_hi      = DATA_RAM_TOP           // 64KB
+      addr_hi      = DATA_RAM_TOP
     )
 
     var gpio0Cfg = GpioCfg(HI_INT = true, LO_INT = true, RISE_INT = true, FALL_INT = true, 12)
@@ -90,9 +85,9 @@ case class AppleSoC_arty() extends Component {
         val clk         = in Bool
         val reset       = in Bool
         val load_imem   = in Bool
-        val uart0       = master(Uart())  // this is needed for debug
+        val uart0       = master(Uart())
         val gpio0       = if (cfg.USE_GPIO0) master(TriStateArray(12 bits)) else null
-        val pwm0cmpgpio = if (cfg.USE_PWM0) out Bits(4 bits) else null
+        val pwm0cmpgpio = if (cfg.USE_PWM0)  out Bits(4 bits) else null
     }
     noIoPrefix()
 
@@ -132,7 +127,7 @@ case class AppleSoC_arty() extends Component {
         val dmem_inst = BlockRAM(usePort2 = false, cfg.dmemSibCfg)
         val clic_inst = Clic(PeripSibCfg.clicSibCfg)
         val plic_inst = Plic(PeripSibCfg.plicSibCfg)
-        val uart2imem_inst = ip.Uart2imem(cfg.imemSibCfg, cfg.uartDbgBaudRate)
+        val uart2imem_inst = ip.Uart2Imem(cfg.imemSibCfg, cfg.uartDbgBaudRate)
 
         // Peripherals
         val peripList  = ArrayBuffer[(Component, SibConfig, Sib)]()
@@ -264,10 +259,10 @@ case class AppleSoC_arty() extends Component {
 
 object AppleSoC_artyMain{
     def main(args: Array[String]) {
-        AppleRISCVCfg.USE_RV32M   = true
-        AppleRISCVCfg.USE_BPU     = true
-        CsrCfg.USE_MHPMC3  = true
-        CsrCfg.USE_MHPMC4  = true
+        AppleRISCVCfg.USE_RV32M    = true
+        AppleRISCVCfg.USE_BPU      = true
+        CsrCfg.USE_MHPMC3          = true
+        CsrCfg.USE_MHPMC4          = true
         SpinalVerilog(InOutWrapper(AppleSoC_arty()))
     }
 }

@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: regfile
+// Module Name: RegFile
 //
 // Author: Heqing Huang
 // Date Created: 03/27/2021

@@ -1,3 +1,20 @@
+///////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// Copyright 2021 by Heqing Huang (feipenghhq@gamil.com)
+//
+// ~~~ Hardware in SpinalHDL ~~~
+//
+// Module Name: Uart2Imem
+//
+// Author: Heqing Huang
+// Date Created: 05/02/2021
+//
+// ================== Description ==================
+//
+// Uart to Instruction RAM. Used to Download Instructions into Instruction RAM
+//
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 package AppleRISCVSoC.ip
 
 import AppleRISCVSoC.bus.{Sib, SibConfig}
@@ -12,7 +29,7 @@ import spinal.lib.master
  * uart rx to imem logic.
  * Used to download instruction from uart to instruction mem
  */
-case class Uart2imem(sibConfig: SibConfig, baudrate: Int) extends Component {
+case class Uart2Imem(sibConfig: SibConfig, baudrate: Int) extends Component {
 
   noIoPrefix()
 

@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: branch unit
+// Module Name: BU
 //
 // Author: Heqing Huang
 // Date Created: 04/03/2021
@@ -14,8 +14,8 @@
 // Branch unit.
 //
 // - Calculate the branch address
-// - Determine if we branch or not for conditional branch
-// - Branch unit is in EX stage
+// - Determine if we take the branch or not for conditional branch
+// - Check if the branch Prediction is good or not
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -35,17 +35,19 @@ case class BU() extends Component {
     val jal_op     = in Bool                           // We get jump instruction
     val jalr_op    = in Bool
     val is_branch_instr = out Bool
-    val take_branch = out Bool
-    val target_pc   = out UInt(AppleRISCVCfg.XLEN bits)
-    val ex_stage_valid = in Bool
-    val exc_instr_addr_ma = out Bool
+    val take_branch     = out Bool
+    val target_pc       = out UInt(AppleRISCVCfg.XLEN bits)
+    val ex_stage_valid     = in Bool
+    val exc_instr_addr_ma  = out Bool
     val branch_should_take = out Bool
     val pred_take  = if (AppleRISCVCfg.USE_BPU) in Bool else null
     val pred_pc    = if (AppleRISCVCfg.USE_BPU) in UInt(AppleRISCVCfg.XLEN bits) else null
   }
   noIoPrefix()
 
+  // ===================================
   // Address Calculation
+  // ===================================
   // Note: JALR instruction needs to set the target address lsb to zero.
   // Here we just blindly set the lsb to zero for the following reason:
   // 1. We only support RV32 so our PC should be aligned to word boundary.
@@ -55,7 +57,9 @@ case class BU() extends Component {
   real_target_pc(0) := False
   val current_pc_plus4 = io.current_pc + 4
 
+  // ===================================
   // check the branch result
+  // ===================================
   val branch_result = False
   val beq  = io.rs1_value === io.rs2_value
   val bge  = io.rs1_value.asSInt >= io.rs2_value.asSInt
@@ -72,7 +76,9 @@ case class BU() extends Component {
   io.is_branch_instr := io.ex_stage_valid & (io.jal_op | io.jalr_op | io.br_op)
   io.exc_instr_addr_ma := (io.take_branch  & (io.target_pc(1 downto 0) =/= 0))
 
+  // ===================================
   // Branch Prediction Check:
+  // ===================================
   // Predict wrong includes both the direction and the address.
   // For direction, we check against the predicted result and calculated result.
   // For address:

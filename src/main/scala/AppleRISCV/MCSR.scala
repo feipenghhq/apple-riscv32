@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: mcsr
+// Module Name: MCSR
 //
 // Author: Heqing Huang
 // Date Created: 04/17/2021
@@ -12,9 +12,6 @@
 // ================== Description ==================
 //
 // Machine Level CSR module.
-//
-// For simplicity, for RW register, we always assign MXLEN bit flip flop even some of the bits
-// are reserved or unimplemented.
 //
 // Some notes about interrupt.
 // 1. mstatus:mpp is always set to 2'b11 since we only support machine mode
@@ -58,9 +55,12 @@ case class MCSRIO() extends Bundle {
 }
 
 case class MCSR() extends Component {
+
   val MXLEN = AppleRISCVCfg.MXLEN
+
   val io = MCSRIO()
   noIoPrefix()
+
   val busCtrl = CsrBusSlaveFactory(io.csr_bus)
   val REG_T = Bits(MXLEN bits)
 

@@ -1,69 +1,97 @@
-# Apple RISCV
+# AppleRISCV
 
-- [Apple RISCV](#apple-riscv)
+- [AppleRISCV](#appleriscv)
   - [Introduction](#introduction)
+  - [Key Features](#key-features)
+  - [Environment Dependency](#environment-dependency)
   - [Repo Structure](#repo-structure)
-  - [Required Environment](#required-environment)
-  - [Architecture](#architecture)
+  - [Getting Started](#getting-started)
+  - [Acknowledgement](#acknowledgement)
 
 ## Introduction
 
-Apple RISCV is a simple RISC-V CPU supporting RV32I instruction set. (more instruction maybe added in future)
+AppleRISCV is a RISC-V CPU design using SpinalHDL. I am designing this CPU to learn RISC-V, SpinalHDL, SoC, and also some embedded design.
 
-It has the following features:
+This repo design provide a RISC-V CPU core and a system-on-chip (SoC) design similar to SiFive Freedom E310. (Not all the peripherals are currently implemented). Since the design is mainly targeting FPGA, the SoC design are based on the the FPGA board (with slightly different peripherals and IO mappings)
 
-### Hardware Feature
+## Key Features
 
-- Supporting RV32I ISA, and other necessary extensions ('Zicsr', mret, ecall, *ebreak*)
-- Classic 5 stage pipeline design
-- Support 4 interrupts (external, timer, software, *debug*) defined in RISC-V Specification
-- A complete soc design capable of running basic embedded task.
-- The HDL code is written in SpinalHDL.
+### Hardware
 
-### Software Feature
+- Supporting RV32I ISA, and 'Zicsr' extensions.
+  - Only a subset of the csr register are implemented.
+- Supporting RV32M ISA (optional)
+  - Multiplier is implemented with FPGA DSP resource.
+  - Divider is a serial divider taking 33 clocks to complete.
+- CPU core micro-architecture: 5 stage pipeline design with IF, ID, EX, MEM, WB stages
+- Optional Branch Prediction Unit/Branch Target Buffer to improve branch performance.
+- Support 4 interrupts (external, timer, software, debug) defined in RISC-V Specification
 
-- Support C programming language compiled to newlib c library
-- More features TBD (such as running embedded OS)
+### Software
+
+- Provide a simple Board Support Package (BSP) for different board and SoC.
+- Ported newlib to support AppleRISCV SoC.
+- Support C programming language compiled to newlib c library.
+- Support C input and output using Uart console
+
+## Environment Dependency
+
+### RISC-V Tool Chain
+
+**GNU MCU Eclipse RISC-V Embedded GCC** is used to compile the C code into RISC-V ISA using newlib as the c standard library.
+
+- GNU MCU Eclipse RISC-V Embedded GCC: <https://gnu-mcu-eclipse.github.io/blog/2019/05/21/riscv-none-gcc-v8-2-0-2-2-20190521-released>
+
+### SpinalHDL, Scala and SBT
+
+SpinalHDL is a Scala based Hardware Construction Language. The HDL code in the repo is written in scala. SBT is an interactive build tool for Scala.
+
+- SpinalHDL: <https://spinalhdl.github.io/SpinalDoc-RTD/>
+- Scala: <https://www.scala-lang.org/>
+- SBT: <https://www.scala-sbt.org/>
+
+### Python3, Cocotb, Icarus Verilog
+
+cocotb is a COroutine based COsimulation TestBench environment for verifying VHDL and SystemVerilog RTL using Python. Icarus Verilog is an open source verilog simulator. The test environment in this repo is cocotb and the verilog code is simulated in Icarus Verilog
+
+- Python3: <https://www.python.org/downloads/>
+- Cocotb: <https://docs.cocotb.org/en/stable/index.html>
+- Icarus Verilog <http://iverilog.icarus.com/>
+
+### Xilinx Vivado/Intel Quartus
+
+Vivado and Quartus are used to synthesis the design and generate FPGA bit stream.
+
+- Vivado: <https://www.xilinx.com/products/design-tools/vivado.html>
+- Quartus: <https://www.intel.com/content/www/us/en/software/programmable/quartus-prime/overview.html>
 
 ## Repo Structure
 
-Here is the structures for apple riscv repo
+Here is the structures for AppleRISCV repo
 
-```text
-├── doc                 # Documents
-├── fpga                # FPGA related build scripts
-├── project             # SBT env related folder
-├── src                 # spinalhdl scala HDL source files
-└── tests               # Test related files
-```
+| Name    | Description                                                              |
+| ------- | ------------------------------------------------------------------------ |
+| doc     | documents related to design and architecture                             |
+| fpga    | FPGA related build script and constraints files for different FPGA board |
+| project | SBT related folder                                                       |
+| src     | scala HDL code and verilog code                                          |
+| tests   | riscv-test, cocotb framework                                             |
+| sdk     | board support package, libraries, demo program and benchmark             |
 
-## Required Environment
+## Getting Started
 
-To run the build/tests in the repo, the following environment are required
+You build FPGA image, downloads it to the FPGA board and run the demo program. An Arty-A7 board is preferred for the quick demo.
 
-1. Scala and SBT
-2. Python3
-3. Cocotb
-4. Icarus Verilog
-5. Xilinx Vivado/Intel Quartus
+1. Connect the Arty-A7 FPGA development board to the host machine
+2. `cd fpga`
+3. `make arty`
+4. `make blink_arty`
 
-## Architecture
+This will run the blink program and blink the 4 LEDs in the FPGA board.
 
-Here is a brief introduction of the design micro-architecture. For more details, check the documents for [micro-architecture](doc/micro_arch.md)
+For more details and other demo, check [fpga/README.md](fpga/README.md)
 
-### Apple RISC-V SOC
+## Acknowledgement
 
-The apple riscv soc contains necessary peripherals for the cpu core to run basic task and embedded software.
-
-![soc](doc/assets/img/soc.drawio.png)
-
-### Apple RISC-V SOC
-
-The RISC-V cpu core is designed as classic 5 stage pipeline. Here are the main modules in the 5 stage pipeline
-
-- IF: containing pc register and instruction ram controller
-- ID: containing instruction decoder unit
-- EX: containing ALU(arithmetic logic unit), branch control unit, and forwarding unit.
-- MEM: containing data memory controller
-- WB: containing csr (control and status) module, trap (exception and interrupt) controller.
-
+1. The SoC design (address mapping, peripherals) is based on the SiFive Freedom E310 SoC. <https://old-www.sifive.com/products/freedom-e310/>
+2. The SDK design is mainly based on hbird-e-sdk <https://github.com/SI-RISCV/hbird-e-sdk>

@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: data memory controller
+// Module Name: DmemCtrl
 //
 // Author: Heqing Huang
 // Date Created: 03/31/2021
@@ -16,8 +16,6 @@
 // - Logic to handle byte and half word access to memory
 // - We always read/write the whole word from/to memory so the address to the memory is aligned
 //   to word address (lower 2 bits is always 0)
-// - ASSUMPTION: CPU need to give the aligned address to memory controller
-// - The byte enable controls the byte being written into memory
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -39,15 +37,13 @@ case class DmemCtrl() extends Component {
     val cpu2mc_mem_LS_byte     = in Bool
     val cpu2mc_mem_LS_halfword = in Bool
     val cpu2mc_mem_LW_unsigned = in Bool
-    // Stall should stall the entire pipeline including the mem/wb stage
-    // this is due to we might have data forwarding to calculate the address
-    val dmem_stall_req = out Bool
+    val dmem_stall_req         = out Bool
     // Exception
     val exc_ld_addr_ma = out Bool
     val exc_sd_addr_ma = out Bool
   }
-
   noIoPrefix()
+
   val dmem_sib = master(Sib(AppleRISCVCfg.sibCfg))
 
   // == Store the information for read data process == //
@@ -141,6 +137,6 @@ case class DmemCtrl() extends Component {
   dmem_sib.mask     := Mux(io.cpu2mc_mem_LS_byte, byte_mask, Mux(io.cpu2mc_mem_LS_halfword, halfword_mask, B"1111"))
 
   val dmem_ready     = dmem_sib.ready
-  val dmem_resp      = dmem_sib.resp     // This should be 1
+  val dmem_resp      = dmem_sib.resp     // This should be 1 ideally
   io.dmem_stall_req  := ~dmem_ready & (io.cpu2mc_rd | io.cpu2mc_wr)
 }

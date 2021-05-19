@@ -4,14 +4,14 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: program counter
+// Module Name: PC
 //
 // Author: Heqing Huang
 // Date Created: 03/27/2021
 //
 // ================== Description ==================
 //
-// PC register
+// Program Counter module
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -26,8 +26,8 @@ case class PC() extends Component {
         // IO port
         val bpu_pred_take   = in Bool
         val bpu_pc_in       = in UInt(AppleRISCVCfg.XLEN bits)
-        val branch_pc_in    = in UInt(AppleRISCVCfg.XLEN bits)
         val branch          = in Bool
+        val branch_pc_in    = in UInt(AppleRISCVCfg.XLEN bits)
         val trap            = in Bool
         val trap_pc_in      = in UInt(AppleRISCVCfg.XLEN bits)
         val stall           = in Bool

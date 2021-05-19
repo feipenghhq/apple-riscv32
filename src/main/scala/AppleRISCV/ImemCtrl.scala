@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: apple_riscv
+// Module Name: ImemCtrl
 //
 // Author: Heqing Huang
 // Date Created: 04/07/2021
@@ -28,7 +28,7 @@ case class ImemCtrl() extends Component {
     val cpu2mc_addr = in UInt(AppleRISCVCfg.XLEN bits)
     val cpu2mc_en   = in Bool
     val mc2cpu_data = out Bits(AppleRISCVCfg.XLEN bits)
-    val imem_sib = master(Sib(AppleRISCVCfg.sibCfg))
+    val imem_sib    = master(Sib(AppleRISCVCfg.sibCfg))
   }
   noIoPrefix()
 
@@ -43,7 +43,6 @@ case class ImemCtrl() extends Component {
   // Slave signals
   io.mc2cpu_data     := io.imem_sib.rdata
 
-  val imem_ready = io.imem_sib.ready    // This should always 1
-  val imem_resp  = io.imem_sib.resp     // This should always 1
-  //val imem_data_vld   = imem_ready & imem_resp
+  val imem_ready = io.imem_sib.ready    // This should always be 1 for our current implementation
+  val imem_resp  = io.imem_sib.resp     // This should always be 1 for our current implementation
 }
