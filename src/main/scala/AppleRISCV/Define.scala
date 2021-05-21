@@ -151,9 +151,12 @@ object CsrSelEnum extends SpinalEnum(){
 // ==========================================
 object ExcCode {
   val EXC_CODE_INSTR_ADDR_MA  = 0
+  val EXC_CODE_INSTR_ACC_FLT  = 1
   val EXC_CODE_ILL_INSTR      = 2
   val EXC_CODE_LD_ADDR_MA     = 4
+  val EXC_CODE_LD_ACC_FLT     = 5
   val EXC_CODE_SD_ADDR_MA     = 6
+  val EXC_CODE_SD_ACC_FLT     = 7
   val EXC_CODE_MECALL         = 11
 
   val EXC_CODE_M_SW_INT       = 3

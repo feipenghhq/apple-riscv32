@@ -24,11 +24,11 @@ import spinal.lib.master
 case class ImemCtrl() extends Component {
 
   val io = new Bundle {
-    // CPU side
     val cpu2mc_addr = in UInt(AppleRISCVCfg.XLEN bits)
     val cpu2mc_en   = in Bool
     val mc2cpu_data = out Bits(AppleRISCVCfg.XLEN bits)
     val imem_sib    = master(Sib(AppleRISCVCfg.sibCfg))
+    val exc_instr_acc_flt = out Bool
   }
   noIoPrefix()
 
@@ -42,7 +42,5 @@ case class ImemCtrl() extends Component {
 
   // Slave signals
   io.mc2cpu_data     := io.imem_sib.rdata
-
-  val imem_ready = io.imem_sib.ready    // This should always be 1 for our current implementation
-  val imem_resp  = io.imem_sib.resp     // This should always be 1 for our current implementation
+  io.exc_instr_acc_flt := io.imem_sib.sel & io.imem_sib.ready & ~io.imem_sib.resp
 }

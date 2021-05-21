@@ -130,6 +130,9 @@ case class AppleRISCV() extends Component {
         val pc          = RegNextWhen(pc_inst.io.pc_out,        ~if_pipe_stall) init 0
         val stage_valid = RegNextWhen(if_stage_valid,           ~if_pipe_stall) init False
 
+        // Exception
+        val exc_instr_acc_flt = RegNextWhen(imem_ctrl_inst.io.exc_instr_acc_flt & if_stage_valid, ~if_pipe_stall) init False
+
         // Optional BPU
         val pred_take   = if (AppleRISCVCfg.USE_BPU) RegNextWhen(bpu_inst.io.pred_take, ~if_pipe_stall) else null
         val pred_pc     = if (AppleRISCVCfg.USE_BPU) RegNextWhen(bpu_inst.io.pred_pc, ~if_pipe_stall)   else null
@@ -207,7 +210,8 @@ case class AppleRISCV() extends Component {
         val instr          = RegNextWhen(imem_ctrl_inst.io.mc2cpu_data ,    ~id_pipe_stall)
 
         // Exception, don't insert bubble to exception
-        val exc_ill_instr = RegNextWhen(instr_dec_inst.io.exc_ill_instr & id_stage_valid, ~id_pipe_stall) init False
+        val exc_instr_acc_flt = RegNextWhen(if2id.exc_instr_acc_flt         & id_stage_valid, ~id_pipe_stall) init False
+        val exc_ill_instr     = RegNextWhen(instr_dec_inst.io.exc_ill_instr & id_stage_valid, ~id_pipe_stall) init False
 
         // Optional mul/div
         val mul_op     = if (AppleRISCVCfg.USE_RV32M) RegNextWhen(instr_dec_inst.io.mul_op & id_stage_valid_final, ~id_pipe_stall) init False else null
@@ -321,10 +325,13 @@ case class AppleRISCV() extends Component {
         val target_pc      = RegNextWhen(branch_unit_inst.io.target_pc, ~ex_pipe_stall)
 
         // Exception
-        val exc_ill_instr      = RegNextWhen(id2ex.exc_ill_instr                    & ex_stage_valid_final, ~ex_pipe_stall) init False
-        val exc_instr_addr_ma  = RegNextWhen(branch_unit_inst.io.exc_instr_addr_ma  & ex_stage_valid_final, ~ex_pipe_stall) init False
-        val exc_ld_addr_ma     = RegNextWhen(dmem_ctrl_isnt.io.exc_ld_addr_ma       & ex_stage_valid_final, ~ex_pipe_stall) init False
-        val exc_sd_addr_ma     = RegNextWhen(dmem_ctrl_isnt.io.exc_sd_addr_ma       & ex_stage_valid_final, ~ex_pipe_stall) init False
+        val exc_instr_acc_flt  = RegNextWhen(id2ex.exc_instr_acc_flt                & ex_stage_valid, ~ex_pipe_stall) init False
+        val exc_ill_instr      = RegNextWhen(id2ex.exc_ill_instr                    & ex_stage_valid, ~ex_pipe_stall) init False
+        val exc_instr_addr_ma  = RegNextWhen(branch_unit_inst.io.exc_instr_addr_ma  & ex_stage_valid, ~ex_pipe_stall) init False
+        val exc_ld_addr_ma     = RegNextWhen(dmem_ctrl_isnt.io.exc_ld_addr_ma       & ex_stage_valid, ~ex_pipe_stall) init False
+        val exc_sd_addr_ma     = RegNextWhen(dmem_ctrl_isnt.io.exc_sd_addr_ma       & ex_stage_valid, ~ex_pipe_stall) init False
+        val exc_ld_acc_flt     = RegNextWhen(dmem_ctrl_isnt.io.exc_ld_acc_flt       & ex_stage_valid, ~ex_pipe_stall) init False
+        val exc_sd_acc_flt     = RegNextWhen(dmem_ctrl_isnt.io.exc_sd_acc_flt       & ex_stage_valid, ~ex_pipe_stall) init False
     }
 
     // =========================
@@ -332,7 +339,7 @@ case class AppleRISCV() extends Component {
     // =========================
     val MEMStage = new Area {
         // csr
-        // Note: uimm is the same field as rs1 in instruction so use rs1 here instead
+        // Note: imm is the same field as rs1 in instruction so use rs1 here instead
         mcsr_inst.io.csr_bus.wdata := Mux(ex2mem.csr_sel_imm, ex2mem.rs1_idx.asBits.resized, ex2mem.rs1_value)
         mcsr_inst.io.csr_bus.addr  := ex2mem.csr_idx.asUInt
         mcsr_inst.io.csr_bus.wtype := ex2mem.csr_sel
@@ -358,10 +365,13 @@ case class AppleRISCV() extends Component {
         trap_ctrl_inst.io.timer_interrupt    := io.timer_interrupt
         trap_ctrl_inst.io.software_interrupt := io.software_interrupt
         trap_ctrl_inst.io.debug_interrupt    := io.debug_interrupt
+        trap_ctrl_inst.io.exc_instr_acc_flt  := ex2mem.exc_instr_acc_flt
         trap_ctrl_inst.io.exc_ill_instr      := ex2mem.exc_ill_instr
         trap_ctrl_inst.io.exc_instr_addr_ma  := ex2mem.exc_instr_addr_ma
         trap_ctrl_inst.io.exc_ld_addr_ma     := ex2mem.exc_ld_addr_ma
         trap_ctrl_inst.io.exc_sd_addr_ma     := ex2mem.exc_sd_addr_ma
+        trap_ctrl_inst.io.exc_ld_acc_flt     := ex2mem.exc_ld_acc_flt
+        trap_ctrl_inst.io.exc_sd_acc_flt     := ex2mem.exc_sd_acc_flt
         trap_ctrl_inst.io.mret               := ex2mem.mret
         trap_ctrl_inst.io.ecall              := ex2mem.ecall
         trap_ctrl_inst.io.cur_pc             := ex2mem.pc

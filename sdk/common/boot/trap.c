@@ -20,28 +20,16 @@
 // ================================
 // Exception Handler Routine
 // ================================
-void __attribute__((weak)) handle_ld_addr_misalign(uint32_t mepc) {
-    printf("Exception cause Load address misaligned\n");
-    printf("Instruction pc     = %x\n", mepc);
-    printf("Instruction        = %x\n", get_instruction(mepc));
-    printf("Misaligned address = %x\n", _read_csr(mtval));
-    exit(1);
-}
-
 void __attribute__((weak)) exit_trap(uint32_t mepc, uint32_t mcause) {
-    printf("Error Hit an exception: mcause = %x\n", mcause);
-    printf("Instruction pc     = %x\n", mepc);
-    printf("Instruction        = %x\n", get_instruction(mepc));
+    printf("Exception: mcause = %x\n", mcause);
+    printf("PC = %x\n", mepc);
+    printf("Instruction = %x\n", get_instruction(mepc));
+    printf("mtval = %x\n", _read_csr(mtval));
     exit(1);
 }
 
 void exception_handler(uint32_t mepc, uint32_t mcause) {
-    // Load Address Misaligned
-    if((mcause & MCAUSE_MASK ) == MCAUSE_LD_ADDR_MISALIGN) {
-        handle_ld_addr_misalign(mepc);
-    } else {
-        exit_trap(mepc, mcause);
-    }
+    exit_trap(mepc, mcause);
 }
 
 // ================================

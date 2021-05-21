@@ -28,8 +28,11 @@ import scala.collection.mutable.ArrayBuffer
 case class trap_ctrl_io() extends Bundle {
 
   // exception signal
+  val exc_instr_acc_flt = in Bool
   val exc_ld_addr_ma    = in Bool
   val exc_sd_addr_ma    = in Bool
+  val exc_ld_acc_flt    = in Bool
+  val exc_sd_acc_flt    = in Bool
   val exc_ill_instr     = in Bool
   val exc_instr_addr_ma = in Bool
 
@@ -103,13 +106,17 @@ case class TrapCtrl() extends Component {
     B(ExcCode.EXC_CODE_M_EXT_INT, AppleRISCVCfg.MXLEN-1 bits))
   val interrupt_code = MuxOH(interrupt_code_sel_in, interrupt_code_sel_data)
   // exception
-  val exceptions_code_sel_in = io.exc_ld_addr_ma ## io.exc_sd_addr_ma ## io.exc_ill_instr ## io.exc_instr_addr_ma ## io.ecall
+  val exceptions_code_sel_in = io.exc_sd_acc_flt ## io.exc_ld_acc_flt ## io.exc_ld_addr_ma ## io.exc_sd_addr_ma ## io.exc_ill_instr ## io.exc_instr_addr_ma ## io.exc_instr_acc_flt ## io.ecall
   val exceptions_code_sel_data = Array(
     B(ExcCode.EXC_CODE_MECALL, AppleRISCVCfg.MXLEN-1 bits),       // This is the first entry
+    B(ExcCode.EXC_CODE_INSTR_ACC_FLT, AppleRISCVCfg.MXLEN-1 bits),
     B(ExcCode.EXC_CODE_INSTR_ADDR_MA, AppleRISCVCfg.MXLEN-1 bits),
     B(ExcCode.EXC_CODE_ILL_INSTR, AppleRISCVCfg.MXLEN-1 bits),
     B(ExcCode.EXC_CODE_SD_ADDR_MA, AppleRISCVCfg.MXLEN-1 bits),
-    B(ExcCode.EXC_CODE_LD_ADDR_MA, AppleRISCVCfg.MXLEN-1 bits))
+    B(ExcCode.EXC_CODE_LD_ADDR_MA, AppleRISCVCfg.MXLEN-1 bits),
+    B(ExcCode.EXC_CODE_LD_ACC_FLT, AppleRISCVCfg.MXLEN-1 bits),
+    B(ExcCode.EXC_CODE_SD_ACC_FLT, AppleRISCVCfg.MXLEN-1 bits)
+  )
   val exception_code = MuxOH(exceptions_code_sel_in, exceptions_code_sel_data)
   val trap_code = Mux(interrupt, interrupt_code, exception_code)
 

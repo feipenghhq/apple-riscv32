@@ -41,6 +41,8 @@ case class DmemCtrl() extends Component {
     // Exception
     val exc_ld_addr_ma = out Bool
     val exc_sd_addr_ma = out Bool
+    val exc_ld_acc_flt = out Bool
+    val exc_sd_acc_flt = out Bool
   }
   noIoPrefix()
 
@@ -137,7 +139,8 @@ case class DmemCtrl() extends Component {
   val halfword_mask = Mux(io.cpu2mc_addr(1), B"1100", B"0011")
   dmem_sib.mask     := Mux(io.cpu2mc_mem_LS_byte, byte_mask, Mux(io.cpu2mc_mem_LS_halfword, halfword_mask, B"1111"))
 
-  val dmem_ready     = dmem_sib.ready
-  val dmem_resp      = dmem_sib.resp     // This should be 1 ideally
-  io.dmem_stall_req  := ~dmem_ready & dmem_sib.sel
+  io.dmem_stall_req  := ~dmem_sib.ready & dmem_sib.sel
+  val acc_flt  = dmem_sib.sel & dmem_sib.ready & ~dmem_sib.resp
+  io.exc_ld_acc_flt := ren & acc_flt
+  io.exc_sd_acc_flt := wen & acc_flt
 }
