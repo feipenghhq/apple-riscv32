@@ -23,12 +23,13 @@ IMEM_ROM_PATH 	= $(RISCV_TEST_PATH)/generated
 SOC	?=arty
 
 ifeq ($(SOC), arty)
-	TB_FILES      = $(TB_PATH)/arty_tb.v
-	RTL_FILES     = $(RTL_SOC_PATH)/AppleSoC_arty.v
+	TB_FILES     += $(TB_PATH)/arty_tb.v
+	RTL_FILES    += $(RTL_SOC_PATH)/AppleSoC_arty.v
 	TOPLEVEL 	  = arty_tb
 else ifeq ($(SOC), de2)
-	TB_FILES      = $(TB_PATH)/de2_tb.v
-	RTL_FILES     = $(RTL_SOC_PATH)/AppleSoC_de2.v
+	TB_FILES     += $(TB_PATH)/de2_tb.v
+	TB_FILES     += $(TB_PATH)/IS61LV25616.v
+	RTL_FILES    += $(RTL_SOC_PATH)/AppleSoC_de2.v
 	RTL_FILES    += $(REPO_ROOT)/src/rtl/de2/intelram_2rw_32kb.v
 	RTL_FILES    += $(QUARTUS_PATH)/eda/sim_lib/altera_mf.v
 	TOPLEVEL 	  = de2_tb

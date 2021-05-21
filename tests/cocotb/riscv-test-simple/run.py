@@ -103,5 +103,5 @@ async def run_test(dut):
         2 : 2,
         3 : 3,
     }
-    print_register(dut, 32)
+    #print_register(dut, 32)
     check_register(dut, expected_register)

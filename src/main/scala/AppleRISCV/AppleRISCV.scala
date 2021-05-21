@@ -438,38 +438,51 @@ case class AppleRISCV() extends Component {
         // csr dependency
         val id_rs1_depends_on_csr = (Bypassing.id_rs1_match_ex_rd & id2ex.csr_rd) | (Bypassing.id_rs1_match_mem_rd & ex2mem.csr_rd)
         val id_rs2_depends_on_csr = (Bypassing.id_rs2_match_ex_rd & id2ex.csr_rd) | (Bypassing.id_rs2_match_mem_rd & ex2mem.csr_rd)
-        val id_stall_on_csr_dep = id_rs2_depends_on_csr | id_rs1_depends_on_csr
+        val id_stall_on_csr_dep   = id_rs2_depends_on_csr | id_rs1_depends_on_csr
+        // mul/div stall request
+        val muldiv_stall_req      = if (AppleRISCVCfg.USE_RV32M) mul_inst.io.mul_stall_req | div_inst.io.div_stall_req else False
 
         // Memory requested pipeline stall should not stall the entire pipeline, it should let the MEM/WB stage go.
-        // This is to handle the situation when we have back-to-back memory read access request. it should let the
-        // read data flow into WB stage.
-        // However, there is one exception, that is when the address calculation depends on the data in WB stage
+        // This is to handle the situation when we have back-to-back memory read access request.
+        // However, there is one exception, that is when the address calculation or write data depends on the data in WB stage
         // In this case, we should stall the MEM/WB stage and once the memory access complete, we should release MEM/WB stall
-        val mem_stall_on_addr_dep = dmem_ctrl_isnt.io.dmem_stall_req & (id2ex.rs1_dep_mem | id2ex.rs1_dep_wb)
+        val mem_stall_on_addr_dep = dmem_ctrl_isnt.io.dmem_stall_req &
+          (id2ex.rs1_dep_mem | id2ex.rs1_dep_wb | id2ex.rs2_dep_mem | id2ex.rs2_dep_wb )
 
         // ================================
         // Flushing/Bubble Insertion
         // ================================
-        val muldiv_stall_req = if (AppleRISCVCfg.USE_RV32M) mul_inst.io.mul_stall_req | div_inst.io.div_stall_req else False
+
+        // Flush request
+        val if_stage_flush = branch_unit_inst.io.take_branch | trap_ctrl_inst.io.trap_flush
+        val id_stage_flush = branch_unit_inst.io.take_branch | trap_ctrl_inst.io.trap_flush
+        val ex_stage_flush = trap_ctrl_inst.io.trap_flush
+        val mem_stage_flush = trap_ctrl_inst.io.trap_flush
+
+        // NOP Insertion
+        val id_stage_nop = id_stall_on_csr_dep | id_stall_on_load_dep
+        val ex_stage_nop = muldiv_stall_req | dmem_ctrl_isnt.io.dmem_stall_req
+
         // Flush - regular control signal should use this valid signal
-        if_stage_valid  := ~branch_unit_inst.io.take_branch  & ~trap_ctrl_inst.io.trap_flush
-        id_stage_valid  := if2id.stage_valid  & ~branch_unit_inst.io.take_branch  & ~trap_ctrl_inst.io.trap_flush
-        ex_stage_valid  := id2ex.stage_valid  & ~trap_ctrl_inst.io.trap_flush
-        mem_stage_valid := ex2mem.stage_valid & ~trap_ctrl_inst.io.trap_flush
+        if_stage_valid  := ~if_stage_flush
+        id_stage_valid  := if2id.stage_valid  & ~id_stage_flush
+        ex_stage_valid  := id2ex.stage_valid  & ~ex_stage_flush
+        mem_stage_valid := ex2mem.stage_valid & ~mem_stage_flush
         wb_stage_valid  := mem2wb.stage_valid
+
         // flush plus bubble insertion - only the pipeline stage should use this valid signal
-        id_stage_valid_final := id_stage_valid   & ~id_stall_on_csr_dep & ~(id_stall_on_load_dep & ~dmem_ctrl_isnt.io.dmem_stall_req)
-        ex_stage_valid_final := ex_stage_valid   & ~muldiv_stall_req & ~dmem_ctrl_isnt.io.dmem_stall_req
+        id_stage_valid_final  := id_stage_valid  & ~id_stage_nop
+        ex_stage_valid_final  := ex_stage_valid  & ~ex_stage_nop
         mem_stage_valid_final := mem_stage_valid
 
         // ================================
         // Stall
         // ================================
-        if_pipe_stall  := if_stage_valid &
+        if_pipe_stall  := ~if_stage_flush &
           (id_stall_on_load_dep | id_stall_on_csr_dep | dmem_ctrl_isnt.io.dmem_stall_req | muldiv_stall_req)
-        id_pipe_stall  := id_stage_valid & (dmem_ctrl_isnt.io.dmem_stall_req | muldiv_stall_req)
-        ex_pipe_stall  := ex_stage_valid & mem_stall_on_addr_dep
-        mem_pipe_stall := mem_stage_valid & mem_stall_on_addr_dep
+        id_pipe_stall  := ~id_stage_flush  & (dmem_ctrl_isnt.io.dmem_stall_req | muldiv_stall_req)
+        ex_pipe_stall  := ~ex_stage_flush  & mem_stall_on_addr_dep
+        mem_pipe_stall := ~mem_stage_flush & mem_stall_on_addr_dep
     }
 }
 

@@ -84,7 +84,7 @@ case class AppleSoC_de2() extends Component {
         val clk         = in Bool
         val reset       = in Bool
         val load_imem   = in Bool
-        val sram        = master(SRAMIO())
+        val sram        = master(Sram())
         val uart0       = master(Uart())  // this is needed for debug
         val gpio0       = if (cfg.USE_GPIO0) master(TriStateArray(32 bits)) else null
         val pwm0cmpgpio = if (cfg.USE_PWM0)  out Bits(4 bits) else null
@@ -124,7 +124,8 @@ case class AppleSoC_de2() extends Component {
         // Fixed Component
 
         val imem_inst = IntelRam_2rw_32kb(cfg.imemSibCfg, cfg.imemSibCfg)
-        val SRAMCtrl_inst = SRAMCtrl(cfg.dmemSibCfg)
+        val SramBrdg_inst = SibBridge32to16(cfg.dmemSibCfg)
+        val SramCtrl_inst = SibSramCtrl(SramBrdg_inst.outCfg)
         val clic_inst = Clic(PeripSibCfg.clicSibCfg)
         val plic_inst = Plic(PeripSibCfg.plicSibCfg)
         val uart2imem_inst = ip.Uart2Imem(cfg.imemSibCfg, cfg.uartDbgBaudRate)
@@ -202,8 +203,9 @@ case class AppleSoC_de2() extends Component {
         // dmem switch connection
         dmem_switch.hostSib      <> cpu.core.io.dmem_sib        // To CPU
         dmem_switch.clientSib(0) <> imem_data_mux.inputSib(0)   // To imem data mux port 0
-        dmem_switch.clientSib(1) <> SRAMCtrl_inst.io.sram_sib   // To SRAM ctrl
+        dmem_switch.clientSib(1) <> SramBrdg_inst.io.sib_in     // To SRAM Bridge
         dmem_switch.clientSib(2) <> perip_switch.hostSib        // To Peripheral SIB Switch
+        SramBrdg_inst.io.sib_out <> SramCtrl_inst.io.sram_sib   // To SRAM ctrl
 
         // peripheral switch connection
         perip_switch.clientSib(0) <> clic_inst.io.clic_sib      // To CLIC
@@ -223,7 +225,7 @@ case class AppleSoC_de2() extends Component {
         aon_inst.io.uartdbgrst_req <> uart2imem_inst.io.downloading
 
         // SRAM port
-        SRAMCtrl_inst.io.sram <> io.sram
+        SramCtrl_inst.io.sram <> io.sram
 
         // Imem debug bus
         uart2imem_inst.io.imem_dbg_sib <> imem_data_mux.inputSib(1)  // To imem data mux port 1

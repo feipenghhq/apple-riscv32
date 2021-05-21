@@ -109,37 +109,15 @@ case class Sib(config: SibConfig) extends Bundle with IMasterSlave {
 
     that.resp   := this.resp
     that.ready  := this.ready
-    that.rdata  := this.rdata
+    that.rdata  := this.rdata.resized
 
     this.sel    := that.sel
     this.enable := that.enable
-    this.addr   := that.addr
+    this.addr   := that.addr.resized
     this.write  := that.write
     this.mask   := that.mask
-    this.wdata  := that.wdata
+    this.wdata  := that.wdata.resized
   }
 
   def >>(that: Sib): Unit = that << this
-
-  /**
-   * Remap a bus
-   */
-  def remapAddress(remapping: UInt => UInt): Sib = {
-    val address = remapping(this.addr)
-
-    val busRemap = Sib(SibConfig(dataWidth = this.config.dataWidth, addressWidth = address.getBitsWidth))
-
-    this.resp   := busRemap.resp
-    this.ready  := busRemap.ready
-    this.rdata  := busRemap.rdata
-
-    busRemap.sel    := this.sel
-    busRemap.enable := this.enable
-    busRemap.addr   := address
-    busRemap.write  := this.write
-    busRemap.mask   := this.mask
-    busRemap.wdata  := this.wdata
-
-    busRemap
-  }
 }

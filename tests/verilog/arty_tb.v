@@ -56,4 +56,22 @@ end
   reg               uart0_rxd = 'b1;
   reg               load_imem = 'b0;
 
+// =====================================
+// X checker
+// =====================================
+
+wire        aggr_rd_wdata;
+wire [31:0] rd_wdata = DUT_AppleRISCVSoC.cpu_core.mem2wb_rd_wdata;
+wire        rd_write = DUT_AppleRISCVSoC.cpu_core.mem2wb_rd_wr;
+
+always @(*) begin
+  if (^rd_wdata === 1'bX && rd_write) begin
+    $display("Found X in rd wdata: %x at time %t", rd_wdata, $time);
+  end
+end
+
+initial begin
+  //$monitor("RD wdata: %x at time %t", rd_wdata, $time);
+end
+
 endmodule

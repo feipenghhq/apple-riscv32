@@ -128,8 +128,9 @@ case class DmemCtrl() extends Component {
   val ren = io.cpu2mc_rd & ~io.exc_ld_addr_ma
   dmem_sib.sel       := wen | ren
   dmem_sib.enable    := dmem_sib.sel
-  dmem_sib.addr      := io.cpu2mc_addr
   dmem_sib.write     := wen
+  // The address should align to work boundary,because we always read a word and process the byte here.
+  dmem_sib.addr      := io.cpu2mc_addr(AppleRISCVCfg.XLEN -1 downto 2) @@ False @@ False
 
   // Decode logic for write byte enable
   val byte_mask     = B"0001" |<< io.cpu2mc_addr(1 downto 0)
@@ -138,5 +139,5 @@ case class DmemCtrl() extends Component {
 
   val dmem_ready     = dmem_sib.ready
   val dmem_resp      = dmem_sib.resp     // This should be 1 ideally
-  io.dmem_stall_req  := ~dmem_ready & (io.cpu2mc_rd | io.cpu2mc_wr)
+  io.dmem_stall_req  := ~dmem_ready & dmem_sib.sel
 }

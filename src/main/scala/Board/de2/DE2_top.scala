@@ -31,7 +31,7 @@ case class DE2_top() extends Component {
   val io = new Bundle {
     val clk = in Bool
     val reset = in Bool
-    val sram  = master(SRAMIO())
+    val sram  = master(Sram())
     val KEY   = in Bits(4 bits)     // GPIO 0-3
     val SW    = in Bits(16 bits)    // GPIO 4-19
     val LEDR  = out Bits(12 bits)   // GPIO 20-31
