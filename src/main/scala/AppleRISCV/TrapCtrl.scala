@@ -74,7 +74,8 @@ case class trap_ctrl_io() extends Bundle {
   val pc_value     = out UInt(AppleRISCVCfg.XLEN bits)
 
   // output to hdu for flushing
-  val trap_flush   = out Bool
+  val exc_flush   = out Bool
+  val int_flush   = out Bool
 }
 
 case class TrapCtrl() extends Component {
@@ -136,5 +137,6 @@ case class TrapCtrl() extends Component {
   io.pc_value     := Mux(io.mret, io.mepc.asUInt, (mtvec_base ## B"2'h0").asUInt)
 
   // request to flush
-  io.trap_flush   := io.mtrap_enter | io.mtrap_exit
+  io.exc_flush   := exception | io.ecall | io.mret
+  io.int_flush   := interrupt
 }

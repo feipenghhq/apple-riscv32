@@ -18,6 +18,7 @@ import os
 import sys
 import subprocess
 import shutil
+import argparse
 
 #####################################
 # ISA
@@ -114,14 +115,28 @@ SOC         = ['arty', 'de2']
 # Utility function
 #####################################
 
-class Run:
+def cmdParser():
+    parser = argparse.ArgumentParser(description='Upload Instruction ROM through Uart')
+    parser.add_argument('-dump' , '-d', action='store_true', help='Dump waveform')
+    parser.add_argument('-soc', type=str, required=True, nargs='?', help='The FPGA board')
+    return parser.parse_args()
 
-    def __init__(self, soc):
+#####################################
+# Main Class
+#####################################
+
+class Run:
+    def __init__(self, soc, dump):
+        print("SoC = " + soc + ", Dump = ", str(dump))
         self.soc = soc
+        if dump:
+            self.dump = 1
+        else:
+            self.dump = 0
         self.FILES  = ['results.xml']
-        if soc == 'arty':
+        if soc == 'arty' and dump:
             self.FILES.append('DUT_arty.vcd')
-        if soc == 'de2':
+        if soc == 'de2' and dump:
             self.FILES.append('DUT_de2.vcd')
 
     def clear_all(self):
@@ -141,7 +156,7 @@ class Run:
 
     def run_test(self, test, arch, runtime):
         """ invoke makefile to run a test """
-        cmd = f'make TESTNAME={test} RISCVARCH={arch} RUNTIME={runtime} SOC={self.soc}'
+        cmd = f'make TESTNAME={test} RISCVARCH={arch} RUNTIME={runtime} SOC={self.soc} DUMP={self.dump}'
         os.system(cmd)
 
     def check_result(self):
@@ -208,12 +223,12 @@ class Run:
         self.print_result(results)
 
 if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: ./run_all.py soc_name")
-        exit(1)
-    if not sys.argv[1] in SOC:
+    args = cmdParser()
+    soc = args.soc
+    dump = args.dump
+    if not soc in SOC:
         print(f"'{sys.argv[1]}' is not supported")
         print(f"Supported SOC: {SOC}")
 
-    run = Run(sys.argv[1])
+    run = Run(soc, dump)
     run.all()

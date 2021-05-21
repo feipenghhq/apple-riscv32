@@ -24,6 +24,7 @@ import spinal.lib.master
 case class ImemCtrl() extends Component {
 
   val io = new Bundle {
+    val stage_valid = in Bool
     val cpu2mc_addr = in UInt(AppleRISCVCfg.XLEN bits)
     val cpu2mc_en   = in Bool
     val mc2cpu_data = out Bits(AppleRISCVCfg.XLEN bits)
@@ -33,14 +34,14 @@ case class ImemCtrl() extends Component {
   noIoPrefix()
 
   // Master signals
-  io.imem_sib.sel    := True     // We always want to read instruction memory
+  io.imem_sib.sel    := io.stage_valid // We always want to read instruction memory
   io.imem_sib.enable := io.cpu2mc_en
   io.imem_sib.addr   := io.cpu2mc_addr
-  io.imem_sib.wdata  := 0        // Fixed to zero, We are not writing to I-mem through this port
-  io.imem_sib.write  := False    // Fixed to zero, We are not writing to I-mem through this port
+  io.imem_sib.wdata  := 0
+  io.imem_sib.write  := False
   io.imem_sib.mask   := 0
 
   // Slave signals
-  io.mc2cpu_data     := io.imem_sib.rdata
-  io.exc_instr_acc_flt := io.imem_sib.sel & io.imem_sib.ready & ~io.imem_sib.resp
+  io.mc2cpu_data       := io.imem_sib.rdata
+  io.exc_instr_acc_flt := io.stage_valid & io.imem_sib.sel & io.imem_sib.ready & ~io.imem_sib.resp
 }

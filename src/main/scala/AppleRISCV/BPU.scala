@@ -44,7 +44,7 @@ case class BPU() extends Component {
     val branch_should_take = in Bool
     val branch_instr_pc  = in UInt(AppleRISCVCfg.XLEN bits)
     val branch_target_pc = in UInt(AppleRISCVCfg.XLEN bits)
-    val if_stage_valid   = in Bool
+    val stage_valid      = in Bool
   }
   noIoPrefix()
 
@@ -65,7 +65,7 @@ case class BPU() extends Component {
   val bpb_ram_pred_out     = bpb_ram.readAsync(address = pc_idx)
   val bpb_tag_ram_pred_out = bpb_tag_ram.readAsync(address = pc_idx)
   val pred_hit = (bpb_tag_ram_pred_out === pc_tag) & entry_valid(pc_idx)
-  io.pred_take := (bpb_ram_pred_out === 2 | bpb_ram_pred_out === 3) & pred_hit & io.if_stage_valid
+  io.pred_take := (bpb_ram_pred_out === 2 | bpb_ram_pred_out === 3) & pred_hit & io.stage_valid
   io.pred_pc   := (btb_ram.readAsync(address = pc_idx) @@ U"00").resized
 
   // ===============================

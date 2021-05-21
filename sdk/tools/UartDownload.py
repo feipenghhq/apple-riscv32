@@ -109,9 +109,9 @@ class UartDownload:
 
 def cmdParser():
     parser = argparse.ArgumentParser(description='Upload Instruction ROM through Uart')
-    parser.add_argument('-size', type=int, required=True, nargs='?', help='Size of the Instruction ROM in KByte')
-    parser.add_argument('-file', type=str, required=True, nargs='?', help='The Instruction ROM file')
-    parser.add_argument('-board', type=str, required=True, nargs='?', help='The FPGA board')
+    parser.add_argument('-size', '-s', type=int, required=True, nargs='?', help='Size of the Instruction ROM in KByte')
+    parser.add_argument('-file', '-f', type=str, required=True, nargs='?', help='The Instruction ROM file')
+    parser.add_argument('-board', '-b',  type=str, required=True, nargs='?', help='The FPGA board')
     return parser.parse_args()
 
 def getComport(board):

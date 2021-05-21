@@ -44,13 +44,19 @@ MODULE   	= run
 # Simulator config
 # -----------------------------------------
 SIM 		 ?=icarus
+DUMP	     ?=0
 COMPILE_ARGS =
 PLUSARGS 	 =
 
 ifeq ($(SIM),icarus)
 	COMPILE_ARGS += -DLOAD_INSTR_RAM
 	COMPILE_ARGS += -DLOAD_DATA_RAM
+	ifeq ($(DUMP),1)
+		COMPILE_ARGS += -DDUMP_VCD
+	endif
 endif
+
+
 
 # -----------------------------------------
 # Test config

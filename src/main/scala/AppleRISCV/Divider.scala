@@ -27,11 +27,11 @@ import spinal.lib.fsm._
 case class AppleRISCVDivider() extends Component {
   val io = new Bundle {
     val stage_valid = in Bool
-    val div_req     =  in  Bool
+    val div_req     = in Bool
     val div_opcode  = in(DivOpcodeEnum)
-    val dividend  = in  Bits(AppleRISCVCfg.XLEN bit)
-    val divisor   = in  Bits(AppleRISCVCfg.XLEN bits)
-    val result    = out Bits(AppleRISCVCfg.XLEN bits)
+    val dividend    = in  Bits(AppleRISCVCfg.XLEN bit)
+    val divisor     = in  Bits(AppleRISCVCfg.XLEN bits)
+    val result      = out Bits(AppleRISCVCfg.XLEN bits)
     val div_stall_req = out Bool
   }
   noIoPrefix()

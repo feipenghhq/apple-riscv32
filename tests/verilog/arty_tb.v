@@ -15,7 +15,7 @@ integer dm = 0;
 
 AppleSoC_arty DUT_AppleRISCVSoC(.*);
 
-`ifdef COCOTB_SIM
+`ifdef DUMP_VCD
 initial begin
   $dumpfile ("DUT_arty.vcd");
   $dumpvars (0, DUT_AppleRISCVSoC);

@@ -94,7 +94,7 @@ case class Multiplier(_type: String, stages: Int, multiplierSize: Int, multiplic
     // pipeline stages except the first stage
     val stage = Vec(Reg(SInt(multiplierSize+multiplicandSize bits)), AppleRISCVCfg.MUL_STAGE - 1)
     // pipeline valid stage, including the fist stage
-    val stage_valid = Vec(RegInit(False), AppleRISCVCfg.MUL_STAGE)
+    val mul_stage_valid = Vec(RegInit(False), AppleRISCVCfg.MUL_STAGE)
 
     // Stage 0 - flop the input operand
     val multiplier_s0 = RegNext(io.multiplier)
@@ -107,9 +107,9 @@ case class Multiplier(_type: String, stages: Int, multiplierSize: Int, multiplic
     }
 
     // Stage valid pipeline
-    stage_valid(0) := new_op
-    for (i <- Range(1, stage_valid.length)) {
-      stage_valid(i) := stage_valid(i-1)
+    mul_stage_valid(0) := new_op
+    for (i <- Range(1, mul_stage_valid.length)) {
+      mul_stage_valid(i) := mul_stage_valid(i-1)
     }
 
     when(new_op) {
@@ -119,8 +119,8 @@ case class Multiplier(_type: String, stages: Int, multiplierSize: Int, multiplic
     }
 
     io.product := stage(AppleRISCVCfg.MUL_STAGE-2)
-    io.product_valid := stage_valid(AppleRISCVCfg.MUL_STAGE-1)
-    io.product_early_valid := stage_valid(AppleRISCVCfg.MUL_STAGE-2)
+    io.product_valid := mul_stage_valid(AppleRISCVCfg.MUL_STAGE-1)
+    io.product_early_valid := mul_stage_valid(AppleRISCVCfg.MUL_STAGE-2)
     io.mul_ready := ~busy | io.product_valid
   }
 
