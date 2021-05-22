@@ -45,7 +45,7 @@ rv32ui_isa = [
     ['lh'   , 6000],
     ['lhu'  , 6000 ],
     ['lui'  , 3000 ],
-    ['lw'  , 3000 ],
+    ['lw'  , 4000 ],
     ['or'   , 10000],
     ['ori'  , 3000 ],
     ['sb'   , 6000],
@@ -99,8 +99,8 @@ ARCH = {
     'rv32ui': rv32ui_isa,
     'rv32mi': rv32mi_isa,
     'rv32si': rv32si_isa,
+    'rv32um': rv32um_isa,
     'soc'   : soc_isa,
-    'rv32um': rv32um_isa
 }
 
 #####################################
@@ -127,7 +127,6 @@ def cmdParser():
 
 class Run:
     def __init__(self, soc, dump):
-        print("SoC = " + soc + ", Dump = ", str(dump))
         self.soc = soc
         if dump:
             self.dump = 1
@@ -138,6 +137,7 @@ class Run:
             self.FILES.append('DUT_arty.vcd')
         if soc == 'de2' and dump:
             self.FILES.append('DUT_de2.vcd')
+        self.cmds = []
 
     def clear_all(self):
         """ Clear all the output """
@@ -157,6 +157,7 @@ class Run:
     def run_test(self, test, arch, runtime):
         """ invoke makefile to run a test """
         cmd = f'make TESTNAME={test} RISCVARCH={arch} RUNTIME={runtime} SOC={self.soc} DUMP={self.dump}'
+        self.cmds.append(cmd)
         os.system(cmd)
 
     def check_result(self):
@@ -169,7 +170,6 @@ class Run:
 
     def one_test(self, test, arch, runtime):
         """ run all the process for one tests """
-        os.system("make clean_rom")
         self.run_test(test, arch, runtime)
         result = self.check_result()
         self.move_result(test, arch)
@@ -220,7 +220,10 @@ class Run:
         """ Run all the test """
         self.clear_all()
         results = self.all_arch_tests(ARCH)
+        for cmd in self.cmds:
+            print(cmd)
         self.print_result(results)
+
 
 if __name__ == '__main__':
     args = cmdParser()
@@ -229,6 +232,5 @@ if __name__ == '__main__':
     if not soc in SOC:
         print(f"'{sys.argv[1]}' is not supported")
         print(f"Supported SOC: {SOC}")
-
     run = Run(soc, dump)
     run.all()

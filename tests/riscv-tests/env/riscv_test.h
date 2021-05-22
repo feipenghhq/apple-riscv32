@@ -96,12 +96,18 @@
   li x30, 0;                                                            \
   li x31, 0;
 
+#define EXCEPTION       \
+  .weak  mtvec_handler; \
+  la t0, mtvec_handler; \
+  csrw	 mtvec,t0;
+
 #define RVTEST_CODE_BEGIN
           .section .text.init;                                             \
           .align  6;                                                       \
           .global _start;
 _start:
           INIT_XREG                                                        \
+          EXCEPTION                                                        \
 
 #endif
 

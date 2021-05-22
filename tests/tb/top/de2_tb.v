@@ -66,7 +66,6 @@ inout      [15:0] sram_data;
 // SRAM model
 // =====================================
 
-
 IS61LV25616 IS61LV25616(
   .A(sram_addr),
   .IO(sram_data),
@@ -81,6 +80,7 @@ IS61LV25616 IS61LV25616(
 // X checker
 // =====================================
 
+`ifdef X_CHECKER
 wire        aggr_rd_wdata;
 wire [31:0] rd_wdata = DUT_AppleRISCVSoC.cpu_core.mem2wb_rd_wdata;
 wire        rd_write = DUT_AppleRISCVSoC.cpu_core.mem2wb_rd_wr;
@@ -90,9 +90,6 @@ always @(*) begin
     $display("Found X in rd wdata: %x at time %t", rd_wdata, $time);
   end
 end
-
-initial begin
-  //$monitor("RD wdata: %x at time %t", rd_wdata, $time);
-end
+`endif
 
 endmodule

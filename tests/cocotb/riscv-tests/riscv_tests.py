@@ -32,17 +32,15 @@ def process_rom_file(name):
     """ Split the text and data section for the generated verilog file """
 
     # Link the instruction rom file to the tb directory
-    SRC_FILE = REPO_ROOT + '/tests/riscv-tests-simple/generated/' + name + ".verilog"
-    ROM_FILE = os.getcwd() + '/verilog.rom' # need to link the instruction ram file the the current directory
+    SRC_FILE = REPO_ROOT + f'/tests/riscv-tests/generated/{name}.verilog'
+    ROM_FILE = os.getcwd() + f'/{name}.verilog' # need to link the instruction ram file the the current directory
     if os.path.isfile(ROM_FILE):
         os.remove(ROM_FILE)
     os.symlink(SRC_FILE, ROM_FILE)
     os.system(f"ln -s {REPO_ROOT}/*.bin {os.getcwd()}/.")
-
-    FP = open('verilog.rom', "r")
+    FP = open(f'{name}.verilog', "r")
     IRAM_FP = open('instr_ram.rom', "w")
     DRAM_FP = open('data_ram.rom', "w")
-
     iram = True
     FP.readline() # get ride of the first address line
     for line in FP.readlines():
@@ -53,26 +51,16 @@ def process_rom_file(name):
             IRAM_FP.write(line)
         else:
             DRAM_FP.write(line)
-
     FP.close()
     IRAM_FP.close()
     DRAM_FP.close()
-
-def print_register(dut, size=32):
-    """ Print the register value """
-    for i in range(size):
-        try:
-            val = dut.DUT_AppleRISCVSoC.cpu_core.regfile_inst.ram[i].value.integer
-            print(f"Register {i}, {hex(val)}")
-        except ValueError:
-            print(f"Register {i}, XXXX")
 
 def check_register(dut, expected):
     """ Check the register file with the expected data """
     for key, value in expected.items():
         val = dut.DUT_AppleRISCVSoC.cpu_core.regfile_inst.ram[key].value.integer
         assert value == val, f"RAM1: Register {key}, Expected: {value}, Actual: {val}"
-        print(f"RAM1: Register {key}, Expected: {value}, Actual: {val}")
+        #print(f"RAM1: Register {key}, Expected: {value}, Actual: {val}")
 
 async def reset(dut, time=20):
     """ Reset the design """
@@ -81,27 +69,28 @@ async def reset(dut, time=20):
     await FallingEdge(dut.clk)
     dut.reset = 0
 
-
-
+# This pattern is defined in the TEST_PASS macro
+expected_register = {
+    1 : 1,
+    2 : 2,
+    3 : 3,
+}
 
 ###############################
 # Test suites
 ###############################
 
 @cocotb.test()
-async def run_test(dut):
+def riscv_tests(dut):
+    """ RISCV TEST """
     runtime = int(os.getenv('RUN_TIME'))
-    test = os.getenv('RISCV_ARCH') + '-' + os.getenv('TEST_NAME')
+    arch = os.getenv('RISCV_ARCH')
+    mode = os.getenv('RISCV_MODE')
+    name = os.getenv('TEST_NAME')
+    test = f'{arch}-{mode}-{name}'
     process_rom_file(test)
     clock = Clock(dut.clk, 10, units="ns")  # Create a 10us period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
-    await reset(dut)
-    await Timer(runtime, units="ns")
-    # This pattern is defined in the TEST_PASS macro
-    expected_register = {
-        1 : 1,
-        2 : 2,
-        3 : 3,
-    }
-    #print_register(dut, 32)
+    yield reset(dut)
+    yield Timer(runtime, units="ns")
     check_register(dut, expected_register)
