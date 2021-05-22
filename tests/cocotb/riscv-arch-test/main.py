@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 ##################################################################################################
 ##
 ## Copyright 2021 by Heqing Huang (feipenghhq@gamil.com)
@@ -6,11 +5,11 @@
 ## ~~~ Hardware in SpinalHDL ~~~
 ##
 ## Author: Heqing Huang
-## Date Created: 04/06/2021
+## Date Created: 05/22/2021
 ##
 ## ================== Description ==================
 ##
-## script to run all the instructions
+## Test using riscv-arch-test
 ##
 ##################################################################################################
 
@@ -21,89 +20,6 @@ import shutil
 import argparse
 
 #####################################
-# ISA
-#####################################
-
-# isa and its run time
-rv32ui_isa = [
-    ['add'   , 6000],
-    ['addi'  , 3000 ],
-    ['and'   , 10000],
-    ['andi'  , 3000 ],
-    ['auipc'  , 3000 ],
-    ['beq'  , 5000 ],
-    ['bge'  , 5000 ],
-    ['bgeu'  , 5000 ],
-    ['blt'  , 5000 ],
-    ['bltu'  , 5000 ],
-    ['bne'  , 5000 ],
-    #['fence_i'  , 3000 ],
-    ['jal'  , 3000 ],
-    ['jalr'  , 3000 ],
-    ['lb'   , 6000],
-    ['lbu'  , 6000 ],
-    ['lh'   , 6000],
-    ['lhu'  , 6000 ],
-    ['lui'  , 3000 ],
-    ['lw'  , 4000 ],
-    ['or'   , 10000],
-    ['ori'  , 3000 ],
-    ['sb'   , 6000],
-    ['sh'  , 10000 ],
-    ['simple', 2000 ],
-    ['sll'   , 10000],
-    ['slli'  , 3000 ],
-    ['slt'   , 6000],
-    ['slti'  , 3000 ],
-    ['sltu'   , 6000],
-    ['sltiu'  , 3000 ],
-    ['sra'   , 10000],
-    ['srai'  , 3000 ],
-    ['srl'   , 10000],
-    ['srli'  , 10000 ],
-    ['sub'   , 6000],
-    ['sw'  , 10000 ],
-    ['xor'   , 10000],
-    ['xori'  , 3000 ],
-]
-
-rv32mi_isa = [
-    ['mcsr', 3000],
-    ['ma_addr', 10000],
-	['illegal', 10000]
-]
-
-rv32si_isa = [
-    ['csr', 6000],
-    ['scall', 6000],
-]
-
-soc_isa = [
-    ['software_interrupt', 6000],
-    ['timer_interrupt', 6000],
-]
-
-rv32um_isa = [
-    ['mul', 10000],
-    ['mulh', 10000],
-    ['mulhsu', 10000],
-    ['mulhu', 10000],
-    ['div', 10000],
-    ['divu', 10000],
-    ['rem', 10000],
-    ['remu', 10000],
-]
-
-# architecture
-ARCH = {
-    'rv32ui': rv32ui_isa,
-    'rv32mi': rv32mi_isa,
-    'rv32si': rv32si_isa,
-    'rv32um': rv32um_isa,
-    'soc'   : soc_isa,
-}
-
-#####################################
 # Common variable
 #####################################
 
@@ -111,12 +27,19 @@ OUTPUT_DIR  = 'output'
 RESULT      = 'results.xml'
 SOC         = ['arty', 'de2']
 
+subprocess_run = subprocess.Popen("git rev-parse --show-toplevel", shell=True, stdout=subprocess.PIPE)
+subprocess_return = subprocess_run.stdout.read()
+REPO_ROOT = subprocess_return.decode().rstrip()
+TEST_SUITE_PATH = REPO_ROOT + f'/tests/riscv-arch-test/riscv-arch-test/riscv-test-suite/'
+
 #####################################
 # Utility function
 #####################################
 
+
+
 def cmdParser():
-    parser = argparse.ArgumentParser(description='Run all the tests')
+    parser = argparse.ArgumentParser(description='Run all the rv32m_i tests')
     parser.add_argument('-dump' , '-d', action='store_true', help='Dump waveform')
     parser.add_argument('-soc', type=str, required=True, nargs='?', help='The FPGA board')
     return parser.parse_args()
@@ -128,35 +51,42 @@ def cmdParser():
 class Run:
     def __init__(self, soc, dump):
         self.soc = soc
+        self.FILES = ['results.xml']
+        self.cmds = []
+        self.arch = 'rv32i_m'
+        self.isa = ['I', 'M', 'privilege']
+        self.tests = {}
         if dump:
             self.dump = 1
         else:
             self.dump = 0
-        self.FILES  = ['results.xml']
         if soc == 'arty' and dump:
             self.FILES.append('DUT_arty.vcd')
         if soc == 'de2' and dump:
             self.FILES.append('DUT_de2.vcd')
-        self.cmds = []
 
     def clear_all(self):
         """ Clear all the output """
-        if os.path.isdir(OUTPUT_DIR):
-            shutil.rmtree(OUTPUT_DIR)
-        os.system("make clean_all")
+        os.system(f"make clean_all; rm -rf {OUTPUT_DIR}")
 
-    def move_result(self, test, arch):
+    def move_result(self, test, isa):
         """ Move the test result to its own directory """
-        path = OUTPUT_DIR + '/' + self.soc + '/' + arch + '/' + test
-        if not os.path.isdir(path):
-            os.makedirs(path)
+        path = f'{OUTPUT_DIR}/{self.soc}/{self.arch}/{isa}/{test}'
         for file in self.FILES:
-            tgt = path + '/' + file
-            shutil.move(file, tgt)
+            target = f'{path}/{file}'
+            shutil.move(file, target)
 
-    def run_test(self, test, arch, runtime):
+    def get_all_tests(self):
+        """ Get all the tests for 1 isa """
+        for isa in self.isa:
+            path = f'{TEST_SUITE_PATH}/{self.arch}/{isa}/src'
+            files = os.listdir(path)
+            tests = list(map(lambda x:x[:-2], files))
+            self.tests[isa] = tests
+
+    def run_test(self, test):
         """ invoke makefile to run a test """
-        cmd = f'make TESTNAME={test} RISCVARCH={arch} RUNTIME={runtime} SOC={self.soc} DUMP={self.dump}'
+        cmd = f'make TESTNAME={test} SOC={self.soc} DUMP={self.dump}'
         self.cmds.append(cmd)
         os.system(cmd)
 
@@ -168,27 +98,31 @@ class Run:
             file.close()
             return not (search_word in contents)
 
-    def one_test(self, test, arch, runtime):
+    def one_test(self, test, isa):
         """ run all the process for one tests """
-        self.run_test(test, arch, runtime)
+        self.run_test(test)
         result = self.check_result()
-        self.move_result(test, arch)
+        try:
+            self.move_result(test, isa)
+        except FileNotFoundError:
+            pass
         return result
 
-    def one_arch_tests(self, arch):
-        """ run all tests in an arch """
-        tests = ARCH[arch]
+    def one_isa_tests(self, isa):
+        """ run all tests in an isa """
+        tests = self.tests[isa]
         results = {}
-        for test, runtime in tests:
-            result = self.one_test(test, arch, runtime)
+        for test in tests:
+            result = self.one_test(test, isa)
             results[test] = result
         return results
 
-    def all_arch_tests(self, archs):
+    def all_isa_tests(self):
+        """ run all isa tests """
         results = {}
-        for arch in archs.keys():
-            result = self.one_arch_tests(arch)
-            results[arch] = result
+        for isa in self.tests.keys():
+            result = self.one_isa_tests(isa)
+            results[isa] = result
         return results
 
     def print_result(self, results):
@@ -200,9 +134,10 @@ class Run:
         print("=======================================")
         print("              Tests Result             ")
         print("=======================================")
-        for arch in results.keys():
-            print("## ISA: " + arch + " ##")
-            tests = results[arch]
+        test_num = 0
+        for isa in results.keys():
+            print("## ISA: " + isa + " ##")
+            tests = results[isa]
             for test in tests.keys():
                 rst = translate[tests[test]]
                 final_pass = final_pass & tests[test]
@@ -211,18 +146,25 @@ class Run:
                     print()
                 else:
                     print('    <---- ' + test + ' ---->')
+                test_num += 1
         if final_pass:
             print("Congratulation!! All tests PASS")
         else:
             print("Some tests FAILED")
 
+    def clean_up(self):
+        """ Clean up files """
+        os.system("rm *.verilog")
+
     def all(self):
         """ Run all the test """
         self.clear_all()
-        results = self.all_arch_tests(ARCH)
+        self.get_all_tests()
+        results = self.all_isa_tests()
         for cmd in self.cmds:
             print(cmd)
         self.print_result(results)
+        self.clean_up()
 
 
 if __name__ == '__main__':
