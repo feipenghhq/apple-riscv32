@@ -43,6 +43,8 @@ null
 
 # generated files
 *.bin
+*.verilog
+*.dump
 
 # tests
 *__pycache__

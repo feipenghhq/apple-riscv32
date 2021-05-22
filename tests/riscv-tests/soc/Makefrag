@@ -1,0 +1,9 @@
+#=======================================================================
+# Makefrag for soc tests
+#-----------------------------------------------------------------------
+
+tests_name = \
+	software_interrupt \
+	timer_interrupt \
+
+soc_p_tests = $(addprefix soc-p-, $(tests_name))
