@@ -32,20 +32,18 @@ import scala.collection.mutable.ArrayBuffer
  * Configuration for this SoC
  */
 
-case class AppleSoCCfg_de2() {
+object AppleSoCCfg_de2 {
 
     val NAME = "AppleSoC"
 
     val CLIC_TIMER_WIDTH = 64
     val TIMER_TIMER_WIDTH = 64
 
-    val INSTR_RAM_ADDR_WIDTH = 15
     val INSTR_RAM_BASE = SoCAddrMap.QSPI0_BASE
-    val INSTR_RAM_TOP  = SoCAddrMap.QSPI0_BASE + 0x7FFF // 32KB
+    val INSTR_RAM_TOP  = SoCAddrMap.QSPI0_BASE + ((0x1 << SoCCfg.INSTR_RAM_ADDR_WIDTH)-1)
 
-    val DATA_RAM_ADDR_WIDTH  = 19
     val DATA_RAM_BASE = SoCAddrMap.DTIM_BASE
-    val DATA_RAM_TOP  = SoCAddrMap.DTIM_BASE + 0x7FFFF // 512KB
+    val DATA_RAM_TOP  = SoCAddrMap.DTIM_BASE + ((0x1 << SoCCfg.DATA_RAM_ADDR_WIDTH)-1)
 
     val cpuSibCfg = SibConfig(
         addressWidth = AppleRISCVCfg.XLEN,
@@ -55,14 +53,14 @@ case class AppleSoCCfg_de2() {
     )
 
     val imemSibCfg = SibConfig(
-      addressWidth = INSTR_RAM_ADDR_WIDTH,
+      addressWidth = SoCCfg.INSTR_RAM_ADDR_WIDTH,
       dataWidth    = AppleRISCVCfg.XLEN,
       addr_lo      = INSTR_RAM_BASE,
       addr_hi      = INSTR_RAM_TOP
     )
 
     val dmemSibCfg = SibConfig(
-      addressWidth = DATA_RAM_ADDR_WIDTH,
+      addressWidth = SoCCfg.DATA_RAM_ADDR_WIDTH,
       dataWidth    = AppleRISCVCfg.XLEN,
       addr_lo      = DATA_RAM_BASE,
       addr_hi      = DATA_RAM_TOP
@@ -79,7 +77,7 @@ case class AppleSoCCfg_de2() {
 
 case class AppleSoC_de2() extends Component {
 
-    val cfg = AppleSoCCfg_de2()
+    val cfg = AppleSoCCfg_de2
     val io = new Bundle {
         val clk         = in Bool
         val reset       = in Bool
@@ -264,10 +262,19 @@ case class AppleSoC_de2() extends Component {
 
 object AppleSoC_de2Main{
     def main(args: Array[String]) {
+        if (args.size > 0) {
+            SoCCfg.INSTR_RAM_ADDR_WIDTH = args(0).toInt
+            println("Generate with INSTR_RAM_ADDR_WIDTH = " + args(0))
+        } else {
+            SoCCfg.INSTR_RAM_ADDR_WIDTH = 15
+        }
+        // 512KB SRAM for data memory
+        SoCCfg.DATA_RAM_ADDR_WIDTH = 19
+        // CPU Configuration
         AppleRISCVCfg.USE_RV32M   = true
         AppleRISCVCfg.USE_BPU     = false
         CsrCfg.USE_MHPMC3         = true
         CsrCfg.USE_MHPMC4         = true
-        SpinalVerilog(InOutWrapper(AppleSoC_de2()))
+        SpinalVerilog(InOutWrapper(AppleSoC_de2())).printPruned()
     }
 }

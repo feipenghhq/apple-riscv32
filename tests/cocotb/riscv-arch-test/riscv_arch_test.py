@@ -66,16 +66,22 @@ def process_rom_file(isa, name):
 
 def get_memory_data(dut, addr):
     """ Get the memory data for a specific address"""
-
-    """Arty use Block RAM as Data memory"""
-    memory_inst = dut.DUT_AppleRISCVSoC.soc_dmem_inst
-    addr = addr >> 2 # From byte address to work address
+    addr = addr >> 2 # From byte address to word address
     data = 0
+    """Arty use Block RAM as Data memory"""
     if SoC == 'arty':
+        memory_inst = dut.DUT_AppleRISCVSoC.soc_dmem_inst
         data = memory_inst.ram_symbol0[addr].value
         data = data | (memory_inst.ram_symbol1[addr].value << 8)
         data = data | (memory_inst.ram_symbol2[addr].value << 16)
         data = data | (memory_inst.ram_symbol3[addr].value << 24)
+    """DE2 use SRAM as Data memory"""
+    if SoC == 'de2':
+        memory_inst = dut.IS61LV25616
+        data = memory_inst.RAM_0[addr].value
+        data = data | (memory_inst.RAM_1[addr].value << 8)
+        data = data | (memory_inst.RAM_0[addr+1].value << 16)
+        data = data | (memory_inst.RAM_1[addr+1].value << 24)
     return data
 
 BEGIN_SIGNATURE_PTR = 0x0
@@ -107,7 +113,7 @@ def check_signature(dut):
     """ Check the signature file agains reference """
     file_name = f'{outdir}/{name}/{name}.signature'
     ref_name = f'{REF_PATH}/{isa}/references/{name}.reference_output'
-    assert filecmp.cmp(file_name, ref_name), "Does not match with reference file"
+    assert filecmp.cmp(file_name, ref_name), "Signature does not match with reference file"
 
 
 ###############################
@@ -121,13 +127,14 @@ async def reset(dut, time=20):
     await FallingEdge(dut.clk)
     dut.reset = 0
 
-TIMER_DELTA = 5000
-TIME_OUT = TIMER_DELTA * 20
+TIMER_DELTA = 2000
+TIME_OUT = 500000
 
 @cocotb.test()
 def riscv_arch_test(dut):
     """ RISCV TEST """
     total_time = 0
+    timeout = False
     # process input information
     process_rom_file(isa, name)
 
@@ -137,11 +144,11 @@ def riscv_arch_test(dut):
     yield reset(dut)
     yield Timer(runtime, units="ns")
     total_time += runtime
-    while not check_finish(dut):
+    while not check_finish(dut) and not timeout:
         yield Timer(TIMER_DELTA, units="ns")
         total_time += TIMER_DELTA
         if total_time > TIME_OUT:
-            assert False, "TEST Timeout"
+            timeout = True
 
     # Check result
     dump_signature(dut)

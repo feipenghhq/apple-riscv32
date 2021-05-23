@@ -35,7 +35,7 @@ case class AppleRISCVDivider() extends Component {
     val div_stall_req = out Bool
   }
   noIoPrefix()
-  
+
   val divider_inst = MixedDivider(AppleRISCVCfg.XLEN)
   divider_inst.io.div_req  := io.div_req & io.stage_valid & ~divider_inst.io.div_done
   divider_inst.io.dividend := io.dividend
@@ -82,8 +82,8 @@ case class MixedDivider(WIDTH: Int) extends Component {
 
   // process the output signal
   val not_divide_by_zero = io.divisor =/= 0
-  val quotient_is_negative = RegNextWhen(io.signed & not_divide_by_zero & (io.dividend.msb ^ io.divisor.msb), io.div_req & io.div_ready)
-  val remainder_is_negative = RegNextWhen(io.signed & not_divide_by_zero & io.dividend.msb, io.div_req & io.div_ready)
+  val quotient_is_negative = RegNextWhen(io.signed & (io.dividend.msb ^ io.divisor.msb) & not_divide_by_zero, io.div_req & io.div_ready)
+  val remainder_is_negative = RegNextWhen(io.signed & io.dividend.msb, io.div_req & io.div_ready)
   io.quotient := divider.io.quotient.twoComplement(quotient_is_negative).asBits.resized
   io.remainder := divider.io.remainder.twoComplement(remainder_is_negative).asBits.resized
 }

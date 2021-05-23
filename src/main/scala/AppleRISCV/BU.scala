@@ -72,10 +72,6 @@ case class BU() extends Component {
     is(BranchOpcodeEnum.BGEU) {branch_result := bgeu}
     is(BranchOpcodeEnum.BLTU) {branch_result := !bgeu}
   }
-
-  io.is_branch_instr := io.stage_valid & (io.jal_op | io.jalr_op | io.br_op)
-  io.exc_instr_addr_ma := (io.take_branch  & (io.target_pc(1 downto 0) =/= 0))
-
   // ===================================
   // Branch Prediction Check:
   // ===================================
@@ -89,11 +85,15 @@ case class BU() extends Component {
 
   // We only need to take the branch/jump if we predict wrong
   // because we would been already jumped if we predict correct.
+  // we also don't want to take the branch if the address is misaligned
   val branch_taken_final = if (AppleRISCVCfg.USE_BPU) pred_wrong & io.is_branch_instr else io.branch_should_take & io.stage_valid
-  io.take_branch  := branch_taken_final
+  io.take_branch  := branch_taken_final & ~io.exc_instr_addr_ma
 
   // For the target PC address if the branch should take, then we should use the target pc address
   // if the branch should not take, then we should use the current pc + 4
   val target_pc_final = if (AppleRISCVCfg.USE_BPU) Mux(io.branch_should_take, real_target_pc, current_pc_plus4) else real_target_pc
   io.target_pc := target_pc_final
+
+  io.is_branch_instr := io.stage_valid & (io.jal_op | io.jalr_op | io.br_op)
+  io.exc_instr_addr_ma := (branch_taken_final  & (io.target_pc(1 downto 0) =/= 0))
 }

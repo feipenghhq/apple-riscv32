@@ -27,7 +27,7 @@ import spinal.lib.io._
 
 case class DE2_top() extends Component {
 
-  val cfg = AppleSoCCfg_de2()
+  val cfg = AppleSoCCfg_de2
   val io = new Bundle {
     val clk = in Bool
     val reset = in Bool
@@ -88,6 +88,8 @@ case class DE2_top() extends Component {
 
 object DE2_topMain{
   def main(args: Array[String]) {
+    // 512KB SRAM for data memory
+    SoCCfg.DATA_RAM_ADDR_WIDTH = 19
     // CPU Configuration
     AppleRISCVCfg.USE_RV32M   = true
     AppleRISCVCfg.USE_BPU     = false

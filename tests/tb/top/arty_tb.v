@@ -2,13 +2,19 @@ module arty_tb ();
 
 parameter DATA_RAM_ADDR_WIDTH = 16;
 parameter DATA_RAM_SIZE = 1 << (DATA_RAM_ADDR_WIDTH);
+
+// The riscv-arch-test need a larger instruction memory then the actual hardware
+`ifdef SIM_LARGE_INSTR_RAM
+parameter INSTR_RAM_ADDR_WIDTH = 21;
+`else
 parameter INSTR_RAM_ADDR_WIDTH = 16;
+`endif
 parameter INSTR_RAM_SIZE = 1 << (INSTR_RAM_ADDR_WIDTH);
 
 reg clk;
 reg reset;
 reg [7:0] data_ram [0:DATA_RAM_SIZE-1];
-reg [7:0] instr_ram [0:DATA_RAM_SIZE-1];
+reg [7:0] instr_ram [0:INSTR_RAM_SIZE-1];
 
 integer im = 0;
 integer dm = 0;

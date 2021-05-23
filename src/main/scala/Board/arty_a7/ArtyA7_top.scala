@@ -26,7 +26,7 @@ import spinal.lib.io._
 
 case class ArtyA7_top() extends Component {
 
-  val cfg = AppleSoCCfg_arty()
+  val cfg = AppleSoCCfg_arty
   val io = new Bundle {
     val clk   = in Bool
     val reset = in Bool

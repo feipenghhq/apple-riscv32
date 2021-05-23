@@ -45,12 +45,11 @@ MODULE = riscv_arch_test
 # -----------------------------------------
 SIM 		 ?=icarus
 DUMP	     ?=0
-COMPILE_ARGS =
-PLUSARGS 	 =
 
 ifeq ($(SIM),icarus)
 	COMPILE_ARGS += -DLOAD_INSTR_RAM
 	COMPILE_ARGS += -DLOAD_DATA_RAM
+	COMPILE_ARGS += -DSIM_LARGE_INSTR_RAM
 	ifeq ($(DUMP),1)
 		COMPILE_ARGS += -DDUMP_VCD
 	endif
@@ -77,11 +76,13 @@ export SoC 			= $(SOC)
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
+INSTR_RAM_ADDR_WIDTH = 21
+
 $(REPO_ROOT)/AppleSoC_arty.v:
-	cd $(REPO_ROOT) && sbt "runMain AppleRISCVSoC.AppleSoC_artyMain"
+	cd $(REPO_ROOT) && sbt "runMain AppleRISCVSoC.AppleSoC_artyMain $(INSTR_RAM_ADDR_WIDTH)"
 
 $(REPO_ROOT)/AppleSoC_de2.v:
-	cd $(REPO_ROOT) && sbt "runMain AppleRISCVSoC.AppleSoC_de2Main"
+	cd $(REPO_ROOT) && sbt "runMain AppleRISCVSoC.AppleSoC_de2Main  $(INSTR_RAM_ADDR_WIDTH)"
 
 clean_all:
 	@rm -rf __pycache__ *.pyc */__pycache__ */*.pyc *.log

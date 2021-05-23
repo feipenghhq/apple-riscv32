@@ -22,6 +22,12 @@ package AppleRISCVSoC
 import bus._
 import AppleRISCV._
 
+object SoCCfg {
+
+    var INSTR_RAM_ADDR_WIDTH = 16
+    var DATA_RAM_ADDR_WIDTH  = 16
+}
+
 // Trying to be compatible with Freedom E310
 object SoCAddrMap {
 

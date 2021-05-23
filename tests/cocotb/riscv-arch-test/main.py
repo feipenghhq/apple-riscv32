@@ -36,8 +36,6 @@ TEST_SUITE_PATH = REPO_ROOT + f'/tests/riscv-arch-test/riscv-arch-test/riscv-tes
 # Utility function
 #####################################
 
-
-
 def cmdParser():
     parser = argparse.ArgumentParser(description='Run all the rv32m_i tests')
     parser.add_argument('-dump' , '-d', action='store_true', help='Dump waveform')
@@ -84,9 +82,9 @@ class Run:
             tests = list(map(lambda x:x[:-2], files))
             self.tests[isa] = tests
 
-    def run_test(self, test):
+    def run_test(self, test, isa):
         """ invoke makefile to run a test """
-        cmd = f'make TESTNAME={test} SOC={self.soc} DUMP={self.dump}'
+        cmd = f'make RISCVISA={isa} TESTNAME={test} SOC={self.soc} DUMP={self.dump} '
         self.cmds.append(cmd)
         os.system(cmd)
 
@@ -100,7 +98,7 @@ class Run:
 
     def one_test(self, test, isa):
         """ run all the process for one tests """
-        self.run_test(test)
+        self.run_test(test, isa)
         result = self.check_result()
         try:
             self.move_result(test, isa)
