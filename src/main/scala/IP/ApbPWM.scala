@@ -8,29 +8,33 @@
 //
 // Author: Heqing Huang
 // Date Created: 05/13/2021
+// Revision 1: 05/23/2021
 //
 // ================== Description ==================
 //
 // PWM module
 //
+// Revision 1:
+//  - Use APB as bus interface
+//
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package AppleRISCVSoC.ip
+package IP
 
-import AppleRISCVSoC.bus._
 import spinal.core._
 import spinal.lib._
+import spinal.lib.bus.amba3.apb._
 
-case class PWM(cmpwidth: Int, sibCfg: SibConfig) extends Component {
+case class ApbPWM(cmpwidth: Int, apbCfg: Apb3Config) extends Component {
   require(cmpwidth <= 16)
   val io = new Bundle {
-    val pwm_sib     = slave(Sib(sibCfg))
-    val pwmcmpip    = out Bits(4 bits)
+    val apb = slave(Apb3(apbCfg))
+    val pwmcmpip = out Bits(4 bits)
     val pwmcmpgpio  = out Bits(4 bits)
   }
   noIoPrefix()
 
-  val busCtrl = SibSlaveFactory(io.pwm_sib)
+  val busCtrl = Apb3SlaveFactory(io.apb)
 
   // ====================================
   // Register

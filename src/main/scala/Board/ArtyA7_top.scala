@@ -15,7 +15,7 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package Board.arty_a7
+package Board
 
 import AppleRISCV._
 import AppleRISCVSoC._
@@ -25,14 +25,13 @@ import spinal.lib.com.uart.Uart
 import spinal.lib.io._
 
 case class ArtyA7_top() extends Component {
-
-  val cfg = AppleSoCCfg_arty
+  
   val io = new Bundle {
     val clk   = in Bool
     val reset = in Bool
     val uart0 = master(Uart())
-    val gpio0 = master(TriStateArray(12 bits))
-    val pwm0cmpgpio = out Bits(4 bits)
+    val gpio = master(TriStateArray(12 bits))
+    val pwm = out Bits(4 bits)
   }
   noIoPrefix()
 
@@ -42,7 +41,7 @@ case class ArtyA7_top() extends Component {
     mmcm.io.clk_in1 := io.clk
 
     //Create a new clock domain named 'core'
-    val coreClockDomain = ClockDomain.internal(
+    val socClockDomain = ClockDomain.internal(
       name = "soc",
       frequency = FixedFrequency(100 MHz),
       config = ClockDomainConfig(
@@ -52,20 +51,19 @@ case class ArtyA7_top() extends Component {
       )
     )
 
-    coreClockDomain.clock := mmcm.io.clk_out1
+    socClockDomain.clock := mmcm.io.clk_out1
     // button create low level when pressed
-    coreClockDomain.reset := ResetCtrl.asyncAssertSyncDeassert(~io.reset, coreClockDomain)
+    socClockDomain.reset := ResetCtrl.asyncAssertSyncDeassert(~io.reset, socClockDomain)
   }
 
-
-  val top = new ClockingArea(clkCtrl.coreClockDomain) {
-    val AppleSoC_arty_inst = AppleSoC_arty()
-    AppleSoC_arty_inst.io.clk    := clkCtrl.coreClockDomain.clock
-    AppleSoC_arty_inst.io.reset  := clkCtrl.coreClockDomain.reset
+  val top = new ClockingArea(clkCtrl.socClockDomain) {
+    val AppleSoC_arty_inst = ArtySoC()
+    AppleSoC_arty_inst.io.clk    := clkCtrl.socClockDomain.clock
+    AppleSoC_arty_inst.io.reset  := clkCtrl.socClockDomain.reset
     AppleSoC_arty_inst.io.uart0  <> io.uart0
-    AppleSoC_arty_inst.io.load_imem  :=  io.gpio0(8).read
-    if(cfg.USE_GPIO0) AppleSoC_arty_inst.io.gpio0      <> io.gpio0
-    if(cfg.USE_PWM0) AppleSoC_arty_inst.io.pwm0cmpgpio <> io.pwm0cmpgpio
+    AppleSoC_arty_inst.io.load_imem  :=  io.gpio(8).read
+    if(SoCCfg.USE_GPIO) AppleSoC_arty_inst.io.gpio <> io.gpio
+    if(SoCCfg.USE_PWM0) AppleSoC_arty_inst.io.pwm0 <> io.pwm
   }
 }
 

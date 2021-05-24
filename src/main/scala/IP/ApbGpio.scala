@@ -4,11 +4,12 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: Gpio
+// Module Name: ApbGpio
 //
 // Author: Heqing Huang
 // Date Created: 04/21/2021
-// Version V2: 05/10/2021
+// Version 1: 05/10/2021
+// Version 2: 05/23/2021
 //
 // ================== Description ==================
 //
@@ -35,13 +36,19 @@
 // 0x038    iof_en      ∗ HW I/O Function enable           N/A
 // 0x03C    iof_sel     HW I/O Function select             N/A
 //
+// Revision 1:
+//  - Match registers with SiFive Freedom E310 SoC
+//
+// Revision 2:
+//  - Use APB as bus interface
+//
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package AppleRISCVSoC.ip
+package IP
 
-import AppleRISCVSoC.bus._
 import spinal.core._
 import spinal.lib._
+import spinal.lib.bus.amba3.apb._
 import spinal.lib.io.TriStateArray
 
 
@@ -53,13 +60,7 @@ case class GpioCfg(
   val FALL_INT: Boolean = false,
   val GPIO_WIDTH: Int = 32)
 
-case class gpio_io(cfg: GpioCfg, sibCfg: SibConfig, useInt: Boolean = true) extends Bundle {
-  val gpio         = master(TriStateArray(cfg.GPIO_WIDTH bits))
-  val gpio_sib     = slave(Sib(sibCfg))
-  val gpio_irq     = out Bits(cfg.GPIO_WIDTH bits)
-}
-
-case class gpio_interrupt(busCtrl: SibSlaveFactory, width: Int, enable: Boolean, addr: Int,
+case class gpio_interrupt(busCtrl: Apb3SlaveFactory, width: Int, enable: Boolean, addr: Int,
                           intName: String, gpio_value: Vec[Bool], int_op: Bool => Bool) extends Area {
     // Interrupt Ctrl and Status Register
     val ie = if (enable) busCtrl.createReadAndWrite(Bits(width bits), addr    , 0, "GPIO" + intName + "Interrupt Enable") init 0 else null
@@ -72,14 +73,15 @@ case class gpio_interrupt(busCtrl: SibSlaveFactory, width: Int, enable: Boolean,
 }
 
 
-case class Gpio(cfg: GpioCfg, sibCfg: SibConfig) extends Component {
-
-  noIoPrefix()
-  val io        = gpio_io(cfg, sibCfg)
-  val busCtrl   = SibSlaveFactory(io.gpio_sib)
-
+case class Gpio(cfg: GpioCfg, apbCfg: Apb3Config) extends Component {
+  
+  val io = new Bundle {
+    val gpio     = master(TriStateArray(cfg.GPIO_WIDTH bits))
+    val apb      = slave(Apb3(apbCfg))
+    val gpio_irq = out Bits(cfg.GPIO_WIDTH bits)
+  }
+  val busCtrl = Apb3SlaveFactory(io.apb)
   val gpio_value = io.gpio.read.asBools
-
 
   // 0x000    value       pin value
   busCtrl.read(io.gpio.read, 0x0, 0, "GPIO pin Value")

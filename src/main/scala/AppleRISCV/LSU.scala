@@ -27,7 +27,7 @@ package AppleRISCV
 
 import spinal.core._
 import spinal.lib._
-import spinal.lib.bus.amba3.ahblite.AhbLite3
+import spinal.lib.bus.amba3.ahblite._
 import spinal.lib.bus.amba3.ahblite.AhbLite3._
 
 
@@ -44,7 +44,7 @@ case class LSU() extends Component {
     val rd_unsigned = in Bool
     val lsu_stall_req = out Bool
 
-    val dbus_ahb = master(AhbLite3(AppleRISCVCfg.dbusAhbCfg))
+    val dbus_ahb = master(AhbLite3Master(AppleRISCVCfg.dbusAhbCfg))
     
     // Exception
     val exc_ld_addr_ma = out Bool
@@ -123,6 +123,7 @@ case class LSU() extends Component {
   val rdata_hw0_sign_ext     = rdata_hw0.asSInt.resize(AppleRISCVCfg.XLEN).asBits
   val rdata_hw1_sign_ext     = rdata_hw1.asSInt.resize(AppleRISCVCfg.XLEN).asBits
 
+  io.rdata := io.dbus_ahb.HRDATA
   when(rw_byte_s1) {
     switch(byte_addr_s1) {
       is(0) {io.rdata := Mux(rd_unsigned_s1, rdata_byte0_unsign_ext, rdata_byte0_sign_ext)}
@@ -135,8 +136,6 @@ case class LSU() extends Component {
       is(0) {io.rdata := Mux(rd_unsigned_s1, rdata_hw0_unsign_ext, rdata_hw0_sign_ext)}
       is(2) {io.rdata := Mux(rd_unsigned_s1, rdata_hw1_unsign_ext, rdata_hw1_sign_ext)}
     }
-  }.otherwise {
-    io.rdata := io.dbus_ahb.HRDATA
   }
 
   // ========================================

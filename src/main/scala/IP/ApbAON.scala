@@ -8,31 +8,35 @@
 //
 // Author: Heqing Huang
 // Date Created: 05/10/2021
+// Version 1: 05/23/2021
 //
 // ================== Description ==================
 //
 // AON - Always-On Domain
 //
+// Revision 1:
+//  - Use APB as bus interface
+//
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package AppleRISCVSoC.ip
+package IP
 
-import AppleRISCVSoC.bus._
 import spinal.core._
 import spinal.lib._
+import spinal.lib.bus.amba3.apb._
 
-case class AON(sibCfg: SibConfig) extends Component {
+case class ApbAON(apbCfg: Apb3Config) extends Component {
 
   val io = new Bundle {
-    val aon_sib = slave(Sib(sibCfg))
+    val apb = slave(Apb3(apbCfg))
     // reset
     val uartdbgrst_req = in Bool
-    val corerst        = out Bool
+    val corerst = out Bool
     // interrupt
     val rtc_irq = out Bool
   }
   noIoPrefix()
-  val busCtrl = SibSlaveFactory(io.aon_sib)
+  val busCtrl = Apb3SlaveFactory(io.apb)
 
   // =============================================
   // Reset Unit

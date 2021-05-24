@@ -8,7 +8,8 @@
 //
 // Author: Heqing Huang
 // Date Created: 04/22/2021
-// Revision V2: 05/10/2021
+// Revision 1: 05/10/2021
+// Revision 2: 05/23/2021
 //
 // ================== Description ==================
 //
@@ -17,7 +18,6 @@
 // • 8-N-1 and 8-N-2 formats: 8 data bits, no parity bit, 1 start bit, 1 or 2 stop bits
 // • 8-entry transmit and receive FIFO buffers with programmable watermark interrupts
 // • 8x Rx oversampling (instead of the original 16 from Freedom)
-//
 //
 //  ---   UART Register Offsets ---
 // Offset   Name      Description
@@ -29,18 +29,25 @@
 // 0x014    ip        UART Interrupt pending
 // 0x018    div       Baud rate divisor
 //
+//
+// Revision 1:
+//  - Match registers with SiFive Freedom E310 SoC
+//
+// Revision 2:
+//  - Use APB as bus interface
+//
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package AppleRISCVSoC.ip
+package IP
 
-import AppleRISCVSoC.bus._
 import spinal.core._
 import spinal.lib._
+import spinal.lib.bus.amba3.apb._
 import spinal.lib.com.uart.UartParityType._
 import spinal.lib.com.uart.UartStopType._
 import spinal.lib.com.uart._
 
-object SibUartCfg {
+object ApbUartCfg {
   val uartCfg = UartCtrlGenerics(
     dataWidthMax      = 8,
     clockDividerWidth = 16,
@@ -52,30 +59,30 @@ object SibUartCfg {
   val txFifoDepth = 8
 }
 
-case class SibUart(sibCfg: SibConfig) extends Component {
+case class SibUart(apbCfg: Apb3Config) extends Component {
 
   noIoPrefix()
 
   val io = new Bundle {
     val en   = in Bool
-    val uart_sib = slave(Sib(sibCfg))
     val uart = master(Uart())
     val txwm = out Bool
     val rxwm = out Bool
+    val apb  = slave(Apb3(apbCfg))
   }
 
-  val busCtrl = SibSlaveFactory(io.uart_sib)
-  val uartCtrl = new UartCtrl(SibUartCfg.uartCfg)
+  val busCtrl = Apb3SlaveFactory(io.apb)
+  val uartCtrl = new UartCtrl(ApbUartCfg.uartCfg)
 
   // 0x000    txdata    Transmit data register
-  val dataType = Bits(SibUartCfg.uartCfg.dataWidthMax bits)
-  val (tx_data, tx_avail) = busCtrl.createAndDriveFlow(dataType, 0x000, 0).queueWithAvailability(SibUartCfg.txFifoDepth)
+  val dataType = Bits(ApbUartCfg.uartCfg.dataWidthMax bits)
+  val (tx_data, tx_avail) = busCtrl.createAndDriveFlow(dataType, 0x000, 0).queueWithAvailability(ApbUartCfg.txFifoDepth)
   tx_data >> uartCtrl.io.write
   val tx_full = (tx_avail === 0)
   busCtrl.read(tx_full, 0x0000, 31, "Transmit FIFO full")
 
   // 0x004    rxdata    Receive data register
-  val (rx_data, rx_occup) = uartCtrl.io.read.queueWithOccupancy(SibUartCfg.rxFifoDepth)
+  val (rx_data, rx_occup) = uartCtrl.io.read.queueWithOccupancy(ApbUartCfg.rxFifoDepth)
   busCtrl.readStreamNonBlocking(rx_data, address = 0x004, validBitOffset = 31, payloadBitOffset = 0)
 
   // 0x008    txctrl    Transmit control register
@@ -109,10 +116,9 @@ case class SibUart(sibCfg: SibConfig) extends Component {
   uartCtrl.io.config.clockDivider     := div
 
   // Uart RX/TX control
-  uartCtrl.io.writeBreak := ~(txen  | io.en)
+  uartCtrl.io.writeBreak := ~(txen | io.en)
   uartCtrl.io.uart.rxd   := io.uart.rxd | ~(rxen | io.en)
   io.uart.txd            := uartCtrl.io.uart.txd | ~(txen | io.en)
-  //io.uart <> uartCtrl.io.uart
 
   // Interrupt
   io.txwm := txwm_int

@@ -4,38 +4,43 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: Uart2Imem
+// Module Name: UartDebug
 //
 // Author: Heqing Huang
 // Date Created: 05/02/2021
+// Revision 1: 05/23/2021
 //
 // ================== Description ==================
 //
-// Uart to Instruction RAM. Used to Download Instructions into Instruction RAM
+// Uart Debug module.
+//
+// 1. Download Instruction into Instruction RAM.
+//
+// Revision 1:
+//  - Changed to Ahblite3 bus
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package AppleRISCVSoC.ip
+package IP
 
-import AppleRISCVSoC.bus.{Sib, SibConfig}
 import spinal.core._
+import spinal.lib._
+import spinal.lib.bus.amba3.ahblite.AhbLite3._
+import spinal.lib.bus.amba3.ahblite._
 import spinal.lib.com.uart.UartParityType._
 import spinal.lib.com.uart.UartStopType._
 import spinal.lib.com.uart._
 import spinal.lib.fsm._
-import spinal.lib.master
+
 
 /**
- * uart rx to imem logic.
- * Used to download instruction from uart to instruction mem
+ * uart debug logic.
  */
-case class Uart2Imem(sibConfig: SibConfig, baudrate: Int) extends Component {
-
-  noIoPrefix()
+case class UartDebug(ahblite3Cfg: AhbLite3Config, baudrate: Int) extends Component {
 
   val io = new Bundle {
     val uart = master(Uart())
-    val imem_dbg_sib = master(Sib(sibConfig))
+    val ahblite3 = master(AhbLite3Master(ahblite3Cfg))
     val load_imem = in Bool
     val downloading = out Bool
   }
@@ -59,10 +64,10 @@ case class Uart2Imem(sibConfig: SibConfig, baudrate: Int) extends Component {
   uart.io.config.frame.stop := ONE
   uart.io.config.frame.dataLength := 7
 
-
   val writeCtrl = new Area {
     // tie-off the write port as we are only receiving data from uart
     uart.io.write.valid := False
+    uart.io.writeBreak := False
     uart.io.write.payload := 0
   }
 
@@ -116,13 +121,18 @@ case class Uart2Imem(sibConfig: SibConfig, baudrate: Int) extends Component {
 
     val downloadCtrlFsm = new StateMachine {
 
-      val addr = Reg(UInt(sibConfig.addressWidth bits)) init 0
-      io.imem_dbg_sib.sel := False
-      io.imem_dbg_sib.enable := True
-      io.imem_dbg_sib.write := True
-      io.imem_dbg_sib.wdata := read4ByteFsm.readData
-      io.imem_dbg_sib.mask := B"1111"
-      io.imem_dbg_sib.addr := addr
+      val addr = Reg(UInt(ahblite3Cfg.addressWidth bits)) init 0
+      io.ahblite3.HTRANS := IDLE
+      io.ahblite3.HWRITE := True
+      io.ahblite3.HWDATA := read4ByteFsm.readData
+      io.ahblite3.HADDR  := addr
+      io.ahblite3.HMASTLOCK  := False
+      io.ahblite3.HPROT(0)  := False      // Opcode fetch
+      io.ahblite3.HPROT(1)  := True       // Privileged access (We only have machine mode right now)
+      io.ahblite3.HPROT(2)  := False      // None Buffer-able
+      io.ahblite3.HPROT(3)  := False      // None Cache-able
+      io.ahblite3.HSIZE     := B"3'b010"  // Word
+      io.ahblite3.HBURST    := B"3'b000"  // Single burst
       io.downloading := False
 
       val idle = new State with EntryPoint
@@ -138,7 +148,7 @@ case class Uart2Imem(sibConfig: SibConfig, baudrate: Int) extends Component {
       downloading.whenIsActive {
         io.downloading := True
         when(read4ByteFsm.captured && !stopSignal) {
-          io.imem_dbg_sib.sel := True
+          io.ahblite3.HTRANS := NONSEQ
           addr := addr + 4
         }
         when(read4ByteFsm.captured && stopSignal) {

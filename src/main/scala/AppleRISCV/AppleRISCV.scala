@@ -21,14 +21,13 @@
 
 package AppleRISCV
 
-import AppleRISCVSoC.bus._
 import spinal.core._
-import spinal.lib.bus.amba3.ahblite.AhbLite3
+import spinal.lib.bus.amba3.ahblite.AhbLite3Master
 import spinal.lib.master
 
 case class AppleRISCVIO() extends Bundle {
-    val ibus_ahb            = master(AhbLite3(AppleRISCVCfg.ibusAhbCfg))
-    val dbus_ahb            = master(AhbLite3(AppleRISCVCfg.dbusAhbCfg))
+    val ibus_ahb            = master(AhbLite3Master(AppleRISCVCfg.ibusAhbCfg))
+    val dbus_ahb            = master(AhbLite3Master(AppleRISCVCfg.dbusAhbCfg))
     val external_interrupt  = in Bool
     val timer_interrupt     = in Bool
     val software_interrupt  = in Bool

@@ -8,7 +8,8 @@
 //
 // Author: Heqing Huang
 // Date Created: 04/19/2021
-// Revision V2: 05/10/2021
+// Revision 1: 05/10/2021
+// Revision 2: 05/23/2021
 //
 // ================== Description ==================
 //
@@ -24,24 +25,30 @@
 // 0x0200BFF8   8B      RO      mtime Timer register
 // * Other address are all reserved
 //
+// Revision 1:
+//  - Match registers with SiFive Freedom E310 SoC
+//
+// Revision 2:
+//  - Use APB as bus interface
+//
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-package AppleRISCVSoC.ip
+package IP
 
-import AppleRISCVSoC.bus._
 import spinal.core._
 import spinal.lib._
+import spinal.lib.bus.amba3.apb._
 
-case class Clic(sibCfg: SibConfig) extends Component {
+case class ApbClic(apbCfg: Apb3Config) extends Component {
 
   val io = new Bundle {
-    val clic_sib     = slave(Sib(sibCfg))
+    val apb          = slave(Apb3(apbCfg))
     val software_irq = out Bool
     val timer_irq    = out Bool
   }
   noIoPrefix()
 
-  val busCtrl  = SibSlaveFactory(io.clic_sib)
+  val busCtrl  = Apb3SlaveFactory(io.apb)
 
   // 0x02000000   4B      RW      msip for hart 0 MSIP Registers
   val msip = busCtrl.createReadAndWrite(Bool, 0, 0, "msip for hart 0 MSIP Registers") init False

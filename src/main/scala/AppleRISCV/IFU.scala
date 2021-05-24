@@ -23,8 +23,8 @@ package AppleRISCV
 
 import spinal.core._
 import spinal.lib._
-import spinal.lib.bus.amba3.ahblite.AhbLite3
 import spinal.lib.bus.amba3.ahblite.AhbLite3._
+import spinal.lib.bus.amba3.ahblite._
 
 case class IFU() extends Component {
 
@@ -33,7 +33,7 @@ case class IFU() extends Component {
     val stage_enable = in Bool
     val pc = in UInt(AppleRISCVCfg.XLEN bits)
     val instruction = out Bits(AppleRISCVCfg.XLEN bits)
-    val ibus_ahb = master(AhbLite3(AppleRISCVCfg.ibusAhbCfg))
+    val ibus_ahb = master(AhbLite3Master(AppleRISCVCfg.ibusAhbCfg))
     val ifu_stall_req = out Bool
     val exc_instr_acc_flt = out Bool
   }
@@ -56,8 +56,9 @@ case class IFU() extends Component {
 
   // a shadow copy of the instruction for the stall
   val shadow = RegNextWhen(io.ibus_ahb.HRDATA, io.stage_enable)
+  val stage_enable_ff = RegNext(io.stage_enable) init False
 
-  io.instruction := io.stage_enable ? io.ibus_ahb.HRDATA | shadow
+  io.instruction := stage_enable_ff ? shadow | io.ibus_ahb.HRDATA
   io.ifu_stall_req := data_phase & ~io.ibus_ahb.HREADY
   io.exc_instr_acc_flt := data_phase & io.ibus_ahb.HREADY & io.ibus_ahb.HRESP
 }

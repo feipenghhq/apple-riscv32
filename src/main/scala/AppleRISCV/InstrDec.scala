@@ -122,6 +122,7 @@ case class InstrDec() extends Component {
 
     // default value
     io.rd_wr          := False
+    val rs1_rd        = Bool.noCombLoopCheck
     io.rs1_rd         := False
     io.rs2_rd         := False
     io.lsu_wr        := False
