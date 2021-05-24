@@ -23,11 +23,12 @@ package AppleRISCV
 
 import AppleRISCVSoC.bus._
 import spinal.core._
+import spinal.lib.bus.amba3.ahblite.AhbLite3
 import spinal.lib.master
 
 case class AppleRISCVIO() extends Bundle {
-    val imem_sib            = master(Sib(AppleRISCVCfg.sibCfg))
-    val dmem_sib            = master(Sib(AppleRISCVCfg.sibCfg))
+    val ibus_ahb            = master(AhbLite3(AppleRISCVCfg.ibusAhbCfg))
+    val dbus_ahb            = master(AhbLite3(AppleRISCVCfg.dbusAhbCfg))
     val external_interrupt  = in Bool
     val timer_interrupt     = in Bool
     val software_interrupt  = in Bool
@@ -45,7 +46,7 @@ case class AppleRISCV() extends Component {
     // IF Stage
     val pc_inst = PC()
     val bpu_inst = if(AppleRISCVCfg.USE_BPU) BPU() else null
-    val imem_ctrl_inst = ImemCtrl()
+    val ifu_inst = IFU()
 
     // ID Stage
     val instr_dec_inst = InstrDec()
@@ -58,7 +59,7 @@ case class AppleRISCV() extends Component {
     val branch_unit_inst = BU()
 
     // MEM Stage
-    val dmem_ctrl_isnt = DmemCtrl()
+    val lsu_isnt = LSU()
 
     // WB Stage
     val mcsr_inst       = MCSR()  // mcsr with hart 0
@@ -117,11 +118,11 @@ case class AppleRISCV() extends Component {
             bpu_inst.io.stage_valid         := if_stage_valid
         }
 
-        // ImemCtrl
-        io.imem_sib                     <> imem_ctrl_inst.io.imem_sib
-        imem_ctrl_inst.io.stage_valid   := if_stage_valid
-        imem_ctrl_inst.io.cpu2mc_addr   := pc_inst.io.pc_out
-        imem_ctrl_inst.io.cpu2mc_en     := ~if2id_pipe_stall
+        // IFU
+        io.ibus_ahb <> ifu_inst.io.ibus_ahb
+        ifu_inst.io.stage_valid := if_stage_valid
+        ifu_inst.io.pc := pc_inst.io.pc_out
+        ifu_inst.io.stage_enable := ~if2id_pipe_stall
     }
 
     // =========================
@@ -132,7 +133,7 @@ case class AppleRISCV() extends Component {
         val stage_valid = RegNextWhen(if2id_pipe_valid,  ~if2id_pipe_stall) init False
 
         // Exception
-        val exc_instr_acc_flt = RegNext(imem_ctrl_inst.io.exc_instr_acc_flt & if2id_pipe_valid) init False
+        val exc_instr_acc_flt = RegNext(ifu_inst.io.exc_instr_acc_flt & if2id_pipe_valid) init False
 
         // [Optional] BPU result
         val pred_take = if (AppleRISCVCfg.USE_BPU) RegNextWhen(bpu_inst.io.pred_take, ~if2id_pipe_stall) else null
@@ -145,7 +146,7 @@ case class AppleRISCV() extends Component {
 
     val IDStage = new Area {
         // InstrDec
-        instr_dec_inst.io.instr     := imem_ctrl_inst.io.mc2cpu_data
+        instr_dec_inst.io.instr     := ifu_inst.io.instruction
         instr_dec_inst.io.instr_vld := if2id.stage_valid
 
         // register file
@@ -177,8 +178,8 @@ case class AppleRISCV() extends Component {
         // control signal
         val stage_valid   = RegNextWhen(id2ex_pipe_valid,             ~id2ex_pipe_stall) init False
         val rd_wr         = RegNextWhen(instr_dec_inst.io.rd_wr,      ~id2ex_pipe_stall) init False
-        val dmem_wr       = RegNextWhen(instr_dec_inst.io.dmem_wr,    ~id2ex_pipe_stall) init False
-        val dmem_rd       = RegNextWhen(instr_dec_inst.io.dmem_rd,    ~id2ex_pipe_stall) init False
+        val lsu_wr       = RegNextWhen(instr_dec_inst.io.lsu_wr,    ~id2ex_pipe_stall) init False
+        val lsu_rd       = RegNextWhen(instr_dec_inst.io.lsu_rd,    ~id2ex_pipe_stall) init False
         val branch_op     = RegNextWhen(instr_dec_inst.io.branch_op,  ~id2ex_pipe_stall) init False
         val jal_op        = RegNextWhen(instr_dec_inst.io.jal_op,     ~id2ex_pipe_stall) init False
         val jalr_op       = RegNextWhen(instr_dec_inst.io.jalr_op,    ~id2ex_pipe_stall) init False
@@ -197,9 +198,9 @@ case class AppleRISCV() extends Component {
         val csr_sel        = RegNextWhen(instr_dec_inst.io.csr_sel,         ~id2ex_pipe_stall)
         val alu_opcode     = RegNextWhen(instr_dec_inst.io.alu_opcode,      ~id2ex_pipe_stall)
         val bu_opcode      = RegNextWhen(instr_dec_inst.io.bu_opcode,       ~id2ex_pipe_stall)
-        val dmem_ld_byte   = RegNextWhen(instr_dec_inst.io.dmem_ld_byte,    ~id2ex_pipe_stall)
-        val dmem_ld_hword  = RegNextWhen(instr_dec_inst.io.dmem_ld_hword,   ~id2ex_pipe_stall)
-        val dmem_ld_unsign = RegNextWhen(instr_dec_inst.io.dmem_ld_unsign,  ~id2ex_pipe_stall)
+        val lsu_ld_byte   = RegNextWhen(instr_dec_inst.io.lsu_ld_byte,    ~id2ex_pipe_stall)
+        val lsu_ld_hword  = RegNextWhen(instr_dec_inst.io.lsu_ld_hword,   ~id2ex_pipe_stall)
+        val lsu_ld_unsign = RegNextWhen(instr_dec_inst.io.lsu_ld_unsign,  ~id2ex_pipe_stall)
         val rs1_value      = RegNextWhen(IDStage.rs1Mux.rs1_final ,         ~id2ex_pipe_stall)
         val rs2_value      = RegNextWhen(regfile_inst.io.rs2_data_out,      ~id2ex_pipe_stall)
         val imm_value      = RegNextWhen(instr_dec_inst.io.imm_value ,      ~id2ex_pipe_stall)
@@ -209,7 +210,7 @@ case class AppleRISCV() extends Component {
         val rs2_dep_wb     = RegNextWhen(IDStage.rs2_dep_mem_rd,            ~id2ex_pipe_stall)
         val pc             = RegNextWhen(if2id.pc,                          ~id2ex_pipe_stall)
         val op2_sel_imm    = RegNextWhen(instr_dec_inst.io.op2_sel_imm ,    ~id2ex_pipe_stall)
-        val instr          = RegNextWhen(imem_ctrl_inst.io.mc2cpu_data ,    ~id2ex_pipe_stall)
+        val instr          = RegNextWhen(ifu_inst.io.instruction ,          ~id2ex_pipe_stall)
 
         // Exception
         val exc_instr_acc_flt = RegNext(if2id.exc_instr_acc_flt         & id2ex_pipe_valid) init False
@@ -288,14 +289,14 @@ case class AppleRISCV() extends Component {
         }
 
         // Memory Controller Input
-        dmem_ctrl_isnt.dmem_sib                  <> io.dmem_sib
-        dmem_ctrl_isnt.io.cpu2mc_wr              := id2ex.dmem_wr & ex_stage_valid
-        dmem_ctrl_isnt.io.cpu2mc_rd              := id2ex.dmem_rd & ex_stage_valid
-        dmem_ctrl_isnt.io.cpu2mc_addr            := id2ex.imm_value.asUInt + rs1_value_forwarded.asUInt // dedicated AG
-        dmem_ctrl_isnt.io.cpu2mc_data            := rs2_value_forwarded
-        dmem_ctrl_isnt.io.cpu2mc_mem_LS_byte     := id2ex.dmem_ld_byte
-        dmem_ctrl_isnt.io.cpu2mc_mem_LS_halfword := id2ex.dmem_ld_hword
-        dmem_ctrl_isnt.io.cpu2mc_mem_LW_unsigned := id2ex.dmem_ld_unsign
+        lsu_isnt.io.dbus_ahb    <> io.dbus_ahb
+        lsu_isnt.io.write       := id2ex.lsu_wr & ex_stage_valid
+        lsu_isnt.io.read        := id2ex.lsu_rd & ex_stage_valid
+        lsu_isnt.io.addr        := id2ex.imm_value.asUInt + rs1_value_forwarded.asUInt
+        lsu_isnt.io.wdata       := rs2_value_forwarded
+        lsu_isnt.io.rw_byte     := id2ex.lsu_ld_byte
+        lsu_isnt.io.rw_half     := id2ex.lsu_ld_hword
+        lsu_isnt.io.rd_unsigned := id2ex.lsu_ld_unsign
     }
 
     // =========================
@@ -330,10 +331,10 @@ case class AppleRISCV() extends Component {
         val exc_instr_acc_flt  = RegNext(id2ex.exc_instr_acc_flt               & ex2mem_pipe_valid) init False
         val exc_ill_instr      = RegNext(id2ex.exc_ill_instr                   & ex2mem_pipe_valid) init False
         val exc_instr_addr_ma  = RegNext(branch_unit_inst.io.exc_instr_addr_ma & ex2mem_pipe_valid) init False
-        val exc_ld_addr_ma     = RegNext(dmem_ctrl_isnt.io.exc_ld_addr_ma      & ex2mem_pipe_valid) init False
-        val exc_sd_addr_ma     = RegNext(dmem_ctrl_isnt.io.exc_sd_addr_ma      & ex2mem_pipe_valid) init False
-        val exc_ld_acc_flt     = RegNext(dmem_ctrl_isnt.io.exc_ld_acc_flt      & ex2mem_pipe_valid) init False
-        val exc_sd_acc_flt     = RegNext(dmem_ctrl_isnt.io.exc_sd_acc_flt      & ex2mem_pipe_valid) init False
+        val exc_ld_addr_ma     = RegNext(lsu_isnt.io.exc_ld_addr_ma      & ex2mem_pipe_valid) init False
+        val exc_sd_addr_ma     = RegNext(lsu_isnt.io.exc_sd_addr_ma      & ex2mem_pipe_valid) init False
+        val exc_ld_acc_flt     = RegNext(lsu_isnt.io.exc_ld_acc_flt      & ex2mem_pipe_valid) init False
+        val exc_sd_acc_flt     = RegNext(lsu_isnt.io.exc_sd_acc_flt      & ex2mem_pipe_valid) init False
     }
 
     // =========================
@@ -379,7 +380,7 @@ case class AppleRISCV() extends Component {
         trap_ctrl_inst.io.branch_target_pc   := ex2mem.target_pc
         trap_ctrl_inst.io.stage_valid        := ex2mem.stage_valid // no one should flush mem stage right now
         trap_ctrl_inst.io.cur_instr          := ex2mem.instr
-        trap_ctrl_inst.io.cur_dmem_addr      := ex2mem.alu_out.asUInt
+        trap_ctrl_inst.io.cur_lsu_addr       := ex2mem.alu_out.asUInt
         trap_ctrl_inst.io.mtvec              := mcsr_inst.io.mtvec
         trap_ctrl_inst.io.mepc               := mcsr_inst.io.mepc
         trap_ctrl_inst.io.mie_meie           := mcsr_inst.io.mie_meie
@@ -392,7 +393,7 @@ case class AppleRISCV() extends Component {
         // Select data between memory, alu, mul, div, and csr
         val rd_wdata = ex2mem.alu_out.clone()
         switch(ex2mem.rd_sel){
-            is(RdSelEnum.MEM) {rd_wdata := dmem_ctrl_isnt.io.mc2cpu_data}
+            is(RdSelEnum.MEM) {rd_wdata := lsu_isnt.io.rdata}
             is(RdSelEnum.CSR) {rd_wdata := mcsr_inst.io.csr_bus.rdata}
             default {rd_wdata := ex2mem.rd_wdata}
         }
@@ -443,7 +444,7 @@ case class AppleRISCV() extends Component {
     val HDU = new Area {
         // Control Hazard Detection
         // Load dependency on ID
-        val id_stall_on_load_dep = (IDStage.rs1_dep_ex_rd | IDStage.rs2_dep_ex_rd) & id2ex.dmem_rd & ex_stage_valid
+        val id_stall_on_load_dep = (IDStage.rs1_dep_ex_rd | IDStage.rs2_dep_ex_rd) & id2ex.lsu_rd & ex_stage_valid
         // csr dependency
         val id_rs1_depends_on_csr = (Bypassing.id_rs1_match_ex_rd  & id2ex.csr_rd  & ex_stage_valid) |
                                     (Bypassing.id_rs1_match_mem_rd & ex2mem.csr_rd & mem_stage_valid)
@@ -457,7 +458,7 @@ case class AppleRISCV() extends Component {
         // This is to handle the situation when we have back-to-back memory read access request.
         // However, there is one exception, that is when the address calculation or write data depends on the data in WB stage
         // In this case, we should stall the MEM/WB stage and once the memory access complete, we should release MEM/WB stall
-        val mem_stall_on_addr_dep = dmem_ctrl_isnt.io.dmem_stall_req &
+        val mem_stall_on_addr_dep = lsu_isnt.io.lsu_stall_req &
           (id2ex.rs1_dep_mem | id2ex.rs1_dep_wb | id2ex.rs2_dep_mem | id2ex.rs2_dep_wb )
 
         // ================================
@@ -471,14 +472,14 @@ case class AppleRISCV() extends Component {
         val mem_flush = trap_ctrl_inst.io.exc_flush
 
         // Stall request
-        val if2id_stall  = id_stall_on_load_dep | id_stall_on_csr_dep | dmem_ctrl_isnt.io.dmem_stall_req | muldiv_stall_req
-        val id2ex_stall  = dmem_ctrl_isnt.io.dmem_stall_req | muldiv_stall_req
+        val if2id_stall  = id_stall_on_load_dep | id_stall_on_csr_dep | lsu_isnt.io.lsu_stall_req | muldiv_stall_req
+        val id2ex_stall  = lsu_isnt.io.lsu_stall_req | muldiv_stall_req
         val ex2mem_stall = mem_stall_on_addr_dep
         val mem2wb_stall = mem_stall_on_addr_dep
 
         // Insert NOP
         val id2ex_nop = id_stall_on_csr_dep | id_stall_on_load_dep
-        val ex2mem_nop = muldiv_stall_req | dmem_ctrl_isnt.io.dmem_stall_req
+        val ex2mem_nop = muldiv_stall_req | lsu_isnt.io.lsu_stall_req
 
         // Final Stage valid signal
         if_stage_valid  := ~if_flush

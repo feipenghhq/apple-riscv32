@@ -36,11 +36,11 @@ case class InstrDecIO() extends Bundle {
     val rs2_rd = out Bool
 
     // Memory control signal
-    val dmem_wr         = out Bool
-    val dmem_rd         = out Bool
-    val dmem_ld_byte    = out Bool         // load/store byte
-    val dmem_ld_hword   = out Bool         // load/store half word
-    val dmem_ld_unsign  = out Bool         // load unsigned
+    val lsu_wr         = out Bool
+    val lsu_rd         = out Bool
+    val lsu_ld_byte    = out Bool         // load/store byte
+    val lsu_ld_hword   = out Bool         // load/store half word
+    val lsu_ld_unsign  = out Bool         // load unsigned
 
     // ALU control
     val alu_opcode = out(AluOpcodeEnum())
@@ -124,11 +124,11 @@ case class InstrDec() extends Component {
     io.rd_wr          := False
     io.rs1_rd         := False
     io.rs2_rd         := False
-    io.dmem_wr        := False
-    io.dmem_rd        := False
-    io.dmem_ld_byte   := False
-    io.dmem_ld_hword  := False
-    io.dmem_ld_unsign := False
+    io.lsu_wr        := False
+    io.lsu_rd        := False
+    io.lsu_ld_byte   := False
+    io.lsu_ld_hword  := False
+    io.lsu_ld_unsign := False
     io.alu_opcode     := AluOpcodeEnum.AND
     io.bu_opcode      := BranchOpcodeEnum.BEQ
     io.rd_sel         := RdSelEnum.ALU
@@ -204,23 +204,23 @@ case class InstrDec() extends Component {
         // Memory Load Instruction
         is(InstrDefine.OP_MEM_LOAD) {
             io.op2_sel_imm := True
-            io.dmem_rd     := True
+            io.lsu_rd     := True
             io.rs1_rd      := True
             io.rd_wr       := rd_isnot_x0
             io.alu_opcode  := AluOpcodeEnum.ADD
             io.rd_sel      := RdSelEnum.MEM
             alu_imm_type   := AluImmTypeE.ITYPE
             switch(func3) {
-                is(InstrDefine.LW_F3_LB) {io.dmem_ld_byte := True}
-                is(InstrDefine.LW_F3_LH) {io.dmem_ld_hword := True}
+                is(InstrDefine.LW_F3_LB) {io.lsu_ld_byte := True}
+                is(InstrDefine.LW_F3_LH) {io.lsu_ld_hword := True}
                 is(InstrDefine.LW_F3_LW) {}
                 is(InstrDefine.LW_F3_LBU) {
-                    io.dmem_ld_byte := True
-                    io.dmem_ld_unsign := True
+                    io.lsu_ld_byte := True
+                    io.lsu_ld_unsign := True
                 }
                 is(InstrDefine.LW_F3_LHU) {
-                    io.dmem_ld_hword := True
-                    io.dmem_ld_unsign := True
+                    io.lsu_ld_hword := True
+                    io.lsu_ld_unsign := True
                 }
                 default {ill_instr := True}
             }
@@ -232,11 +232,11 @@ case class InstrDec() extends Component {
             io.op2_sel_imm  := True
             io.rs1_rd       := True
             io.rs2_rd       := True
-            io.dmem_wr      := True
+            io.lsu_wr      := True
             alu_imm_type    := AluImmTypeE.STYPE
             switch(func3) {
-                is(InstrDefine.SW_F3_SB) {io.dmem_ld_byte := True}
-                is(InstrDefine.SW_F3_SH) {io.dmem_ld_hword := True}
+                is(InstrDefine.SW_F3_SB) {io.lsu_ld_byte := True}
+                is(InstrDefine.SW_F3_SH) {io.lsu_ld_hword := True}
                 is(InstrDefine.SW_F3_SW) {}
                 default {ill_instr := True}
             }

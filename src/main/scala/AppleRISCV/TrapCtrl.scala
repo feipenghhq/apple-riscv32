@@ -50,7 +50,7 @@ case class trap_ctrl_io() extends Bundle {
   val stage_valid    = in Bool
   val cur_pc         = in UInt(AppleRISCVCfg.XLEN bits)
   val cur_instr      = in Bits(AppleRISCVCfg.XLEN bits)
-  val cur_dmem_addr  = in UInt(AppleRISCVCfg.XLEN bits)
+  val cur_lsu_addr  = in UInt(AppleRISCVCfg.XLEN bits)
   val is_branch_instr  = in Bool
   val branch_target_pc = in UInt(AppleRISCVCfg.XLEN bits)
 
@@ -85,9 +85,9 @@ case class TrapCtrl() extends Component {
   val io = trap_ctrl_io()
 
   // == exception control == //
-  val dmem_addr_exception = io.exc_ld_addr_ma | io.exc_sd_addr_ma
-  val exception           = dmem_addr_exception | io.exc_ill_instr | io.exc_instr_addr_ma
-  val dmem_addr_extended  = io.cur_dmem_addr.resize(AppleRISCVCfg.MXLEN)
+  val lsu_addr_exception = io.exc_ld_addr_ma | io.exc_sd_addr_ma
+  val exception           = lsu_addr_exception | io.exc_ill_instr | io.exc_instr_addr_ma
+  val lsu_addr_extended  = io.cur_lsu_addr.resize(AppleRISCVCfg.MXLEN)
 
   // == interrupt control == //
   val external_interrupt_masked = io.external_interrupt & io.mstatus_mie & io.mie_meie
@@ -126,7 +126,7 @@ case class TrapCtrl() extends Component {
   io.mtrap_exit   := io.mret
 
   io.mtrap_mcause := interrupt ## trap_code
-  io.mtrap_mtval  := Mux(io.exc_ill_instr, io.cur_instr, dmem_addr_extended.asBits)
+  io.mtrap_mtval  := Mux(io.exc_ill_instr, io.cur_instr, lsu_addr_extended.asBits)
 
   val interrupt_mepc = io.is_branch_instr ? io.branch_target_pc | (io.cur_pc + 4)
   io.mtrap_mepc   := interrupt ? interrupt_mepc.asBits | io.cur_pc.asBits

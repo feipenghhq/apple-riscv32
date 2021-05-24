@@ -17,8 +17,8 @@
 
 package AppleRISCV
 
-import AppleRISCVSoC.bus._
 import spinal.core._
+import spinal.lib.bus.amba3.ahblite.AhbLite3Config
 
 object AppleRISCVCfg {
 
@@ -32,7 +32,12 @@ object AppleRISCVCfg {
 
     val PC_RESET_VAL    = 0x20000000L
 
-    val sibCfg = SibConfig(
+    val ibusAhbCfg = AhbLite3Config(
+        addressWidth = XLEN,
+        dataWidth = XLEN
+    )
+
+    val dbusAhbCfg = AhbLite3Config(
         addressWidth = XLEN,
         dataWidth = XLEN
     )

@@ -118,8 +118,8 @@ case class AppleSoC_arty() extends Component {
 
         // Fixed Component
 
-        val imem_inst = BlockRAM(usePort2 = true, cfg.imemSibCfg, cfg.imemSibCfg)
-        val dmem_inst = BlockRAM(usePort2 = false, cfg.dmemSibCfg)
+        val imem_inst = Bram_2rw(cfg.imemSibCfg)
+        val dmem_inst = Bram_1rw(cfg.dmemSibCfg)
         val clic_inst = Clic(PeripSibCfg.clicSibCfg)
         val plic_inst = Plic(PeripSibCfg.plicSibCfg)
         val uart2imem_inst = ip.Uart2Imem(cfg.imemSibCfg, cfg.uartDbgBaudRate)
