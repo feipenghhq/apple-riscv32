@@ -36,7 +36,6 @@ case class ArtySoC() extends Component {
         val gpio        = if (SoCCfg.USE_GPIO) master(TriStateArray(12 bits)) else null
         val pwm0        = if (SoCCfg.USE_PWM0) out Bits(4 bits) else null
     }
-    noIoPrefix()
 
     val cpu_rst = Bool
     val perip_rst = Bool
@@ -57,6 +56,8 @@ case class ArtySoC() extends Component {
         val cpu_rst_area = new ResetArea(cpu_rst, true) {
             val core = AppleRISCV()
             core.io.debug_interrupt := False
+            core.setName("core")
+            newReset.setName("io_core_rst")
         }
 
         val uartdbg = UartDebug(AhbLite3Cfg.ahblite3Cfg, SoCCfg.uartDbgBaudRate)

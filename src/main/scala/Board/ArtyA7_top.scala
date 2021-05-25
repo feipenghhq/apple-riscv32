@@ -31,7 +31,7 @@ case class ArtyA7_top() extends Component {
     val reset = in Bool
     val uart0 = master(Uart())
     val gpio = master(TriStateArray(12 bits))
-    val pwm = out Bits(4 bits)
+    val pwm0 = out Bits(4 bits)
   }
   noIoPrefix()
 
@@ -57,13 +57,13 @@ case class ArtyA7_top() extends Component {
   }
 
   val top = new ClockingArea(clkCtrl.socClockDomain) {
-    val AppleSoC_arty_inst = ArtySoC()
-    AppleSoC_arty_inst.io.clk    := clkCtrl.socClockDomain.clock
-    AppleSoC_arty_inst.io.reset  := clkCtrl.socClockDomain.reset
-    AppleSoC_arty_inst.io.uart0  <> io.uart0
-    AppleSoC_arty_inst.io.load_imem  :=  io.gpio(8).read
-    if(SoCCfg.USE_GPIO) AppleSoC_arty_inst.io.gpio <> io.gpio
-    if(SoCCfg.USE_PWM0) AppleSoC_arty_inst.io.pwm0 <> io.pwm
+    val artySoC = ArtySoC()
+    artySoC.io.clk    := clkCtrl.socClockDomain.clock
+    artySoC.io.reset  := clkCtrl.socClockDomain.reset
+    artySoC.io.uart0  <> io.uart0
+    artySoC.io.load_imem  :=  io.gpio(8).read
+    if(SoCCfg.USE_GPIO) artySoC.io.gpio <> io.gpio
+    if(SoCCfg.USE_PWM0) artySoC.io.pwm0 <> io.pwm0
   }
 }
 

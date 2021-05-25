@@ -35,18 +35,26 @@ trait Ahblite3RamGeneric {
 
   // define the memory port using spinal mem
   def port_generic(ahblite3Cfg: AhbLite3Config, p: AhbLite3, ram: Mem[Bits]): Area = new Area {
-    val word_addr = p.HADDR(ahblite3Cfg.addressWidth-1 downto 2)
-    p.HREADYOUT := True
-    p.HRESP := False  // 0 means OK
+
+    val wordRange = ahblite3Cfg.addressWidth-1 downto log2Up(ahblite3Cfg.bytePerWord)
+
+    val word_addr = p.HADDR(wordRange)
+    val pending_write = RegNext(p.HTRANS(1) & p.HWRITE & p.HSEL)
+    val pending_addr = RegNext(word_addr)
+    val pending_mask = RegNext(p.writeMask())
+
     ram.write(
-      address = word_addr,
-      data = p.HWDATA,
-      enable = p.HTRANS(1) & p.HWRITE,
-      mask = p.writeMask()
+      address = pending_addr,
+      data    = p.HWDATA,
+      enable  = pending_write,
+      mask    = pending_mask
     )
     p.HRDATA := ram.readSync(
       address = word_addr
     )
+    // avoid read after write same address hazard
+    p.HREADYOUT := !(p.HSEL && p.HTRANS(1) && !p.HWRITE && pending_write && p.HADDR(wordRange) === pending_addr)
+    p.HRESP     := False  // 0 means OK
   }
 }
 

@@ -117,7 +117,7 @@ case class Peripherals(cpu_rst: Bool,
 
   // UART0
   if (SoCCfg.USE_UART0) {
-    val uart0 = SibUart(ApbCfg.uart0ApbCfg())
+    val uart0 = ApbUart(ApbCfg.uart0ApbCfg())
     apbDecList.append((uart0.io.apb, SoCAddrMapping.UART0.sizeMapping()))
     uart0.io.en := uart_en
     uart0.io.uart <> _uart0

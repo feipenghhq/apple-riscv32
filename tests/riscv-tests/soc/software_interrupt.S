@@ -37,14 +37,15 @@ RVTEST_CODE_BEGIN
 
 
   # check if the interrupt has changed register value
-  ori t1, x0, 0xf
-  beq a0, t1, pass
+  ori s11, x0, 0xf
+  beq a0, s11, pass
 
   j fail
 
 TEST_PASSFAIL
 
   .global mtvec_handler
+  # We should not use s11 as destination register sicne we did not save the context
   mtvec_handler:
     # check mip
     ori t1, x0, 0x8

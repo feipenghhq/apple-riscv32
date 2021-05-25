@@ -187,7 +187,7 @@ case class AppleRISCV() extends Component {
         val ebreak        = RegNextWhen(instr_dec_inst.io.ebreak,     ~id2ex_pipe_stall) init False
         val csr_wr        = RegNextWhen(instr_dec_inst.io.csr_wr,     ~id2ex_pipe_stall) init False
         val csr_rd        = RegNextWhen(instr_dec_inst.io.csr_rd,     ~id2ex_pipe_stall) init False
-    
+
         // Payload
         val rd_idx         = RegNextWhen(instr_dec_inst.io.rd_idx ,         ~id2ex_pipe_stall)
         val rs1_idx        = RegNextWhen(instr_dec_inst.io.rs1_idx,         ~id2ex_pipe_stall)

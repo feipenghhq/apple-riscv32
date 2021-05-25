@@ -32,7 +32,7 @@ def process_rom_file(name):
     """ Split the text and data section for the generated verilog file """
 
     # Link the instruction rom file to the tb directory
-    SRC_FILE = REPO_ROOT + f'/tests/riscv-tests/generated/{name}.verilog'
+    SRC_FILE = REPO_ROOT + f'/tests/dedicated-tests/generated/{name}.verilog'
     ROM_FILE = os.getcwd() + f'/{name}.verilog' # need to link the instruction ram file the the current directory
     if os.path.isfile(ROM_FILE):
         os.remove(ROM_FILE)
@@ -61,10 +61,10 @@ def check_finish(dut):
     reg2 = dut.DUT_AppleRISCVSoC.core.regfile_inst.ram[2].value.integer
     reg3 = dut.DUT_AppleRISCVSoC.core.regfile_inst.ram[3].value.integer
     if reg1 == 1 and reg2 == 2 and reg3 == 3:
-        return (True, True)
+        return True, True
     if reg1 == 0xf and reg2 == 0xf and reg3 == 0xf:
-        return (True, False)
-    return (False, False)
+        return True, False
+    return False, False
 
 
 ###############################
@@ -82,13 +82,13 @@ async def reset(dut, time=20):
     dut.io_reset = 0
 
 @cocotb.test()
-def riscv_tests(dut):
-    """ RISCV TEST """
+def dedicated_test(dut):
+    """ Dedicated RISCV TEST """
     runtime = int(os.getenv('RUN_TIME'))
     arch = os.getenv('RISCV_ARCH')
     mode = os.getenv('RISCV_MODE')
     name = os.getenv('TEST_NAME')
-    test = f'{arch}-{mode}-{name}'
+    test = name
     total_time = 0
     timeout = False
     process_rom_file(test)

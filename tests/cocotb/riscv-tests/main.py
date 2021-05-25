@@ -26,73 +26,13 @@ import argparse
 
 # isa and its run time
 rv32ui_isa = [
-    ['add'   , 6000],
-    ['addi'  , 3000 ],
-    ['and'   , 10000],
-    ['andi'  , 3000 ],
-    ['auipc'  , 3000 ],
-    ['beq'  , 5000 ],
-    ['bge'  , 5000 ],
-    ['bgeu'  , 5000 ],
-    ['blt'  , 5000 ],
-    ['bltu'  , 5000 ],
-    ['bne'  , 5000 ],
-    #['fence_i'  , 3000 ],
-    ['jal'  , 3000 ],
-    ['jalr'  , 3000 ],
-    ['lb'   , 6000],
-    ['lbu'  , 6000 ],
-    ['lh'   , 6000],
-    ['lhu'  , 6000 ],
-    ['lui'  , 3000 ],
-    ['lw'  , 4000 ],
-    ['or'   , 10000],
-    ['ori'  , 3000 ],
-    ['sb'   , 6000],
-    ['sh'  , 10000 ],
-    ['simple', 2000 ],
-    ['sll'   , 10000],
-    ['slli'  , 3000 ],
-    ['slt'   , 6000],
-    ['slti'  , 3000 ],
-    ['sltu'   , 6000],
-    ['sltiu'  , 3000 ],
-    ['sra'   , 10000],
-    ['srai'  , 3000 ],
-    ['srl'   , 10000],
-    ['srli'  , 10000 ],
-    ['sub'   , 6000],
-    ['sw'  , 10000 ],
-    ['xor'   , 10000],
-    ['xori'  , 3000 ],
-]
-
-rv32mi_isa = [
-    ['mcsr', 3000],
-    ['ma_addr', 10000],
-	['illegal', 10000]
-]
-
-rv32si_isa = [
-    ['csr', 6000],
-    ['scall', 6000],
-]
-
-soc_isa = [
-    ['software_interrupt', 6000],
-    ['timer_interrupt', 6000],
-]
-
-rv32um_isa = [
-    ['mul', 10000],
-    ['mulh', 10000],
-    ['mulhsu', 10000],
-    ['mulhu', 10000],
-    ['div', 10000],
-    ['divu', 10000],
-    ['rem', 10000],
-    ['remu', 10000],
-]
+    'add', 'addi', 'and', 'andi', 'auipc', 'beq', 'bge', 'bgeu', 'blt', 'bltu', 'bne', 'jal', 'jalr',
+    'lb', 'lbu', 'lh', 'lhu', 'lui', 'lw', 'or', 'ori', 'sb', 'sh', 'simple', 'sll', 'slli', 'slt',
+    'slti', 'sltu', 'sltiu', 'sra', 'srai', 'srl', 'srli', 'sub', 'sw', 'xor', 'xori']
+rv32mi_isa = ['mcsr', 'ma_addr', 'illegal',]
+rv32si_isa = ['csr', 'scall',]
+rv32um_isa = ['mul', 'mulh', 'mulhsu', 'mulhu', 'div', 'divu', 'rem', 'remu',]
+soc_isa = ['software_interrupt', 'timer_interrupt',]
 
 # architecture
 ARCH = {
@@ -154,9 +94,9 @@ class Run:
             tgt = path + '/' + file
             shutil.move(file, tgt)
 
-    def run_test(self, test, arch, runtime):
+    def run_test(self, test, arch):
         """ invoke makefile to run a test """
-        cmd = f'make TESTNAME={test} RISCVARCH={arch} RUNTIME={runtime} SOC={self.soc} DUMP={self.dump}'
+        cmd = f'make TESTNAME={test} RISCVARCH={arch} SOC={self.soc} DUMP={self.dump}'
         self.cmds.append(cmd)
         os.system(cmd)
 
@@ -168,9 +108,9 @@ class Run:
             file.close()
             return not (search_word in contents)
 
-    def one_test(self, test, arch, runtime):
+    def one_test(self, test, arch):
         """ run all the process for one tests """
-        self.run_test(test, arch, runtime)
+        self.run_test(test, arch)
         result = self.check_result()
         self.move_result(test, arch)
         return result
@@ -179,8 +119,8 @@ class Run:
         """ run all tests in an arch """
         tests = ARCH[arch]
         results = {}
-        for test, runtime in tests:
-            result = self.one_test(test, arch, runtime)
+        for test in tests:
+            result = self.one_test(test, arch)
             results[test] = result
         return results
 

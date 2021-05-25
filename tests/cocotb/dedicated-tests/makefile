@@ -38,7 +38,7 @@ endif
 VERILOG_SOURCES += $(TB_FILES)
 VERILOG_SOURCES += $(RTL_FILES)
 
-MODULE = riscv_tests
+MODULE = dedicated_test
 
 # -----------------------------------------
 # Simulator config
@@ -66,9 +66,7 @@ endif
 # Test config
 # -----------------------------------------
 TESTNAME 	?=
-RISCVARCH 	?= rv32ui
 RUNTIME 	?= 2000
-RISCVMODE   ?= p
 
 export TEST_NAME 	= $(TESTNAME)
 export RISCV_ARCH 	= $(RISCVARCH)

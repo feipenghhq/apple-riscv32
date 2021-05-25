@@ -19,7 +19,7 @@ reg [7:0] instr_ram [0:INSTR_RAM_SIZE-1];
 integer im = 0;
 integer dm = 0;
 
-AppleSoC_arty DUT_AppleRISCVSoC(.*);
+ArtySoC DUT_AppleRISCVSoC(.*);
 
 `ifdef DUMP_VCD
 initial begin
@@ -34,10 +34,10 @@ initial begin
   $readmemh("instr_ram.rom", instr_ram);
   $display("[INFO] Loading Instruction RAM Done");
   for (im = 0; im < INSTR_RAM_SIZE; im = im + 4) begin
-    DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol3[im/4] = instr_ram[im+3];
-    DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol2[im/4] = instr_ram[im+2];
-    DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol1[im/4] = instr_ram[im+1];
-    DUT_AppleRISCVSoC.soc_imem_inst.ram_symbol0[im/4] = instr_ram[im];
+    DUT_AppleRISCVSoC.soc_imem.ram_symbol3[im/4] = instr_ram[im+3];
+    DUT_AppleRISCVSoC.soc_imem.ram_symbol2[im/4] = instr_ram[im+2];
+    DUT_AppleRISCVSoC.soc_imem.ram_symbol1[im/4] = instr_ram[im+1];
+    DUT_AppleRISCVSoC.soc_imem.ram_symbol0[im/4] = instr_ram[im];
   end
 end
 `endif
@@ -47,20 +47,22 @@ initial begin
   $display("Loading Data ram verilog file");
   $readmemh("data_ram.rom", data_ram);
   for (dm = 0; dm < DATA_RAM_SIZE; dm = dm + 4) begin
-    DUT_AppleRISCVSoC.soc_dmem_inst.ram_symbol3[dm/4] = data_ram[dm+3];
-    DUT_AppleRISCVSoC.soc_dmem_inst.ram_symbol2[dm/4] = data_ram[dm+2];
-    DUT_AppleRISCVSoC.soc_dmem_inst.ram_symbol1[dm/4] = data_ram[dm+1];
-    DUT_AppleRISCVSoC.soc_dmem_inst.ram_symbol0[dm/4] = data_ram[dm];
+    DUT_AppleRISCVSoC.soc_dmem.ram_symbol3[dm/4] = data_ram[dm+3];
+    DUT_AppleRISCVSoC.soc_dmem.ram_symbol2[dm/4] = data_ram[dm+2];
+    DUT_AppleRISCVSoC.soc_dmem.ram_symbol1[dm/4] = data_ram[dm+1];
+    DUT_AppleRISCVSoC.soc_dmem.ram_symbol0[dm/4] = data_ram[dm];
   end
   $display("[INFO] Loading Data RAM Done");
 end
 `endif
 
-  wire     [11:0]   gpio0;
-  wire     [3:0]    pwm0cmpgpio;
-  wire              uart0_txd;
-  reg               uart0_rxd = 'b1;
-  reg               load_imem = 'b0;
+  reg               io_clk;
+  reg               io_reset;
+  reg               io_load_imem = 1'b0;
+  wire              io_uart0_txd;
+  reg               io_uart0_rxd = 1'b0;
+  wire     [3:0]    io_pwm0;
+  wire     [11:0]   io_gpio;
 
 // =====================================
 // X checker

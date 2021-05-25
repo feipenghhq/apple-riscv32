@@ -54,11 +54,11 @@ case class IFU() extends Component {
   val addr_phase = io.stage_valid
   val data_phase = RegNext(addr_phase)
 
-  // a shadow copy of the instruction for the stall
-  val shadow = RegNextWhen(io.ibus_ahb.HRDATA, io.stage_enable)
+  // make a shadow copy of the instruction when stall happens
+  val shadow = RegNextWhen(io.ibus_ahb.HRDATA, io.stage_enable.fall())
   val stage_enable_ff = RegNext(io.stage_enable) init False
 
-  io.instruction := stage_enable_ff ? shadow | io.ibus_ahb.HRDATA
+  io.instruction := stage_enable_ff ? io.ibus_ahb.HRDATA | shadow
   io.ifu_stall_req := data_phase & ~io.ibus_ahb.HREADY
   io.exc_instr_acc_flt := data_phase & io.ibus_ahb.HREADY & io.ibus_ahb.HRESP
 }

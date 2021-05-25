@@ -34,6 +34,7 @@ import spinal.lib.bus.amba3.ahblite.AhbLite3._
 case class LSU() extends Component {
 
   val io = new Bundle {
+    val stage_enable = in Bool
     val write = in Bool
     val read = in Bool
     val addr = in UInt(AppleRISCVCfg.XLEN bits)
@@ -45,7 +46,7 @@ case class LSU() extends Component {
     val lsu_stall_req = out Bool
 
     val dbus_ahb = master(AhbLite3Master(AppleRISCVCfg.dbusAhbCfg))
-    
+
     // Exception
     val exc_ld_addr_ma = out Bool
     val exc_sd_addr_ma = out Bool
@@ -91,14 +92,22 @@ case class LSU() extends Component {
   // ========================================
   // Write Data Processing
   // ========================================
-  val wdata = io.wdata.clone()
-  when(io.rw_byte) {
-    wdata := io.wdata(7 downto 0).resized
-  }.elsewhen(io.rw_half) {
-    wdata := io.wdata(15 downto 0).resized
-  }.otherwise{
-    wdata := io.wdata
+  val byte = io.wdata(7 downto 0)
+  val half = io.wdata(15 downto 0).resized
+  // wdata should be provided at data phase, so we need to delay it for one cycle
+  val wdata = Reg(io.wdata.clone())
+  // also do not update wdata when lsu is waiting for HREADY signal becasue
+  // if we are using forwarded data, it will be gone.
+  when(~io.lsu_stall_req) {
+    when(io.rw_byte) {
+      wdata := byte ## byte ## byte ## byte
+    }.elsewhen(io.rw_half) {
+      wdata := half ## half
+    }.otherwise{
+      wdata := io.wdata
+    }
   }
+
 
   // ========================================
   // Read Data Processing

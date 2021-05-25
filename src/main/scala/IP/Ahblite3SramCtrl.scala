@@ -60,26 +60,26 @@ case class SibSramCtrl(ahblite3Cfg: AhbLite3Config) extends Component {
   noIoPrefix()
 
   // Register Input
-  val ce_ff   = RegNext(io.ahblite3.HTRANS(1)) init False
-  val write_ff = RegNextWhen(io.ahblite3.HWRITE,      io.ahblite3.HTRANS(1))
-  val mask_ff  = RegNextWhen(io.ahblite3.writeMask(), io.ahblite3.HTRANS(1))
-  val wdata_ff = RegNextWhen(io.ahblite3.HWDATA,      io.ahblite3.HTRANS(1))
-  val addr_ff  = RegNextWhen(io.ahblite3.HADDR,       io.ahblite3.HTRANS(1))
+  val pending_rw = RegNext(io.ahblite3.HTRANS(1) & io.ahblite3.HSEL) init False
+  val pending_write = RegNextWhen(io.ahblite3.HWRITE,      io.ahblite3.HTRANS(1))
+  val pending_mask = RegNextWhen(io.ahblite3.writeMask(), io.ahblite3.HTRANS(1))
+  val pending_addr = RegNextWhen(io.ahblite3.HADDR,       io.ahblite3.HTRANS(1))
 
-  val wen = write_ff & (mask_ff.orR)
+  val wen = pending_write & (pending_mask.orR)
 
   // Sram I/O
-  io.sram.ce_n := ~ce_ff
-  io.sram.lb_n := ~mask_ff(0)
-  io.sram.ub_n := ~mask_ff(1)
+  io.sram.ce_n := ~pending_rw
+  io.sram.lb_n := ~pending_mask(0)
+  io.sram.ub_n := ~pending_mask(1)
   io.sram.we_n := ~wen
-  io.sram.oe_n := ~ce_ff
+  io.sram.oe_n := ~pending_rw
   // The Ahblite3 address is byte address, but the sram address is half-word address.
-  io.sram.addr := addr_ff(SramCfg.AW downto 1)
-  io.sram.data.write := wdata_ff
+  io.sram.addr := pending_addr(SramCfg.AW downto 1)
+  io.sram.data.write := io.ahblite3.HWDATA  // write data come 1 cycle after the address phase
   io.sram.data.writeEnable.setAllTo(wen)
 
-  io.ahblite3.HREADYOUT := True
-  io.ahblite3.HRESP  := addr_ff(0)  // the LSb should be zero. 0 means OK.
+  // avoid read after write same address hazard
+  io.ahblite3.HREADYOUT := !(io.ahblite3.HSEL && io.ahblite3.HTRANS(1) && !io.ahblite3.HWRITE && pending_write && io.ahblite3.HADDR === pending_addr)
+  io.ahblite3.HRESP := pending_addr(0)  // the LSb should be zero and 0 means OK.
   io.ahblite3.HRDATA := io.sram.data.read
 }

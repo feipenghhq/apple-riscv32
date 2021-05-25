@@ -59,7 +59,7 @@ object ApbUartCfg {
   val txFifoDepth = 8
 }
 
-case class SibUart(apbCfg: Apb3Config) extends Component {
+case class ApbUart(apbCfg: Apb3Config) extends Component {
 
   noIoPrefix()
 
