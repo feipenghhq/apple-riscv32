@@ -29,12 +29,13 @@ import spinal.lib.bus.amba3.ahblite._
 case class IFU() extends Component {
 
   val io = new Bundle {
-    val stage_valid = in Bool
+    val ifu_valid = in Bool
     val stage_enable = in Bool
     val pc = in UInt(AppleRISCVCfg.XLEN bits)
     val instruction = out Bits(AppleRISCVCfg.XLEN bits)
     val ibus_ahb = master(AhbLite3Master(AppleRISCVCfg.ibusAhbCfg))
-    val ifu_stall_req = out Bool
+    val ifu_wait_data = out Bool
+    val ifu_wait_ibus = out Bool
     val exc_instr_acc_flt = out Bool
   }
 
@@ -46,12 +47,12 @@ case class IFU() extends Component {
   io.ibus_ahb.HPROT(2)  := True         // Buffer-able
   io.ibus_ahb.HPROT(3)  := True         // Cache-able
   io.ibus_ahb.HSIZE     := B"3'b010"    // Word Access
-  io.ibus_ahb.HTRANS    := io.stage_valid ? NONSEQ | IDLE
+  io.ibus_ahb.HTRANS    := io.ifu_valid ? NONSEQ | IDLE
   io.ibus_ahb.HWDATA    := 0
   io.ibus_ahb.HWRITE    := False
 
 
-  val addr_phase = io.stage_valid
+  val addr_phase = io.ifu_valid
   val data_phase = RegNext(addr_phase)
 
   // make a shadow copy of the instruction when stall happens
@@ -59,6 +60,7 @@ case class IFU() extends Component {
   val stage_enable_ff = RegNext(io.stage_enable) init False
 
   io.instruction := stage_enable_ff ? io.ibus_ahb.HRDATA | shadow
-  io.ifu_stall_req := data_phase & ~io.ibus_ahb.HREADY
+  io.ifu_wait_data := data_phase & ~io.ibus_ahb.HREADY
+  io.ifu_wait_ibus := addr_phase & ~io.ibus_ahb.HREADY
   io.exc_instr_acc_flt := data_phase & io.ibus_ahb.HREADY & io.ibus_ahb.HRESP
 }

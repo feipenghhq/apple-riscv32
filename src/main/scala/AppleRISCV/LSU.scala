@@ -34,7 +34,6 @@ import spinal.lib.bus.amba3.ahblite.AhbLite3._
 case class LSU() extends Component {
 
   val io = new Bundle {
-    val stage_enable = in Bool
     val write = in Bool
     val read = in Bool
     val addr = in UInt(AppleRISCVCfg.XLEN bits)
@@ -43,7 +42,9 @@ case class LSU() extends Component {
     val rw_byte = in Bool
     val rw_half = in Bool
     val rd_unsigned = in Bool
-    val lsu_stall_req = out Bool
+    val lsu_wait_data = out Bool  // wait for the data to come back
+    val lsu_wait_dbus = out Bool   // wait for the bus to be available
+    val lsu_disable_ibus = out Bool
 
     val dbus_ahb = master(AhbLite3Master(AppleRISCVCfg.dbusAhbCfg))
 
@@ -70,8 +71,8 @@ case class LSU() extends Component {
   val rw_byte_s1      = RegNextWhen(io.rw_byte, io.read & addr_phase)
   val rw_half_s1      = RegNextWhen(io.rw_half, io.read & addr_phase)
   val byte_addr_s1    = RegNextWhen(io.addr(1 downto 0), io.read & addr_phase)
-  val ren_ff          = RegNextWhen(ren, ~io.lsu_stall_req)
-  val wen_ff          = RegNextWhen(wen, ~io.lsu_stall_req)
+  val ren_ff          = RegNextWhen(ren, ~io.lsu_wait_data)
+  val wen_ff          = RegNextWhen(wen, ~io.lsu_wait_data)
 
   // Check address alignment
   val half_addr_misalign = io.rw_half & io.addr(0)
@@ -81,8 +82,25 @@ case class LSU() extends Component {
 
   // Check if data phase can complete at one cycle
   addr_phase := (wen | ren)
-  data_phase := RegNextWhen(addr_phase, ~io.lsu_stall_req)
-  io.lsu_stall_req  := ~io.dbus_ahb.HREADY & data_phase
+  data_phase := RegNextWhen(addr_phase, ~io.lsu_wait_data)
+  io.lsu_wait_data  := ~io.dbus_ahb.HREADY & data_phase
+
+  // Check if the dbus is busy at the address phase.
+  // In our current implementation, we have dedicated Instruction RAM (IRAM) and Data RAM (DRAM).
+  // ibus will only access IRAM but dbus might access IRAM to get the static variable.
+  // In the current ahb crossbar design, 1 host will lock the bus after in complete both the phases. (data/address)
+  // And since ibus is accessing IRAM for almost every clock cycle, it will always lock the bus to IRAM and dbus will
+  // never be able to access IRAM.
+  // To deal with this situation, we need to prevent ibus from being access the IRAM when dbus is also want to access IRAM.
+  val dbus_busy = addr_phase & ~io.dbus_ahb.HREADY
+  val lsu_disable_ibus = RegInit(False)
+  io.lsu_wait_dbus := dbus_busy | lsu_disable_ibus
+  io.lsu_disable_ibus := lsu_disable_ibus
+  when(dbus_busy) {
+    lsu_disable_ibus := True
+  }.elsewhen(io.dbus_ahb.HREADY) {
+    lsu_disable_ibus := False
+  }
 
   // Check if we have access fault
   val acc_flt = data_phase & io.dbus_ahb.HREADY & io.dbus_ahb.HRESP
@@ -98,7 +116,7 @@ case class LSU() extends Component {
   val wdata = Reg(io.wdata.clone())
   // also do not update wdata when lsu is waiting for HREADY signal becasue
   // if we are using forwarded data, it will be gone.
-  when(~io.lsu_stall_req) {
+  when(~io.lsu_wait_data) {
     when(io.rw_byte) {
       wdata := byte ## byte ## byte ## byte
     }.elsewhen(io.rw_half) {
