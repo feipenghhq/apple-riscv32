@@ -54,8 +54,11 @@ tests/cocotb/*/sim_build/*
 tests/cocotb/*/*/sim_build/*
 tests/cocotb/*/output
 tests/cocotb/*/*rom
+tests/cocotb/dedicated_tests
 *.gtkw
 *.vvp
+.PASS
+.FAIL
 
 
 # vscode scala metals

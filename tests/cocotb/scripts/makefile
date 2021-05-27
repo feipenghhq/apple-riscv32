@@ -24,7 +24,7 @@ SOC	?=arty
 
 ifeq ($(SOC), arty)
 	TB_FILES     += $(TB_PATH)/top/arty_tb.v
-	RTL_FILES    += $(RTL_SOC_PATH)/AppleSoC_arty.v
+	RTL_FILES    += $(RTL_SOC_PATH)/ArtySoC.v
 	TOPLEVEL 	 = arty_tb
 else ifeq ($(SOC), de2)
 	TB_FILES     += $(TB_PATH)/top/de2_tb.v
@@ -38,18 +38,19 @@ endif
 VERILOG_SOURCES += $(TB_FILES)
 VERILOG_SOURCES += $(RTL_FILES)
 
-MODULE = riscv_arch_test
+MODULE = run_one_test
 
 # -----------------------------------------
 # Simulator config
 # -----------------------------------------
 SIM 		 ?=icarus
 DUMP	     ?=0
+COMPILE_ARGS =
+PLUSARGS 	 =
 
 ifeq ($(SIM),icarus)
 	COMPILE_ARGS += -DLOAD_INSTR_RAM
 	COMPILE_ARGS += -DLOAD_DATA_RAM
-	COMPILE_ARGS += -DSIM_LARGE_INSTR_RAM
 	ifeq ($(DUMP),1)
 		COMPILE_ARGS += -DDUMP_VCD
 	endif
@@ -62,30 +63,31 @@ ifeq ($(SIM),modelsim)
 endif
 
 # -----------------------------------------
+# Cocotb config
+# -----------------------------------------
+export COCOTB_REDUCED_LOG_FMT = 1
+
+# -----------------------------------------
 # Test config
 # -----------------------------------------
-TESTNAME 	?=
-RISCVARCH   ?= rv32i_m
-RISCVISA 	?= I
-RUNTIME 	?= 10000
+TIMEOUT  ?=
+TESTNAME ?=
+TESTPATH ?=
 
-export TEST_NAME 	= $(TESTNAME)
-export RISCV_ISA 	= $(RISCVISA)
-export RUN_TIME 	= $(RUNTIME)
-export SoC 			= $(SOC)
+export TIME_OUT  = $(TIMEOUT)
+export TEST_NAME = $(TESTNAME)
+export TEST_PATH = $(TESTPATH)
 
 include $(shell cocotb-config --makefiles)/Makefile.sim
 
-INSTR_RAM_ADDR_WIDTH = 21
-
-$(REPO_ROOT)/AppleSoC_arty.v:
-	cd $(REPO_ROOT) && sbt "runMain AppleRISCVSoC.AppleSoC_artyMain $(INSTR_RAM_ADDR_WIDTH)"
+$(REPO_ROOT)/ArtySoC.v:
+	cd $(REPO_ROOT) && sbt "runMain AppleRISCVSoC.ArtySoCMain"
 
 $(REPO_ROOT)/AppleSoC_de2.v:
-	cd $(REPO_ROOT) && sbt "runMain AppleRISCVSoC.AppleSoC_de2Main  $(INSTR_RAM_ADDR_WIDTH)"
+	cd $(REPO_ROOT) && sbt "runMain AppleRISCVSoC.AppleSoC_de2Main"
 
 clean_all:
 	@rm -rf __pycache__ *.pyc */__pycache__ */*.pyc *.log
 	@rm -rf *vcd results.xml sim_build
-	@rm -rf *.rom *.bin *.verilog *.signature
+	@rm -rf *.rom *.bin *.verilog .PASS .FAIL
 	@rm -rf transcript *wlf .python-version *.ini

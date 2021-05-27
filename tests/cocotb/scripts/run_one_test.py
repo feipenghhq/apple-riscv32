@@ -28,17 +28,17 @@ REPO_ROOT = subprocess_return.decode().rstrip()
 # Common function
 ###############################
 
-def process_rom_file(name):
+def process_rom_file(file_name, file_path):
     """ Split the text and data section for the generated verilog file """
 
     # Link the instruction rom file to the tb directory
-    SRC_FILE = REPO_ROOT + f'/tests/riscv-tests/generated/{name}.verilog'
-    ROM_FILE = os.getcwd() + f'/{name}.verilog' # need to link the instruction ram file the the current directory
+    SRC_FILE = REPO_ROOT + f'/{file_path}/{file_name}.verilog'
+    ROM_FILE = os.getcwd() + f'/{file_name}.verilog' # need to link the instruction ram file the the current directory
     if os.path.isfile(ROM_FILE):
         os.remove(ROM_FILE)
     os.symlink(SRC_FILE, ROM_FILE)
     os.system(f"ln -s {REPO_ROOT}/*.bin {os.getcwd()}/.")
-    FP = open(f'{name}.verilog', "r")
+    FP = open(f'{file_name}.verilog', "r")
     IRAM_FP = open('instr_ram.rom', "w")
     DRAM_FP = open('data_ram.rom', "w")
     iram = True
@@ -72,7 +72,7 @@ def check_finish(dut):
 ###############################
 
 TIMER_DELTA = 1000
-TIME_OUT = 12000
+TIME_OUT = int(os.getenv('TIME_OUT'))
 
 async def reset(dut, time=20):
     """ Reset the design """
@@ -82,16 +82,14 @@ async def reset(dut, time=20):
     dut.io_reset = 0
 
 @cocotb.test()
-def riscv_tests(dut):
+def test(dut):
     """ RISCV TEST """
-    runtime = int(os.getenv('RUN_TIME'))
-    arch = os.getenv('RISCV_ARCH')
-    mode = os.getenv('RISCV_MODE')
-    name = os.getenv('TEST_NAME')
-    test = f'{arch}-{mode}-{name}'
+    runtime = 2000
+    file_name = os.getenv('TEST_NAME')
+    file_path = os.getenv('TEST_PATH')
     total_time = 0
     timeout = False
-    process_rom_file(test)
+    process_rom_file(file_name, file_path)
 
     # Test start
     clock = Clock(dut.io_clk, 10, units="ns")  # Create a 10us period clock on port clk
