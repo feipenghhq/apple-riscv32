@@ -30,7 +30,7 @@ CFLAGS += -DITERATIONS=20000
 # Command
 #############################################################
 
-TARGET = core_main
+TARGET = coremark
 
 PROGRAM     = $(TARGET)
 PROGRAM_ELF = $(PROGRAM)

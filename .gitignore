@@ -52,7 +52,7 @@ tests/cocotb/*/*.xml
 tests/cocotb/*/*/*.xml
 tests/cocotb/*/sim_build/*
 tests/cocotb/*/*/sim_build/*
-tests/cocotb/*/output
+tests/cocotb/output
 tests/cocotb/*/*rom
 tests/cocotb/dedicated_tests
 *.gtkw

@@ -1,5 +1,5 @@
 
-// file: mmcm.v
+// file: mmcm_50mhz.v
 // 
 // (c) Copyright 2008 - 2013 Xilinx, Inc. All rights reserved.
 // 
@@ -56,7 +56,7 @@
 //  Output     Output      Phase    Duty Cycle   Pk-to-Pk     Phase
 //   Clock     Freq (MHz)  (degrees)    (%)     Jitter (ps)  Error (ps)
 //----------------------------------------------------------------------------
-// clk_out1__100.00000______0.000______50.0______130.958_____98.575
+// clk_out1__50.00000______0.000______50.0______151.636_____98.575
 //
 //----------------------------------------------------------------------------
 // Input Clock   Freq (MHz)    Input Jitter (UI)
@@ -65,7 +65,7 @@
 
 `timescale 1ps/1ps
 
-module mmcm_clk_wiz 
+module mmcm_50mhz_clk_wiz 
 
  (// Clock in ports
   // Clock out ports
@@ -74,10 +74,10 @@ module mmcm_clk_wiz
  );
   // Input buffering
   //------------------------------------
-wire clk_in1_mmcm;
-wire clk_in2_mmcm;
+wire clk_in1_mmcm_50mhz;
+wire clk_in2_mmcm_50mhz;
   IBUF clkin1_ibufg
-   (.O (clk_in1_mmcm),
+   (.O (clk_in1_mmcm_50mhz),
     .I (clk_in1));
 
 
@@ -90,19 +90,20 @@ wire clk_in2_mmcm;
   //    * Unused inputs are tied off
   //    * Unused outputs are labeled unused
 
-  wire        clk_out1_mmcm;
-  wire        clk_out2_mmcm;
-  wire        clk_out3_mmcm;
-  wire        clk_out4_mmcm;
-  wire        clk_out5_mmcm;
-  wire        clk_out6_mmcm;
-  wire        clk_out7_mmcm;
+  wire        clk_out1_mmcm_50mhz;
+  wire        clk_out2_mmcm_50mhz;
+  wire        clk_out3_mmcm_50mhz;
+  wire        clk_out4_mmcm_50mhz;
+  wire        clk_out5_mmcm_50mhz;
+  wire        clk_out6_mmcm_50mhz;
+  wire        clk_out7_mmcm_50mhz;
 
   wire [15:0] do_unused;
   wire        drdy_unused;
   wire        psdone_unused;
   wire        locked_int;
-  wire        clkfbout_mmcm;
+  wire        clkfbout_mmcm_50mhz;
+  wire        clkfbout_buf_mmcm_50mhz;
   wire        clkfboutb_unused;
     wire clkout0b_unused;
    wire clkout1_unused;
@@ -126,7 +127,7 @@ wire clk_in2_mmcm;
     .CLKFBOUT_MULT_F      (10.000),
     .CLKFBOUT_PHASE       (0.000),
     .CLKFBOUT_USE_FINE_PS ("FALSE"),
-    .CLKOUT0_DIVIDE_F     (10.000),
+    .CLKOUT0_DIVIDE_F     (20.000),
     .CLKOUT0_PHASE        (0.000),
     .CLKOUT0_DUTY_CYCLE   (0.500),
     .CLKOUT0_USE_FINE_PS  ("FALSE"),
@@ -134,9 +135,9 @@ wire clk_in2_mmcm;
   mmcm_adv_inst
     // Output clocks
    (
-    .CLKFBOUT            (clkfbout_mmcm),
+    .CLKFBOUT            (clkfbout_mmcm_50mhz),
     .CLKFBOUTB           (clkfboutb_unused),
-    .CLKOUT0             (clk_out1_mmcm),
+    .CLKOUT0             (clk_out1_mmcm_50mhz),
     .CLKOUT0B            (clkout0b_unused),
     .CLKOUT1             (clkout1_unused),
     .CLKOUT1B            (clkout1b_unused),
@@ -148,8 +149,8 @@ wire clk_in2_mmcm;
     .CLKOUT5             (clkout5_unused),
     .CLKOUT6             (clkout6_unused),
      // Input clock control
-    .CLKFBIN             (clkfbout_mmcm),
-    .CLKIN1              (clk_in1_mmcm),
+    .CLKFBIN             (clkfbout_buf_mmcm_50mhz),
+    .CLKIN1              (clk_in1_mmcm_50mhz),
     .CLKIN2              (1'b0),
      // Tied to always select the primary input clock
     .CLKINSEL            (1'b1),
@@ -178,6 +179,10 @@ wire clk_in2_mmcm;
  // Output buffering
   //-----------------------------------
 
+  BUFG clkf_buf
+   (.O (clkfbout_buf_mmcm_50mhz),
+    .I (clkfbout_mmcm_50mhz));
+
 
 
 
@@ -185,7 +190,7 @@ wire clk_in2_mmcm;
 
   BUFG clkout1_buf
    (.O   (clk_out1),
-    .I   (clk_out1_mmcm));
+    .I   (clk_out1_mmcm_50mhz));
 
 
 

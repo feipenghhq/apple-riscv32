@@ -472,14 +472,14 @@ case class AppleRISCV() extends Component {
 
         // Stall request
         val if2id_stall  = id_stall_on_load_dep | id_stall_on_csr_dep | lsu_inst.io.lsu_wait_data |
-                           muldiv_stall_req | lsu_inst.io.lsu_wait_dbus | ifu_inst.io.ifu_wait_ibus
+                           muldiv_stall_req | ifu_inst.io.ifu_wait_ibus | lsu_inst.io.lsu_wait_dbus
         val id2ex_stall  = lsu_inst.io.lsu_wait_data | muldiv_stall_req | lsu_inst.io.lsu_wait_dbus
         val ex2mem_stall = mem_stall_on_addr_dep | lsu_inst.io.lsu_wait_dbus
         val mem2wb_stall = mem_stall_on_addr_dep | lsu_inst.io.lsu_wait_dbus
 
         // Insert NOP
         val if2id_nop = lsu_inst.io.lsu_disable_ibus
-        val id2ex_nop = id_stall_on_csr_dep | id_stall_on_load_dep
+        val id2ex_nop = id_stall_on_csr_dep | id_stall_on_load_dep | ifu_inst.io.ifu_wait_ibus
         val ex2mem_nop = muldiv_stall_req | lsu_inst.io.lsu_wait_data
 
         // Final Stage valid signal

@@ -47,7 +47,7 @@ case class IFU() extends Component {
   io.ibus_ahb.HPROT(2)  := True         // Buffer-able
   io.ibus_ahb.HPROT(3)  := True         // Cache-able
   io.ibus_ahb.HSIZE     := B"3'b010"    // Word Access
-  io.ibus_ahb.HTRANS    := io.ifu_valid ? NONSEQ | IDLE
+  io.ibus_ahb.HTRANS    := (io.ifu_valid & ~clockDomain.readResetWire) ? NONSEQ | IDLE
   io.ibus_ahb.HWDATA    := 0
   io.ibus_ahb.HWRITE    := False
 

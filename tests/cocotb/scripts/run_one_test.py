@@ -32,7 +32,7 @@ def process_rom_file(file_name, file_path):
     """ Split the text and data section for the generated verilog file """
 
     # Link the instruction rom file to the tb directory
-    SRC_FILE = REPO_ROOT + f'/{file_path}/{file_name}.verilog'
+    SRC_FILE = f'/{file_path}/{file_name}.verilog'
     ROM_FILE = os.getcwd() + f'/{file_name}.verilog' # need to link the instruction ram file the the current directory
     if os.path.isfile(ROM_FILE):
         os.remove(ROM_FILE)
@@ -54,17 +54,23 @@ def process_rom_file(file_name, file_path):
     FP.close()
     IRAM_FP.close()
     DRAM_FP.close()
+    os.system("sed -i 's/@2/@0/' instr_ram.rom")
 
 def check_finish(dut):
     """ Check if the rest is finished or not """
-    reg1 = dut.DUT_AppleRISCVSoC.core.regfile_inst.ram[1].value.integer
-    reg2 = dut.DUT_AppleRISCVSoC.core.regfile_inst.ram[2].value.integer
-    reg3 = dut.DUT_AppleRISCVSoC.core.regfile_inst.ram[3].value.integer
+    try:
+        reg1 = dut.DUT_AppleRISCVSoC.core.regfile_inst.ram[1].value.integer
+        reg2 = dut.DUT_AppleRISCVSoC.core.regfile_inst.ram[2].value.integer
+        reg3 = dut.DUT_AppleRISCVSoC.core.regfile_inst.ram[3].value.integer
+    except ValueError:
+        reg1 = 'X'
+        reg2 = 'X'
+        reg3 = 'X'
     if reg1 == 1 and reg2 == 2 and reg3 == 3:
-        return (True, True)
+        return True, True
     if reg1 == 0xf and reg2 == 0xf and reg3 == 0xf:
-        return (True, False)
-    return (False, False)
+        return True, False
+    return False, False
 
 
 ###############################

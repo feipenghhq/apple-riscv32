@@ -19,11 +19,12 @@ package Board
 
 import spinal.core._
 
-class mmcm extends BlackBox{
+class mmcm extends BlackBox {
   val io = new Bundle{
     val clk_in1    = in Bool
     val clk_out1   = out Bool
   }
-
   noIoPrefix()
 }
+
+case class mmcm_50mhz() extends mmcm {}

@@ -1,1 +1,0 @@
-../scripts/run_one_test.py

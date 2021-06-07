@@ -11,8 +11,8 @@ _DEVICE = xc7a35ticsg324-1L
 TOP_RTL		  = ArtyA7_top.v
 
 _RTL_SRC      += $(REPO_ROOT)/ArtyA7_top.v
-_RTL_SRC      += $(XILINX_RTL_PATH)/mmcm.v
-_RTL_SRC      += $(XILINX_RTL_PATH)/mmcm_clk_wiz.v
+_RTL_SRC      += $(XILINX_RTL_PATH)/mmcm_50mhz.v
+_RTL_SRC      += $(XILINX_RTL_PATH)/mmcm_50mhz_clk_wiz.v
 
 _XDC          += constraints/constraints.xdc
 _XDC          += constraints/io.xdc
@@ -39,7 +39,7 @@ $(OUTPUT)/$(TOP).bit: $(TOP_RTL)
 	vivado -mode tcl -source scripts/build.tcl | tee build.log
 
 $(TOP_RTL):
-	cd $(REPO_ROOT) && sbt "runMain Board.arty_a7.ArtyA7_topMain"
+	cd $(REPO_ROOT) && sbt "runMain Board.ArtyA7_topMain"
 
 clean:
 	rm -rf arty vivado* .Xil *.jou *.log

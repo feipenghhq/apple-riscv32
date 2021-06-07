@@ -2,43 +2,44 @@
 # makefile For FPGA
 ############################################################
 
-CMD = ../sdk/tools/UartDownload.py
+BOARD ?=
 
 ############################################################
-# Arty
+# FPGA build
 ############################################################
 
-arty:
-	cd arty-a7 && $(MAKE) all
+fpga:
+	cd $(BOARD) && $(MAKE) all
 
-arty_pgm:
-	cd arty-a7 && $(MAKE) pgm
-
-blink_arty:
-	sudo $(CMD) -size=64 -board=arty -file=program/blink/blink.arty.verilog
-
-uart_arty:
-	sudo $(CMD) -size=64 -board=arty -file=program/uart/uart.arty.verilog
-
-coremark_arty:
-	sudo $(CMD) -size=64 -board=arty -file=program/coremark/core_main.arty.verilog
+pgm:
+	cd $(BOARD) && $(MAKE) pgm
 
 ############################################################
-# DE2
+# Compile and Load Program
 ############################################################
 
-.PHONY: de2
-de2:
-	cd de2 && $(MAKE) all
+REPO_ROOT = $(shell git rev-parse --show-toplevel)
+CMD = $(REPO_ROOT)/sdk/tools/UartDownload.py
 
-de2_pgm:
-	cd de2 && $(MAKE) pgm
+demo = blink uart
+program = coremark
+size ?=
 
-blink_de2:
-	sudo $(CMD) -size=32 -board=de2 -file=program/blink/blink.de2.verilog
+boardCheck:
+ifeq ($(BOARD), )
+$(error BOARD not set)
+endif
+ifeq ($(BOARD), arty)
+size := 64
+endif
+ifeq ($(BOARD), de2)
+size := 32
+endif
 
-uart_de2:
-	sudo $(CMD) -size=32 -board=de2 -file=program/uart/uart.de2.verilog
+$(demo): boardCheck
+	cd $(REPO_ROOT)/sdk/demo/$@ && make BOARD=$(BOARD)
+	sudo $(CMD) -size=$(size) -board=arty -file=$(REPO_ROOT)/sdk/demo/$@/$@.verilog
 
-coremark_de2:
-	sudo $(CMD) -size=32 -board=de2 -file=program/coremark/core_main.de2.verilog
+$(program): boardCheck
+	cd $(REPO_ROOT)/sdk/benchmark/$@ && make BOARD=$(BOARD)
+	sudo $(CMD) -size=$(size) -board=arty -file=$(REPO_ROOT)/sdk/benchmark/$@/$@.verilog

@@ -15,7 +15,6 @@
 ##################################################################################################
 
 import os
-import sys
 import argparse
 
 from get_all_tests import *

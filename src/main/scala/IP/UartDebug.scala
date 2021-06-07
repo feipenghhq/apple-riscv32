@@ -119,7 +119,7 @@ case class UartDebug(ahblite3Cfg: AhbLite3Config, baudrate: Int) extends Compone
     val startSignal = read4ByteFsm.readData === B"32'hFFFFFFFF"
     val stopSignal = read4ByteFsm.readData === B"32'hFFFFFFFE"
 
-    val downloadCtrlFsm = new StateMachine {
+    new StateMachine {
 
       val addr = Reg(UInt(ahblite3Cfg.addressWidth bits)) init 0
       io.ahblite3.HTRANS := IDLE
@@ -139,7 +139,7 @@ case class UartDebug(ahblite3Cfg: AhbLite3Config, baudrate: Int) extends Compone
       val downloading = new State
 
       idle.whenIsActive {
-        addr := 0
+        addr := 0x20000000
         when(read4ByteFsm.captured & startSignal & io.load_imem) {
           goto(downloading)
         }

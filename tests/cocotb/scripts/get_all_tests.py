@@ -16,7 +16,7 @@ def dedicated_tests():
     names = ["dedicated-access_imem"]
     tests = {}
     for name in names:
-        tests[name] = f"{path}"
+        tests[name] = f"{REPO_ROOT}/{path}"
     return tests
 
 def riscv_tests():
@@ -27,7 +27,7 @@ def riscv_tests():
     tests = {}
     for test in files:
         if 'verilog' in test:
-            tests[test.replace(".verilog", "")] = path
+            tests[test.replace(".verilog", "")] = f"{REPO_ROOT}/{path}"
     return tests
 
 
@@ -41,7 +41,7 @@ def riscv_arch_tests():
         files = os.listdir(abs_path)
         for test in files:
             if 'verilog' in test:
-                tests[test.replace(".verilog", "")] = path1
+                tests[test.replace(".verilog", "")] = f"{REPO_ROOT}/{path1}"
     return tests
 
 def get_all_tests(name):

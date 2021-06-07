@@ -43,7 +43,7 @@ case class ArtySoC() extends Component {
     val socClkDomain = ClockDomain(
         clock = io.clk,
         reset = io.reset,
-        frequency = FixedFrequency(100 MHz),
+        frequency = FixedFrequency(50 MHz),
         config = ClockDomainConfig(
             clockEdge        = RISING,
             resetKind        = SYNC,

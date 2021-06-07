@@ -15,6 +15,6 @@
 #define __BOARD_ARTY_H__
 
 // Clock Frequency in MHz
-#define CLK_FEQ_MHZ     100
+#define CLK_FEQ_MHZ     50
 
 #endif
