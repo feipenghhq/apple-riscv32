@@ -152,6 +152,5 @@ case class IntelRam_2rw_32kb_bb() extends BlackBox {
     val q_a             = out Bits(32 bits)
     val q_b             = out Bits(32 bits)
   }
-  noIoPrefix()
   mapClockDomain(clock=io.clock)
 }

@@ -36,6 +36,7 @@ def cmdParser():
     parser.add_argument('-soc', type=str, required=True, nargs='?', help='The FPGA board')
     parser.add_argument('-timeout', '-to', type=str, required=True, nargs='?', help='Timeout value')
     parser.add_argument('-test', '-t', type=str, required=True, nargs='?', help='The test you want to run')
+    parser.add_argument('-dump', '-d', type=str, required=True, nargs='?', help='Dump the waveform?')
     return parser.parse_args()
 
 def find_test(name):
@@ -57,6 +58,7 @@ if __name__ == '__main__':
     soc = args.soc
     to = args.timeout
     test = args.test
+    dump = args.dump
     path, test = find_test(test)
-    cmd = f"make TESTNAME={test} TESTPATH={path} TIMEOUT={to} DUMP=1"
+    cmd = f"make TESTNAME={test} TESTPATH={path} TIMEOUT={to} DUMP={dump}"
     os.system(cmd)

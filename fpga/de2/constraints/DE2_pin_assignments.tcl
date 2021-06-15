@@ -165,7 +165,7 @@ set_location_assignment PIN_N23 -to KEY[1]
 set_location_assignment PIN_P23 -to KEY[2]
 #set_location_assignment PIN_W26 -to KEY[3]
 # KEY3 mapped to RESET
-set_location_assignment PIN_W26 -to reset
+set_location_assignment PIN_W26 -to RESET
 ##################################################
 # LEDR
 ##################################################
@@ -205,8 +205,8 @@ set_location_assignment PIN_Y12 -to LEDG[8]
 #set_location_assignment PIN_D13 -to CLOCK_27
 #set_location_assignment PIN_N2 -to CLOCK_50
 #set_location_assignment PIN_P26 -to EXT_CLOCK
-# clk mapped to CLOCK_50
-set_location_assignment PIN_N2 -to clk
+# clk
+set_location_assignment PIN_N2 -to CLK
 ##################################################
 # PS2
 ##################################################
@@ -215,8 +215,8 @@ set_location_assignment PIN_N2 -to clk
 ##################################################
 # UART
 ##################################################
-set_location_assignment PIN_C25 -to uart0_rxd
-set_location_assignment PIN_B25 -to uart0_txd
+set_location_assignment PIN_C25 -to UART0_rxd
+set_location_assignment PIN_B25 -to UART0_txd
 ##################################################
 # LCD
 ##################################################
@@ -236,45 +236,45 @@ set_location_assignment PIN_B25 -to uart0_txd
 ##################################################
 # SRAM
 ##################################################
-set_location_assignment PIN_AE4 -to sram_addr[0]
-set_location_assignment PIN_AF4 -to sram_addr[1]
-set_location_assignment PIN_AC5 -to sram_addr[2]
-set_location_assignment PIN_AC6 -to sram_addr[3]
-set_location_assignment PIN_AD4 -to sram_addr[4]
-set_location_assignment PIN_AD5 -to sram_addr[5]
-set_location_assignment PIN_AE5 -to sram_addr[6]
-set_location_assignment PIN_AF5 -to sram_addr[7]
-set_location_assignment PIN_AD6 -to sram_addr[8]
-set_location_assignment PIN_AD7 -to sram_addr[9]
-set_location_assignment PIN_V10 -to sram_addr[10]
-set_location_assignment PIN_V9 -to sram_addr[11]
-set_location_assignment PIN_AC7 -to sram_addr[12]
-set_location_assignment PIN_W8 -to sram_addr[13]
-set_location_assignment PIN_W10 -to sram_addr[14]
-set_location_assignment PIN_Y10 -to sram_addr[15]
-set_location_assignment PIN_AB8 -to sram_addr[16]
-set_location_assignment PIN_AC8 -to sram_addr[17]
-set_location_assignment PIN_AD8 -to sram_data[0]
-set_location_assignment PIN_AE6 -to sram_data[1]
-set_location_assignment PIN_AF6 -to sram_data[2]
-set_location_assignment PIN_AA9 -to sram_data[3]
-set_location_assignment PIN_AA10 -to sram_data[4]
-set_location_assignment PIN_AB10 -to sram_data[5]
-set_location_assignment PIN_AA11 -to sram_data[6]
-set_location_assignment PIN_Y11 -to sram_data[7]
-set_location_assignment PIN_AE7 -to sram_data[8]
-set_location_assignment PIN_AF7 -to sram_data[9]
-set_location_assignment PIN_AE8 -to sram_data[10]
-set_location_assignment PIN_AF8 -to sram_data[11]
-set_location_assignment PIN_W11 -to sram_data[12]
-set_location_assignment PIN_W12 -to sram_data[13]
-set_location_assignment PIN_AC9 -to sram_data[14]
-set_location_assignment PIN_AC10 -to sram_data[15]
-set_location_assignment PIN_AE10 -to sram_we_n
-set_location_assignment PIN_AD10 -to sram_oe_n
-set_location_assignment PIN_AF9 -to sram_ub_n
-set_location_assignment PIN_AE9 -to sram_lb_n
-set_location_assignment PIN_AC11 -to sram_ce_n
+set_location_assignment PIN_AE4 -to SRAM_addr[0]
+set_location_assignment PIN_AF4 -to SRAM_addr[1]
+set_location_assignment PIN_AC5 -to SRAM_addr[2]
+set_location_assignment PIN_AC6 -to SRAM_addr[3]
+set_location_assignment PIN_AD4 -to SRAM_addr[4]
+set_location_assignment PIN_AD5 -to SRAM_addr[5]
+set_location_assignment PIN_AE5 -to SRAM_addr[6]
+set_location_assignment PIN_AF5 -to SRAM_addr[7]
+set_location_assignment PIN_AD6 -to SRAM_addr[8]
+set_location_assignment PIN_AD7 -to SRAM_addr[9]
+set_location_assignment PIN_V10 -to SRAM_addr[10]
+set_location_assignment PIN_V9 -to SRAM_addr[11]
+set_location_assignment PIN_AC7 -to SRAM_addr[12]
+set_location_assignment PIN_W8 -to SRAM_addr[13]
+set_location_assignment PIN_W10 -to SRAM_addr[14]
+set_location_assignment PIN_Y10 -to SRAM_addr[15]
+set_location_assignment PIN_AB8 -to SRAM_addr[16]
+set_location_assignment PIN_AC8 -to SRAM_addr[17]
+set_location_assignment PIN_AD8 -to SRAM_data[0]
+set_location_assignment PIN_AE6 -to SRAM_data[1]
+set_location_assignment PIN_AF6 -to SRAM_data[2]
+set_location_assignment PIN_AA9 -to SRAM_data[3]
+set_location_assignment PIN_AA10 -to SRAM_data[4]
+set_location_assignment PIN_AB10 -to SRAM_data[5]
+set_location_assignment PIN_AA11 -to SRAM_data[6]
+set_location_assignment PIN_Y11 -to SRAM_data[7]
+set_location_assignment PIN_AE7 -to SRAM_data[8]
+set_location_assignment PIN_AF7 -to SRAM_data[9]
+set_location_assignment PIN_AE8 -to SRAM_data[10]
+set_location_assignment PIN_AF8 -to SRAM_data[11]
+set_location_assignment PIN_W11 -to SRAM_data[12]
+set_location_assignment PIN_W12 -to SRAM_data[13]
+set_location_assignment PIN_AC9 -to SRAM_data[14]
+set_location_assignment PIN_AC10 -to SRAM_data[15]
+set_location_assignment PIN_AE10 -to SRAM_we_n
+set_location_assignment PIN_AD10 -to SRAM_oe_n
+set_location_assignment PIN_AF9 -to SRAM_ub_n
+set_location_assignment PIN_AE9 -to SRAM_lb_n
+set_location_assignment PIN_AC11 -to SRAM_ce_n
 ##################################################
 # OTG
 ##################################################
@@ -315,7 +315,7 @@ set_location_assignment PIN_AC11 -to sram_ce_n
 #set_location_assignment PIN_A14 -to TCS
 #set_location_assignment PIN_D14 -to TCK
 #set_location_assignment PIN_F14 -to TDO
-#set_location_assignment PIN_C4 -to TD_RESET
+set_location_assignment PIN_C4 -to TD_RESET
 ##################################################
 # VGA
 ##################################################

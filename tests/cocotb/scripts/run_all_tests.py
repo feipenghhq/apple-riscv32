@@ -90,11 +90,17 @@ class AllTests:
             print("Some tests FAILED")
             os.system("touch .FAIL")
 
+    def print_cmd(self):
+        """ Print the command for failed test """
+        for t in self.failed_tests:
+            print(self.cmds[t])
+
     def allTasks(self):
         """ Run all the Tasks """
         os.system("make clean_all")
         self.run_all_tests()
         self.print_result()
+        self.print_cmd()
         os.system("rm -rf *.verilog")
 
 if __name__ == '__main__':

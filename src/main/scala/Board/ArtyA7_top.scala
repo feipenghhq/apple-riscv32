@@ -30,7 +30,7 @@ case class ArtyA7_top() extends Component {
     val CLK   = in Bool
     val RESET = in Bool
     val UART0 = master(Uart())
-    val GPIO = master(TriStateArray(12 bits))
+    val GPIO = master(TriStateArray(SoCCfg.gpio0Width bits))
     val PWM0 = out Bits(4 bits)
   }
 
@@ -70,7 +70,7 @@ object ArtyA7_topMain{
   def main(args: Array[String]) {
     // CPU Configuration
     AppleRISCVCfg.USE_RV32M   = true
-    AppleRISCVCfg.USE_BPU     = false
+    AppleRISCVCfg.USE_BPU     = true
     CsrCfg.USE_MHPMC3         = true
     CsrCfg.USE_MHPMC4         = true
     SpinalVerilog(InOutWrapper(ArtyA7_top()))

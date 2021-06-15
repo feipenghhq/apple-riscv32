@@ -474,13 +474,14 @@ case class AppleRISCV() extends Component {
         val if2id_stall  = id_stall_on_load_dep | id_stall_on_csr_dep | lsu_inst.io.lsu_wait_data |
                            muldiv_stall_req | ifu_inst.io.ifu_wait_ibus | lsu_inst.io.lsu_wait_dbus
         val id2ex_stall  = lsu_inst.io.lsu_wait_data | muldiv_stall_req | lsu_inst.io.lsu_wait_dbus
-        val ex2mem_stall = mem_stall_on_addr_dep | lsu_inst.io.lsu_wait_dbus
+        val ex2mem_stall = lsu_inst.io.lsu_wait_data | mem_stall_on_addr_dep | lsu_inst.io.lsu_wait_dbus
         val mem2wb_stall = mem_stall_on_addr_dep | lsu_inst.io.lsu_wait_dbus
 
         // Insert NOP
         val if2id_nop = lsu_inst.io.lsu_disable_ibus
         val id2ex_nop = id_stall_on_csr_dep | id_stall_on_load_dep | ifu_inst.io.ifu_wait_ibus
-        val ex2mem_nop = muldiv_stall_req | lsu_inst.io.lsu_wait_data
+        val ex2mem_nop = muldiv_stall_req
+        val mem2wb_nop = lsu_inst.io.lsu_wait_data
 
         // Final Stage valid signal
         if_stage_valid  := ~if_flush
@@ -493,7 +494,7 @@ case class AppleRISCV() extends Component {
         if2id_pipe_valid  := if_stage_valid & ~if2id_nop
         id2ex_pipe_valid  := id_stage_valid & ~id2ex_nop
         ex2mem_pipe_valid := ex_stage_valid & ~ex2mem_nop
-        mem2wb_pipe_valid := mem_stage_valid
+        mem2wb_pipe_valid := mem_stage_valid & ~mem2wb_nop
 
         if2id_pipe_stall  := if2id_stall  & ~if_flush
         id2ex_pipe_stall  := id2ex_stall  & ~id_flush

@@ -58,12 +58,15 @@ $(eval $(call compile_template,soc,-march=rv32im -mabi=ilp32))
 tests_dump = $(addsuffix .dump, $(tests))
 
 
-all: $(tests_dump)
+all: $(tests_dump) PASS
 
 %.dump: %
 	$(RISCV_OBJDUMP) generated/$< > generated/$@
 	$(RISCV_OBJCOPY) -O verilog generated/$< generated/$<.verilog
 	rm -r generated/$<
+
+PASS:
+	cd generated && touch .PASS
 
 clean:
 	rm -rf generated/*verilog generated/*dump

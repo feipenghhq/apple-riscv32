@@ -127,7 +127,7 @@ case class Peripherals(cpu_rst: Bool,
 
   // GPIO0
   if (SoCCfg.USE_GPIO) {
-    val gpio = Gpio(SoCCfg.gpio0Cfg(), ApbCfg.gpioApbCfg())
+    val gpio = ApbGpio(SoCCfg.gpio0Cfg(), ApbCfg.gpioApbCfg())
     apbDecList.append((gpio.io.apb, SoCAddrMapping.GPIO.sizeMapping()))
     gpio.io.gpio <> _gpio
     for (idx <- 0 until gpio.io.gpio_irq.getBitsWidth) {

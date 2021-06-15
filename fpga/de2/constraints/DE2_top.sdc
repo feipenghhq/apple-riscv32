@@ -38,7 +38,7 @@ set_time_format -unit ns -decimal_places 3
 # Create Clock
 #**************************************************************
 
-create_clock -name {clk} -period 20.000 -waveform { 0.000 10.000 } [get_ports {clk}]
+create_clock -name {clk} -period 37.000 -waveform { 0.000 18.500 } [get_ports {CLK}]
 
 
 #**************************************************************
@@ -63,20 +63,20 @@ create_clock -name {clk} -period 20.000 -waveform { 0.000 10.000 } [get_ports {c
 # Set Input Delay
 #**************************************************************
 
-set_input_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_data[*]}]
+set_input_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {SRAM_data[*]}]
 
 
 #**************************************************************
 # Set Output Delay
 #**************************************************************
 
-set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_data[*]}]
-set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_addr[*]}]
-set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_lb_n}]
-set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_hb_n}]
-set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_ce_n}]
-set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_oe_n}]
-set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {sram_we_n}]
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {SRAM_data[*]}]
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {SRAM_addr[*]}]
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {SRAM_lb_n}]
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {SRAM_ub_n}]
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {SRAM_ce_n}]
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {SRAM_oe_n}]
+set_output_delay -add_delay  -clock [get_clocks {clk}]  10.000 [get_ports {SRAM_we_n}]
 
 #**************************************************************
 # Set Clock Groups

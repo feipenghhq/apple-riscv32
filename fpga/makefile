@@ -38,8 +38,8 @@ endif
 
 $(demo): boardCheck
 	cd $(REPO_ROOT)/sdk/demo/$@ && make BOARD=$(BOARD)
-	sudo $(CMD) -size=$(size) -board=arty -file=$(REPO_ROOT)/sdk/demo/$@/$@.verilog
+	sudo $(CMD) -size=$(size) -board=$(BOARD) -file=$(REPO_ROOT)/sdk/demo/$@/$@.verilog
 
 $(program): boardCheck
 	cd $(REPO_ROOT)/sdk/benchmark/$@ && make BOARD=$(BOARD)
-	sudo $(CMD) -size=$(size) -board=arty -file=$(REPO_ROOT)/sdk/benchmark/$@/$@.verilog
+	sudo $(CMD) -size=$(size) -board=$(BOARD) -file=$(REPO_ROOT)/sdk/benchmark/$@/$@.verilog

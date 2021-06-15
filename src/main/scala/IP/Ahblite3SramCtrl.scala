@@ -51,19 +51,20 @@ case class Sram() extends Bundle with IMasterSlave {
   }
 }
 
-case class SibSramCtrl(ahblite3Cfg: AhbLite3Config) extends Component {
-
-  val io = new Bundle{
+case class Ahblite3SramCtrl(ahblite3Cfg: AhbLite3Config) extends Component {
+  require(ahblite3Cfg.dataWidth == 16)
+  val io = new Bundle {
     val ahblite3 = slave(AhbLite3(ahblite3Cfg))
     val sram     = master(Sram())
   }
   noIoPrefix()
 
   // Register Input
-  val pending_rw = RegNext(io.ahblite3.HTRANS(1) & io.ahblite3.HSEL) init False
-  val pending_write = RegNextWhen(io.ahblite3.HWRITE,      io.ahblite3.HTRANS(1))
-  val pending_mask = RegNextWhen(io.ahblite3.writeMask(), io.ahblite3.HTRANS(1))
-  val pending_addr = RegNextWhen(io.ahblite3.HADDR,       io.ahblite3.HTRANS(1))
+  val enable = io.ahblite3.HTRANS(1) & io.ahblite3.HSEL
+  val pending_rw = RegNext(enable) init False
+  val pending_write = RegNext(enable & io.ahblite3.HWRITE) init False
+  val pending_mask = RegNextWhen(io.ahblite3.writeMask(), enable)
+  val pending_addr = RegNextWhen(io.ahblite3.HADDR,       enable)
 
   val wen = pending_write & (pending_mask.orR)
 

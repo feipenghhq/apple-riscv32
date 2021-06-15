@@ -30,7 +30,7 @@ REPO_ROOT = subprocess_return.decode().rstrip()
 
 def process_rom_file(file_name, file_path):
     """ Split the text and data section for the generated verilog file """
-
+    print(file_name, file_path)
     # Link the instruction rom file to the tb directory
     SRC_FILE = f'/{file_path}/{file_name}.verilog'
     ROM_FILE = os.getcwd() + f'/{file_name}.verilog' # need to link the instruction ram file the the current directory
@@ -72,6 +72,32 @@ def check_finish(dut):
         return True, False
     return False, False
 
+async def register_write_tracer(dut, reg):
+    """ DUMP register write information for a single register """
+    while True:
+        await FallingEdge(dut.io_clk)
+        path = dut.DUT_AppleRISCVSoC.core.regfile_inst
+        wr = path.register_wr.value
+        idx = path.register_wr_addr.value
+        hit = wr == 1 and idx == reg
+        if hit:
+            try:
+                value = hex(path.rd_wdata.value.integer)
+            except ValueError:
+                value = 'XXXX'
+            pc = hex(dut.DUT_AppleRISCVSoC.core.ex2mem_pc.value.integer + 4)
+            print(f"Writing Register {reg} with value {value}, PC = {pc}")
+
+async def dump_pc_sequence(dut, FH):
+    """ dump pc sequence """
+    prev_pc = hex(0x20000000)
+    while True:
+        await FallingEdge(dut.io_clk)
+        new_pc = hex(dut.DUT_AppleRISCVSoC.core.pc_inst.pc_value.value.integer)
+        if prev_pc != new_pc:
+            prev_pc = new_pc
+            FH.write(prev_pc)
+            FH.write("\n")
 
 ###############################
 # Test suites
@@ -96,11 +122,13 @@ def test(dut):
     total_time = 0
     timeout = False
     process_rom_file(file_name, file_path)
-
+    pc_file = open(f"{file_name}_pc.txt", "w")
     # Test start
     clock = Clock(dut.io_clk, 10, units="ns")  # Create a 10us period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
     yield reset(dut)
+    cocotb.fork(register_write_tracer(dut, 2))  # Check Register 2
+    cocotb.fork(dump_pc_sequence(dut, pc_file))  # Check Register 2
     yield Timer(runtime, units="ns")
     finished, passed = False, False
     while not finished and not timeout:
@@ -112,4 +140,5 @@ def test(dut):
             assert False, "Time out"
 
     # check result
+    pc_file.close()
     assert passed, "Test Failed"

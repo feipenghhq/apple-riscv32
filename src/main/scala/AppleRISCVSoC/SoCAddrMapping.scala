@@ -94,19 +94,19 @@ object SoCAddrMapping {
 
   // Instruction Memory
   val IMEM_BASE = 0x20000000L
-  val IMEM_TOP  = 0x2000FFFFL
-  val IMEM = AddressMap(IMEM_BASE, IMEM_TOP)
+  var IMEM_TOP  = 0x2000FFFFL
+  def IMEM(): AddressMap = AddressMap(IMEM_BASE, IMEM_TOP)
 
   // Data memory
   val DMEM_BASE = 0x80000000L
-  val DMEM_TOP  = 0x8000FFFFL
-  val DMEM = AddressMap(DMEM_BASE, DMEM_TOP)
+  var DMEM_TOP  = 0x8000FFFFL
+  def DMEM(): AddressMap = AddressMap(DMEM_BASE, DMEM_TOP)
 }
 
 object AhbLite3Cfg {
   val ahblite3Cfg = AhbLite3Config(AppleRISCVCfg.XLEN, AppleRISCVCfg.XLEN)
-  def imemAhblite3Cfg(): AhbLite3Config = AhbLite3Config(SoCAddrMapping.IMEM.addrWidth(), AppleRISCVCfg.XLEN)
-  def dmemAhblite3Cfg(): AhbLite3Config = AhbLite3Config(SoCAddrMapping.DMEM.addrWidth(), AppleRISCVCfg.XLEN)
+  def imemAhblite3Cfg(): AhbLite3Config = AhbLite3Config(SoCAddrMapping.IMEM().addrWidth(), AppleRISCVCfg.XLEN)
+  def dmemAhblite3Cfg(): AhbLite3Config = AhbLite3Config(SoCAddrMapping.DMEM().addrWidth(), AppleRISCVCfg.XLEN)
   def peripAhblite3Cfg(): AhbLite3Config = AhbLite3Config(SoCAddrMapping.PERIP.addrWidth(), AppleRISCVCfg.XLEN)
 }
 

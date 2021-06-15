@@ -30,7 +30,7 @@ else ifeq ($(SOC), de2)
 	TB_FILES     += $(TB_PATH)/top/de2_tb.v
 	TB_FILES     += $(TB_PATH)/model/IS61LV25616.v
 	TB_FILES     += $(QUARTUS_PATH)/eda/sim_lib/altera_mf.v
-	RTL_FILES    += $(RTL_SOC_PATH)/AppleSoC_de2.v
+	RTL_FILES    += $(RTL_SOC_PATH)/De2SoC.v
 	RTL_FILES    += $(REPO_ROOT)/src/rtl/de2/intelram_2rw_32kb.v
 	TOPLEVEL 	 = de2_tb
 endif
@@ -83,8 +83,8 @@ include $(shell cocotb-config --makefiles)/Makefile.sim
 $(REPO_ROOT)/ArtySoC.v:
 	cd $(REPO_ROOT) && sbt "runMain AppleRISCVSoC.ArtySoCMain"
 
-$(REPO_ROOT)/AppleSoC_de2.v:
-	cd $(REPO_ROOT) && sbt "runMain AppleRISCVSoC.AppleSoC_de2Main"
+$(REPO_ROOT)/De2SoC.v:
+	cd $(REPO_ROOT) && sbt "runMain AppleRISCVSoC.De2SoCMain"
 
 clean_all:
 	@rm -rf __pycache__ *.pyc */__pycache__ */*.pyc *.log

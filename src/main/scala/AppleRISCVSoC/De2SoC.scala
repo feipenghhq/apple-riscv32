@@ -4,15 +4,14 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: ArtySoC
+// Module Name: De2SoC
 //
 // Author: Heqing Huang
-// Date Created: 03/30/2021
-// Revision V2: 05/10/2021
+// Date Created: 06/07/2021
 //
 // ================== Description ==================
 //
-// The Arty A7 SoC top level
+// The De2 SoC top level
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -22,19 +21,26 @@ import AppleRISCV._
 import IP._
 import spinal.core._
 import spinal.lib._
+import spinal.lib.bus.amba3.ahblite.AhbLite3Config
 import spinal.lib.com.uart._
 import spinal.lib.io._
 
-/** Arty SoC */
-case class ArtySoC(
-                    frequency: HertzNumber = 50 MHz
-                  ) extends Component {
+/** De2 SoC */
+case class De2SoC(
+                   frequency: HertzNumber = 50 MHz
+                 ) extends Component {
+
+    // Parameter Override
+    SoCAddrMapping.IMEM_TOP    = 0x20007FFFL   // 32KB Instruction ROM
+    SoCAddrMapping.DMEM_TOP    = 0x8007FFFFL   // 512KB Data RAM
+    SoCCfg.gpio0Width          = 32
 
     val io = new Bundle {
         val clk         = in Bool
         val reset       = in Bool
         val load_imem   = in Bool
         val uart0       = master(Uart())
+        val sram        = master(Sram())
         val gpio        = if (SoCCfg.USE_GPIO) master(TriStateArray(SoCCfg.gpio0Width bits)) else null
         val pwm0        = if (SoCCfg.USE_PWM0) out Bits(4 bits) else null
     }
@@ -64,13 +70,16 @@ case class ArtySoC(
 
         val uartdbg = UartDebug(AhbLite3Cfg.ahblite3Cfg, SoCCfg.uartDbgBaudRate)
         val imem = Ahblite3Bram_1rw(AhbLite3Cfg.imemAhblite3Cfg())
-        val dmem = Ahblite3Bram_1rw(AhbLite3Cfg.dmemAhblite3Cfg())
+        val sramCtrlBridge = AhbliteBridge32to16(AhbLite3Cfg.dmemAhblite3Cfg())
+        val sramCtrl = Ahblite3SramCtrl(AhbLite3Config(AhbLite3Cfg.dmemAhblite3Cfg().addressWidth, 16))
         val ahblite3corssbar = Ahblite3crossbar(AhbLite3Cfg.ahblite3Cfg)
         ahblite3corssbar.io.dbg_ahb  <> uartdbg.io.ahblite3
         ahblite3corssbar.io.ibus_ahb <> cpu_rst_area.core.io.ibus_ahb
         ahblite3corssbar.io.dbus_ahb <> cpu_rst_area.core.io.dbus_ahb
         imem.io.port1 <> ahblite3corssbar.io.imem_ahb.remapAddress(addr => addr.resize(imem.ahblite3Cfg.addressWidth))
-        dmem.io.port1 <> ahblite3corssbar.io.dmem_ahb.remapAddress(addr => addr.resize(dmem.ahblite3Cfg.addressWidth))
+        sramCtrlBridge.io.ahb_in <> ahblite3corssbar.io.dmem_ahb.remapAddress(addr => addr.resize(sramCtrl.ahblite3Cfg.addressWidth))
+        sramCtrlBridge.io.ahb_out <> sramCtrl.io.ahblite3
+        sramCtrl.io.sram <> io.sram
         uartdbg.io.load_imem <> io.load_imem
         uartdbg.io.uart.rxd <> io.uart0.rxd
 
@@ -89,7 +98,7 @@ case class ArtySoC(
     }
 }
 
-object ArtySoCMain{
+object De2SoCMain{
     def main(args: Array[String]) {
         // FIXME
         if (args.length > 0) {
@@ -100,6 +109,6 @@ object ArtySoCMain{
         AppleRISCVCfg.USE_BPU      = false
         CsrCfg.USE_MHPMC3          = true
         CsrCfg.USE_MHPMC4          = true
-        SpinalVerilog(InOutWrapper(ArtySoC()))
+        SpinalVerilog(InOutWrapper(De2SoC()))
     }
 }

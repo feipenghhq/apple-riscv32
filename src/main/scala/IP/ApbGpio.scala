@@ -73,7 +73,7 @@ case class gpio_interrupt(busCtrl: Apb3SlaveFactory, width: Int, enable: Boolean
 }
 
 
-case class Gpio(cfg: GpioCfg, apbCfg: Apb3Config) extends Component {
+case class ApbGpio(cfg: GpioCfg, apbCfg: Apb3Config) extends Component {
   
   val io = new Bundle {
     val gpio     = master(TriStateArray(cfg.GPIO_WIDTH bits))

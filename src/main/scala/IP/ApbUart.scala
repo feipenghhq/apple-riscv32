@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: SibUart
+// Module Name: ApbUart
 //
 // Author: Heqing Huang
 // Date Created: 04/22/2021
@@ -13,7 +13,7 @@
 //
 // ================== Description ==================
 //
-// Sib MM Uart Controller. Compatible with SiFive Freedom E310 SoC
+// Apb MM Uart Controller. Compatible with SiFive Freedom E310 SoC
 //
 // • 8-N-1 and 8-N-2 formats: 8 data bits, no parity bit, 1 start bit, 1 or 2 stop bits
 // • 8-entry transmit and receive FIFO buffers with programmable watermark interrupts

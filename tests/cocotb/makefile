@@ -3,7 +3,8 @@
 #------------------------------------------------
 
 SOC 	?= arty
-TIMEOUT ?= 20000
+TIMEOUT ?= 100000
+REPO_ROOT = $(shell git rev-parse --show-toplevel)
 
 #------------------------------------------------
 # Run RISCV Test
@@ -11,8 +12,6 @@ TIMEOUT ?= 20000
 .PHONY: dedicated_tests riscv_tests
 
 objects = dedicated_tests riscv_tests
-
-all: $(objects)
 
 $(objects): clean
 	@rm -rf output/$@
@@ -23,6 +22,7 @@ $(objects): clean
 	@cd output/$@ && ln -s ../../scripts/makefile .
 	@cd output/$@ && python3 run_all_tests.py -soc $(SOC) -timeout $(TIMEOUT) -test "$@"
 
+all: $(objects)
 
 #------------------------------------------------
 # Run software test
@@ -37,12 +37,14 @@ ifeq ($(NAME), )
 endif
 
 software_test: software_test_check clean
+	rm -rf output/software_test
+	cd $(REPO_ROOT)/sdk/demo/$(NAME) && make BOARD=$(SOC)
 	@rm -rf output/$@
 	@mkdir -p output/$@
 	@cd output/$@ && ln -s ../../scripts/run_software_tests.py .
 	@cd output/$@ && ln -s ../../scripts/run_one_test.py .
 	@cd output/$@ && ln -s ../../scripts/makefile .
-	@cd output/$@ && python3 run_software_tests.py -soc $(SOC) -timeout $(TIMEOUT) -test $(NAME)
+	@cd output/$@ && python3 run_software_tests.py -soc $(SOC) -timeout $(TIMEOUT) -test $(NAME) -dump $(DUMP)
 
 clean:
-	@rm -rf output/$(objects)
+	@rm -rf output/$(objects) output/software_test
