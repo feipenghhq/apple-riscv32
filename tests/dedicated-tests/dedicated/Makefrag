@@ -4,5 +4,6 @@
 
 dedicated_sc_tests = \
     access_imem \
+    b2b_load_store \
 
 dedicated_p_tests = $(addprefix dedicated-, $(dedicated_sc_tests))

@@ -56,7 +56,9 @@ case class LSU() extends Component {
   }
 
   val addr_phase = Bool
-  val data_phase = Bool
+  val data_phase = RegInit(False)
+  val data_phase_wait = data_phase & ~io.dbus_ahb.HREADY
+  val data_phase_complete = data_phase & io.dbus_ahb.HREADY
 
   // ========================================
   // Processing input
@@ -81,9 +83,14 @@ case class LSU() extends Component {
   io.exc_sd_addr_ma := io.write & (half_addr_misalign | word_addr_misalign)
 
   // Check if data phase can complete at one cycle
-  addr_phase := (wen | ren)
-  data_phase := RegNextWhen(addr_phase, ~io.lsu_wait_data)
-  io.lsu_wait_data  := ~io.dbus_ahb.HREADY & data_phase
+  addr_phase := (wen | ren) & ~data_phase_wait
+  when(addr_phase) {
+    data_phase := True
+  }.elsewhen(data_phase_complete) {
+    data_phase := False
+  }
+
+  io.lsu_wait_data  := data_phase_wait
 
   // Check if the dbus is busy at the address phase.
   // In our current implementation, we have dedicated Instruction RAM (IRAM) and Data RAM (DRAM).

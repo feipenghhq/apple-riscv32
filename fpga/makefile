@@ -21,7 +21,7 @@ pgm:
 REPO_ROOT = $(shell git rev-parse --show-toplevel)
 CMD = $(REPO_ROOT)/sdk/tools/UartDownload.py
 
-demo = blink uart
+demo = blink uart gpio interrupt mem_test pwm
 program = coremark
 size ?=
 

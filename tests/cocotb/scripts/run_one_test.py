@@ -127,8 +127,8 @@ def test(dut):
     clock = Clock(dut.io_clk, 10, units="ns")  # Create a 10us period clock on port clk
     cocotb.fork(clock.start())  # Start the clock
     yield reset(dut)
-    cocotb.fork(register_write_tracer(dut, 2))  # Check Register 2
-    cocotb.fork(dump_pc_sequence(dut, pc_file))  # Check Register 2
+    #cocotb.fork(register_write_tracer(dut, 2))  # Check Register 2
+    #cocotb.fork(dump_pc_sequence(dut, pc_file))  # Check Register 2
     yield Timer(runtime, units="ns")
     finished, passed = False, False
     while not finished and not timeout:

@@ -5,7 +5,7 @@ ENTRY( _start)
 
 MEMORY
 {
-    rom (rxai!w): ORIGIN = 0x20000000, LENGTH = 64K
+    rom (rxai!w): ORIGIN = 0x20000000, LENGTH = 32K
     ram (wxa!ri): ORIGIN = 0x80000000, LENGTH = 64K
 }
 

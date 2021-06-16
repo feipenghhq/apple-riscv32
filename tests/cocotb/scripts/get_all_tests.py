@@ -13,10 +13,12 @@ def riscv_test():
 def dedicated_tests():
     """ Get all the test for dedicated test """
     path = "tests/dedicated-tests/generated"
-    names = ["dedicated-access_imem"]
+    abs_path = f"{REPO_ROOT}/{path}"
+    files = os.listdir(abs_path)
     tests = {}
-    for name in names:
-        tests[name] = f"{REPO_ROOT}/{path}"
+    for test in files:
+        if 'verilog' in test:
+            tests[test.replace(".verilog", "")] = f"{REPO_ROOT}/{path}"
     return tests
 
 def riscv_tests():

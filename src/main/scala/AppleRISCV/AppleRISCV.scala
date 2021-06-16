@@ -496,10 +496,10 @@ case class AppleRISCV() extends Component {
         ex2mem_pipe_valid := ex_stage_valid & ~ex2mem_nop
         mem2wb_pipe_valid := mem_stage_valid & ~mem2wb_nop
 
-        if2id_pipe_stall  := if2id_stall  & ~if_flush
-        id2ex_pipe_stall  := id2ex_stall  & ~id_flush
-        ex2mem_pipe_stall := ex2mem_stall & ~ex_flush
-        mem2wb_pipe_stall := mem2wb_stall & ~mem_flush
+        if2id_pipe_stall  := if2id_stall
+        id2ex_pipe_stall  := id2ex_stall
+        ex2mem_pipe_stall := ex2mem_stall
+        mem2wb_pipe_stall := mem2wb_stall
     }
 }
 

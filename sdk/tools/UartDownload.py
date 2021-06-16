@@ -117,10 +117,12 @@ def cmdParser():
 def getComport(board):
     all_port_info = comports()
     for p, des, _ in all_port_info:
+        print(p, des)
         if PORT_NAME[board] in des:
             print("Found Com Ports: " + p)
             print(des)
             return p
+    raise ValueError("Did not find com port")
 
 if __name__ == "__main__":
     args = cmdParser()

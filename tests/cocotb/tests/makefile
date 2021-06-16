@@ -45,6 +45,7 @@ SIM 		 ?=icarus
 DUMP	     ?=0
 COMPILE_ARGS =
 PLUSARGS 	 =
+MODULE 		 ?=
 
 ifeq ($(SIM),icarus)
 	ifeq ($(DUMP),1)

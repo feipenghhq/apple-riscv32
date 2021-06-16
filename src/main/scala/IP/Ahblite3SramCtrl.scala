@@ -65,7 +65,6 @@ case class Ahblite3SramCtrl(ahblite3Cfg: AhbLite3Config) extends Component {
   val pending_write = RegNext(enable & io.ahblite3.HWRITE) init False
   val pending_mask = RegNextWhen(io.ahblite3.writeMask(), enable)
   val pending_addr = RegNextWhen(io.ahblite3.HADDR,       enable)
-
   val wen = pending_write & (pending_mask.orR)
 
   // Sram I/O

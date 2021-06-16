@@ -94,7 +94,7 @@ object De2_topMain{
   def main(args: Array[String]) {
     // CPU Configuration
     AppleRISCVCfg.USE_RV32M   = true
-    AppleRISCVCfg.USE_BPU     = false
+    AppleRISCVCfg.USE_BPU     = true
     CsrCfg.USE_MHPMC3         = true
     CsrCfg.USE_MHPMC4         = true
     SpinalVerilog(InOutWrapper(De2_top()))

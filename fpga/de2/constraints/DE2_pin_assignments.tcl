@@ -206,7 +206,7 @@ set_location_assignment PIN_Y12 -to LEDG[8]
 #set_location_assignment PIN_N2 -to CLOCK_50
 #set_location_assignment PIN_P26 -to EXT_CLOCK
 # clk
-set_location_assignment PIN_N2 -to CLK
+set_location_assignment PIN_D13 -to CLK
 ##################################################
 # PS2
 ##################################################
