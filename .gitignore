@@ -55,6 +55,9 @@ tests/cocotb/*/*/sim_build/*
 tests/cocotb/output
 tests/cocotb/*/*rom
 tests/cocotb/dedicated_tests
+tests/ips/*/*.xml
+tests/ips/*/sim_build
+
 *.gtkw
 *.vvp
 .PASS
