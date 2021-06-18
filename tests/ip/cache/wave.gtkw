@@ -1,0 +1,55 @@
+[*]
+[*] GTKWave Analyzer v3.3.103 (w)1999-2019 BSI
+[*] Fri Jun 18 21:38:25 2021
+[*]
+[dumpfile] "/home/feipenghhq/Desktop/RISCV/AppleRISCV/tests/ip/cache/DUT.vcd"
+[dumpfile_mtime] "Fri Jun 18 21:32:45 2021"
+[dumpfile_size] 2011283
+[savefile] "/home/feipenghhq/Desktop/RISCV/AppleRISCV/tests/ip/cache/wave.gtkw"
+[timestart] 47899400
+[size] 3440 1302
+[pos] -1221 -369
+*-17.000000 48589400 54720000 48560000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] cache_tb.
+[treeopen] cache_tb.DUT.
+[sst_width] 405
+[signals_width] 607
+[sst_expanded] 1
+[sst_vpaned_height] 796
+@28
+cache_tb.DUT.clk
+cache_tb.DUT.reset
+cache_tb.DUT.io_cache_ahb_HSEL
+cache_tb.DUT.io_cache_ahb_HTRANS[1:0]
+cache_tb.DUT.io_cache_ahb_HWRITE
+cache_tb.DUT.io_cache_ahb_HREADYOUT
+@22
+cache_tb.DUT.io_cache_ahb_HRDATA[31:0]
+cache_tb.DUT.io_cache_ahb_HADDR[23:0]
+@200
+-
+@28
+cache_tb.DUT.io_mem_ahb_HSEL
+cache_tb.DUT.io_mem_ahb_HWRITE
+cache_tb.DUT.io_mem_ahb_HREADYOUT
+cache_tb.DUT.io_mem_ahb_HTRANS[1:0]
+cache_tb.DUT.io_mem_ahb_HREADYOUT
+@23
+cache_tb.DUT.io_mem_ahb_HADDR[23:0]
+@22
+cache_tb.DUT.io_mem_ahb_HRDATA[31:0]
+cache_tb.DUT.io_mem_ahb_HWDATA[31:0]
+@200
+-
+@820
+cache_tb.DUT.CacheCtrl_stateReg_string[167:0]
+@28
+cache_tb.DUT.CacheCtrl_memWordCnt[1:0]
+@200
+-
+@28
+cache_tb.DUT.CacheCtrl_newSetId[1:0]
+@22
+cache_tb.DUT.setPorts_0_rdata[63:0]
+[pattern_trace] 1
+[pattern_trace] 0

@@ -9,10 +9,11 @@
 ##
 ## ================== Description ==================
 ##
-## AHB Bus Function
+## AHB BFM
 ##
 ##################################################################################################
 
+import random
 import cocotb
 import cocotb_bus
 from cocotb.clock import Clock
@@ -21,6 +22,7 @@ from cocotb_bus.drivers import BusDriver
 from cocotb_bus.monitors import BusMonitor
 from cocotb_bus.bus import Bus
 from CacheScoreboard import *
+
 
 
 #########################################################################
@@ -71,21 +73,24 @@ class AHB3Generator(object):
     """ AHB Lite 3 Generator
         Only support single transcation right now.
     """
-    def __init__(self, clk, driver, scoreboard):
+    def __init__(self, clk, driver, scoreboard, debug=False):
         self.clk        = clk
         self.count      = 0
         self.readCount  = 0
         self.writeCount = 0
         self.driver     = driver
         self.scoreboard = scoreboard
-        self.wait       = 100
+        self.wait       = 200
         self.log        = cocotb.log
+        self.debug      = debug
 
     def reset(self):
         self.driver.append(AHB3ReqTrans(False, 0x0, 0x0, False))
 
     async def read(self, addr):
-        self.log.debug(f"Generate read request at addr {addr}")
+        await self.driver._wait_for_signal(self.driver.bus.HREADYOUT)
+        if self.debug:
+            self.log.info(f"Generate read request at addr {addr}")
         # Push the expected read resp transaction to scoreboard
         tr = AHB3RespTrans(addr, self.scoreboard.getData(addr))
         self.scoreboard.addExpected(tr)
@@ -94,12 +99,13 @@ class AHB3Generator(object):
         dataPhase = AHB3ReqTrans(False, addr, 0x0, False)
         await self.driver.send(addrPhase)
         await self.driver.send(dataPhase)
-        # FIXME self.driver._wait_for_signal(self.driver.bus.HREADYOUT)
-        await Timer(self.wait, "ns") # FIXME
+        await Timer(random.randint(1, self.wait), "ns")
 
 
     async def write(self, addr, data):
-        self.log.info(f"Generate write request at addr {hex(addr)} with data {data}")
+        await self.driver._wait_for_signal(self.driver.bus.HREADYOUT)
+        if self.debug:
+            self.log.info(f"Generate write request at addr {hex(addr)} with data {data}")
         # update data in coreboard
         self.scoreboard.updateMemory(addr, data)
         # Send the transaction
@@ -107,7 +113,7 @@ class AHB3Generator(object):
         dataPhase = AHB3ReqTrans(False, 0x0, data, False)
         await self.driver.send(addrPhase)
         await self.driver.send(dataPhase)
-        await Timer(self.wait, "ns") # FIXME
+        await Timer(random.randint(1, self.wait), "ns")
 
 
 class AHB3Driver(BusDriver):
@@ -117,6 +123,11 @@ class AHB3Driver(BusDriver):
 class AHB3Monitor(BusMonitor):
     """ AHB Lite3 BusMonitor """
     _signals = AHB3Signal.signal
+
+    def __init__(self, entity, name, clock, reset=None, debug=False):
+        super().__init__(entity, name, clock, reset)
+        self.debug = debug
+
 
     def readHSEL(self):
         try:
@@ -133,7 +144,8 @@ class AHB3Monitor(BusMonitor):
             if self.bus.HREADYOUT.value and hasReadReq:
                 hasReadReq = False
                 data = self.bus.HRDATA.value.integer
-                self.log.info(f"Captured read data: {data}, addr: {hex(addr)}")
+                if self.debug:
+                    self.log.info(f"Captured read data: {data}, addr: {hex(addr)}")
                 tr = AHB3RespTrans(addr, data)
                 self._recv(tr)
             if (not self._reset.value) and self.readHSEL() and (not self.bus.HWRITE.value):

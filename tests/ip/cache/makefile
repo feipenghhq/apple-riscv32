@@ -49,6 +49,9 @@ endif
 # Cocotb config
 # -----------------------------------------
 #export COCOTB_REDUCED_LOG_FMT = 1
+#export COCOTB_LOG_LEVEL = INFO
+DBG ?= 0
+export DEBUG = $(DBG)
 
 # -----------------------------------------
 # Test config
