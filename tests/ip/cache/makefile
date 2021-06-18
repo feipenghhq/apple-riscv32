@@ -18,7 +18,7 @@ RTL_PATH  		= $(REPO_ROOT)
 # -----------------------------------------
 # Source files
 # -----------------------------------------
-RTL_FILES 		= $(RTL_PATH)/Ahblite3CacheSetAssociative.v
+RTL_FILES 		= $(RTL_PATH)/Ahblite3Cache.v
 TB_FILES		= $(TB_PATH)/top/cache_tb.v
 TOPLEVEL		= cache_tb
 
@@ -30,7 +30,7 @@ VERILOG_SOURCES += $(RTL_FILES)
 # -----------------------------------------
 SIM 		 ?=icarus
 DUMP	     ?=0
-MODULE 		 = cache_test
+MODULE 		 ?= directed_test
 
 ifeq ($(SIM),icarus)
 	ifeq ($(DUMP),1)
@@ -48,7 +48,7 @@ endif
 # -----------------------------------------
 # Cocotb config
 # -----------------------------------------
-export COCOTB_REDUCED_LOG_FMT = 1
+#export COCOTB_REDUCED_LOG_FMT = 1
 
 # -----------------------------------------
 # Test config

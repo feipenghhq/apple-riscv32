@@ -29,7 +29,7 @@ module cache_tb ();
   reg               clk;
   reg               reset;
 
-Ahblite3CacheSetAssociative DUT(.*);
+Ahblite3Cache DUT(.*);
 
 `ifdef DUMP_VCD
 initial begin
