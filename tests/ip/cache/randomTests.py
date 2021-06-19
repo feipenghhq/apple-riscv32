@@ -21,21 +21,21 @@ from env import *
 memDepth = 4096
 
 def addrRandom():
-    """ Constraint the address """
+    """ random address """
     return (random.randint(0, ((memDepth)<<2)-1) >> 2) << 2
 
 def addrSameSet():
-    """ Generate address with the same set """
+    """ address within the same set """
     setIdx = 0
     setBitStart = 3
-    setBitEnd = 9
+    setBitEnd = 11
     addrMax = memDepth >> setBitEnd - 1
     addr = random.randint(0, addrMax)
     addr = (addr << setBitEnd) + (setIdx << (setBitStart-1))
     return addr
 
 @cocotb.coroutine
-def cacheRandomRead(dut, iterNum, readOnly, addrGen, seed):
+def cacheRandomRead(dut, iterNum, addrGen, seed):
     """ Cache Ramdom Read/Write test
     """
     cacheAhbGen = setup(dut)
@@ -44,17 +44,23 @@ def cacheRandomRead(dut, iterNum, readOnly, addrGen, seed):
     for i in range(iterNum):
         addr = addrGen()
         data = random.randint(0, 1000)
-        if readOnly or random.randint(0, 1):
+        if random.randint(0, 1):
             yield cacheAhbGen.read(addr)
         else:
             yield cacheAhbGen.write(addr, data)
 
 seeds = [random.randint(0, sys.maxsize-1) for x in range(10)]
-randomReadTf = cocotb.regression.TestFactory(cacheRandomRead)
-randomReadTf.add_option("iterNum",  [8000])
-randomReadTf.add_option("readOnly", [0])
-randomReadTf.add_option("addrGen",  [addrRandom, addrSameSet])
-randomReadTf.add_option("seed",     seeds)
-#randomReadTf.add_option("addrGen",  [addrRandom])
-#randomReadTf.add_option("seed",     [581984651058802384])  # To debug a seed
-randomReadTf.generate_tests()
+randomAddrTF = cocotb.regression.TestFactory(cacheRandomRead)
+randomAddrTF.add_option("iterNum",  [10000])
+randomAddrTF.add_option("addrGen",  [addrRandom])
+randomAddrTF.add_option("seed",     seeds)
+#randomAddrTF.add_option("addrGen",  [addrRandom])
+#randomAddrTF.add_option("seed",     [118544370685217500])  # To debug a seed
+randomAddrTF.generate_tests(prefix="randomAddr")
+
+seeds = [random.randint(0, sys.maxsize-1) for x in range(5)]
+sameSetAddrTF = cocotb.regression.TestFactory(cacheRandomRead)
+sameSetAddrTF.add_option("iterNum",  [2000])
+sameSetAddrTF.add_option("addrGen",  [addrSameSet])
+sameSetAddrTF.add_option("seed",     seeds)
+sameSetAddrTF.generate_tests(prefix="sameSetAddr")

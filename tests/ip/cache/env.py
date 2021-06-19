@@ -20,7 +20,7 @@ from cocotb.triggers import FallingEdge, RisingEdge, Timer
 import random
 import os
 
-from AhbBFM import AHB3Bus, AHB3Driver, AHB3Generator, AHB3Monitor
+from AhbBFM import AHB3Bus, AHB3Driver, AHB3Generator, AHB3Monitor, AHB3Signal
 from MemoryBFM import *
 from CacheScoreboard import *
 
@@ -52,7 +52,7 @@ async def reset(dut, time=20):
     await RisingEdge(dut.clk)
 
 def setup(dut, memDepth = 4096):
-    memoryAhbBus = AHB3Bus(dut, 'io_mem_ahb')
+    memoryAhbBus = AHB3Bus(dut, 'io_mem_ahb', type=AHB3Signal.MASTER)
     memory       = MemoryModel(dut, memDepth, 32, memoryAhbBus, debug=debug)
     cacheAhbMon  = AHB3Monitor(dut, 'io_cache_ahb', dut.clk, reset=dut.reset, debug=debug)
     cacheSB      = CacheScoreboard(dut, memory.getMemory(), cacheAhbMon, debug=debug)

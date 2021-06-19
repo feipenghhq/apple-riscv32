@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: SibSramCtrl
+// Module Name: Ahblite3Cache
 //
 // Author: Heqing Huang
 // Date Created: 06/15/2021
@@ -21,7 +21,7 @@
 // - [x] Write Miss/Write Hit
 // - [x] Read Set Replacement and Flushing
 // - [x] Write Set Replacement and Flushing
-// - [ ] LRU replacement policy
+// - [x] NRU replacement policy
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 package IP
@@ -36,10 +36,11 @@ import scala.collection.mutable.ArrayBuffer
 /** Cache Configuration */
 case class CacheConfig(
                         ahblite3Cfg: AhbLite3Config,
-                        cacheLineSize: Int,            // cache line size in byte
-                        setNum: Int,                   // number of set
+                        cacheLineSize: Int,             // cache line size in byte
+                        setNum: Int,                    // number of set
                         setSize: Int,                   // size of each set
-                        ramType: String = "DISTRIBUTED"
+                        ramType: String = "DISTRIBUTED",
+                        replacement: String = "NRU"     // replacement policy
                       ) {
   def wordCount          = cacheLineSize / 4
   def cacheLineSizeBits  = cacheLineSize * 8
@@ -62,17 +63,24 @@ case class SetLogicPort(cacheConfig: CacheConfig) extends Bundle with IMasterSla
   val rdIdx     = UInt(cacheConfig.idxAddrRange.size bits)
   val wrIdx     = UInt(cacheConfig.idxAddrRange.size bits)
   val wdata     = Bits(cacheConfig.cacheLineSize*8 bits)
-  val updateTag  = Bool    // write new tag
+  val updateTag = Bool    // write new tag
+  val setnru    = if (cacheConfig.replacement == "NRU") Bool else null
+  val clrnru    = if (cacheConfig.replacement == "NRU") Bool else null
 
   val hit    = Bool
-  val vld    = Bool
+  //val vld    = Bool
   val dty    = Bool
   val tagout = UInt(cacheConfig.tagAddrRange.size bits)
   val rdata  = Bits(cacheConfig.cacheLineSize * 8  bits)
+  val nru    = if (cacheConfig.replacement == "NRU") Bool else null
 
   override def asMaster(): Unit = {
     in(fill, write, mask, tag, rdIdx, wrIdx, wdata, updateTag)
-    out(hit, vld, dty, tagout, rdata)
+    out(hit, dty, tagout, rdata)
+    if (cacheConfig.replacement == "NRU") {
+      in(setnru, clrnru)
+      out(nru)
+    }
   }
 }
 
@@ -85,6 +93,7 @@ case class SetsLogic(cacheConfig: CacheConfig) extends Component {
   val data_ram  = Mem(Bits(cacheConfig.cacheLineSizeBits bits), cacheConfig.setSize)
   val valid     = Reg(Bits(cacheConfig.setSize bits)) init 0  // valid bits for each entry
   val dirty     = Reg(Bits(cacheConfig.setSize bits)) init 0  // dirty bits for each entry
+  val nrus      = if (cacheConfig.replacement == "NRU") Reg(Bits(cacheConfig.setSize bits)) else null // NRU bits
 
   // Additional logic for distributed ram
   val distr = if (cacheConfig.ramType == "DISTRIBUTED") new Area {
@@ -100,11 +109,13 @@ case class SetsLogic(cacheConfig: CacheConfig) extends Component {
 
   val valid_out = RegNext(valid(io.rdIdx))
   val dirty_out = RegNext(dirty(io.rdIdx))
+  val nru_out   = RegNext(nrus(io.rdIdx))
   val tag_s1    = RegNext(io.tag)
 
   io.hit    := valid_out && (tag_out === tag_s1)
-  io.vld    := valid_out
+  //io.vld    := valid_out
   io.dty    := dirty_out
+  io.nru    := nru_out
   io.tagout := tag_out
 
   // Read
@@ -137,6 +148,18 @@ case class SetsLogic(cacheConfig: CacheConfig) extends Component {
   when(io.updateTag) {
     valid(io.wrIdx) := True
   }
+
+  // NRU logic
+  val aaa = SInt(cacheConfig.setSize bits)
+  aaa := -1
+  nrus init aaa.asBits
+
+  when(io.clrnru) {
+    nrus(io.rdIdx) := False
+  }.elsewhen(io.setnru) {
+    nrus(io.rdIdx) := True
+  }
+
 }
 
 /** AHB3 Cache */
@@ -176,15 +199,31 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
     idx
   }
 
-  /** Find the Set to fill the data */
-  def findNewSet(hasFree: Bool, free: Bits): Bits = {
-    val idx = free.clone()
-    when(hasFree) {
-      idx := free
+  /** find the lowest 1 */
+  def bitMask(b: Bits): Bits = {
+    b & (~b.asUInt + 1).asBits
+  }
+
+  /**
+   * Find the Set to fill the data
+   * Using NRU logic
+   */
+  def findNewSetNRU(nrus: Bits, dirtys: Bits): Bits = {
+    val noNru = ~nrus.orR
+    val noDirty = ~dirtys.orR
+    val allDirty = dirtys.andR
+    val setIds = Bits(nrus.getBitsWidth bits)
+    // No NRU found and all Dirty or No Dirty, choose set 0
+    when(noNru && (allDirty || noDirty)) {
+      setIds := B"1".resized
+    // No NRU found and not all Dirty, choose the lowest non-dirty set
+    }.elsewhen(noNru && !allDirty) {
+      setIds := bitMask(dirtys)
+    // Choose the lowest NRU
     }.otherwise{
-      idx := B"1'b1".resize(free.getBitsWidth)
+      setIds := bitMask(nrus)
     }
-    idx
+    setIds
   }
 
   /** Convert Array of Bool to bits */
@@ -197,7 +236,7 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
 
   val io = new Bundle {
     val cache_ahb = slave(AhbLite3(cacheConfig.ahblite3Cfg))
-    val mem_ahb   = master(AhbLite3(cacheConfig.ahblite3Cfg))
+    val mem_ahb   = master(AhbLite3Master(cacheConfig.ahblite3Cfg))
   }
 
   // ----------------------------------------
@@ -243,8 +282,6 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
     cacheSets.append(set)
   }
 
-
-
   //###############################################################//
 
   // ----------------------------------------
@@ -266,15 +303,15 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
     // Variable
     // ----------------------------------------
     val cacheHit       = setPorts.map(_.hit).reduce(_ | _)                  // overall cache hit
-    val cacheVlds      = arrayToBit(setPorts.map(_.vld))                    // cache valid for each set
-    val cacheDirty     = setPorts.map(_.dty).reduce(_ | _)                  // overall cache dirty
+    //val cacheVlds      = arrayToBit(setPorts.map(_.vld))                  // cache valid for each set
+    val cacheNrus      = arrayToBit(setPorts.map(_.nru))                    // cache nru for each set
+    val cacheDirtys    = arrayToBit(setPorts.map(_.dty))                    // cache dirty for each set
     val cacheLineData  = MuxOH(setPorts.map(_.hit), setPorts.map(_.rdata))  // cache line data from the hit set
-    val freeSetIds     = findFreeSet(cacheVlds)                             // free set indexes
-    val hasFreeSet     = freeSetIds.orR
-    val newSetId       = findNewSet(hasFreeSet, freeSetIds)                 // the set to store the new data from memory
+    val newSetId       = findNewSetNRU(cacheNrus, cacheDirtys)              // the set to store the new data from memory
     val cacheLineTag   = MuxOH(newSetId, setPorts.map(_.tagout))            // cache line tag from the hit set
     val flushAddr      = cacheLineTag @@ cacheSetIdx_ff @@ word0Addr        // the address for flushing data to memory
-
+    val noNru          = ~cacheNrus.orR                                     // No available NRUs, need to reset NRU
+    val newSetDirty    = (newSetId & cacheDirtys).orR
     val cacheWriteMask = Reg(Bits(cacheConfig.cacheLineSize bits))                // cache line mask for cache write, determine which word to write
     val addrInc        = Reg(UInt(cacheConfig.wordAddrRange.size+2 bits)) init 0  // address increment on base addr
     val memWordCnt     = Reg(UInt(cacheConfig.wordAddrRange.size+1 bits)) init 0  // number of access word from/to memory
@@ -289,7 +326,6 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
     io.cache_ahb.HRESP     := False
     io.cache_ahb.HRDATA    := 0
 
-    io.mem_ahb.HSEL        := False
     io.mem_ahb.HWRITE      := False
     io.mem_ahb.HADDR       := 0
     io.mem_ahb.HWDATA      := 0
@@ -298,7 +334,6 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
     io.mem_ahb.HSIZE       := 0
     io.mem_ahb.HBURST      := 0
     io.mem_ahb.HMASTLOCK   := False
-    io.mem_ahb.HREADY      := True
 
     rdataCapture           := memWordCnt === wordIdx_ff
 
@@ -312,6 +347,10 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
       p.mask     := cacheWriteMask
       p.wdata    := wordToCacheLine(io.cache_ahb.HWDATA)
       p.updateTag := False
+      if (cacheConfig.replacement == "NRU") {
+        p.setnru := False
+        p.clrnru := False
+      }
     }
 
     /** group logic for new cache request */
@@ -334,7 +373,6 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
       val cacheLineAddrWord0 = cacheLineAddr_ff @@ word0Addr
       // for flush operation, the address should come from cache tag
       val baseAddr = flush ? flushAddr | cacheLineAddrWord0
-      io.mem_ahb.HSEL   := True
       io.mem_ahb.HWRITE := write
       io.mem_ahb.HADDR  := baseAddr + addrInc
       io.mem_ahb.HTRANS := NONSEQ
@@ -369,11 +407,13 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
         }.otherwise{
           goto(CACHE_IDLE)
         }
+        // clr the nru bit as we just used this set
+        if (cacheConfig.replacement == "NRU") {for ((p, idx) <- setPorts.zipWithIndex) {p.clrnru := newSetId(idx)}}
       // Cache Miss - Grab the data from main memory
       }.otherwise{
         when(io.mem_ahb.HREADY) {
           // Flush the dirty cache line to Main Memory
-          when(!hasFreeSet && cacheDirty) {
+          when(newSetDirty) {
             memAccess(True, addrInc, True)
             goto(FLUSH)
           // Nothing to send back, read the data from memory
@@ -384,11 +424,13 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
         }.otherwise{
           //goto(READ_WAIT_MEMORY)
         }
+        // If no NRU bit found, reset NRU
+        if (cacheConfig.replacement == "NRU") {setPorts.foreach(_.setnru := noNru)}
       }
     }
 
     READ_MEMORY.whenIsActive {
-      when(io.mem_ahb.HREADYOUT) {
+      when(io.mem_ahb.HREADY) {
         memWordCnt     := memWordCnt + 1
         addrInc        := addrInc + 4
         cacheWriteMask := (B"4'hf" << (memWordCnt << 2)).resized
@@ -416,6 +458,8 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
               goto(CACHE_IDLE)
             }
           }
+          // clr the nru bit as we just used this set
+          if (cacheConfig.replacement == "NRU") {for ((p, idx) <- setPorts.zipWithIndex) {p.clrnru := newSetId(idx)}}
         }.otherwise{
           memAccess(write = False, addrInc, False)
         }
@@ -444,7 +488,7 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
       memWordCnt_s1     := memWordCnt
       // Need to use the value of memWordCnt from previous clock because the data is one clock delayed
       io.mem_ahb.HWDATA := cacheLineToWord(MuxOH(newSetId, setPorts.map(_.rdata)))(memWordCnt_s1(memWordCnt_s1.getBitsWidth-2 downto 0))
-      when(io.mem_ahb.HREADYOUT) {
+      when(io.mem_ahb.HREADY) {
         // FLUSH complete, Start reading the memory
         when(memWordCnt === cacheConfig.wordCount) {
           addrInc      := 4

@@ -41,25 +41,24 @@ class MemoryModel:
         haddr  = 0
         hwrite = 0
         hwdata = 0
-        self.bus.driveASignal('HRESP',      0)
-        self.bus.driveASignal('HREADYOUT',  1)
-        self.bus.driveASignal('HRDATA',     0)
+        self.bus.driveASignal('HRESP',  0)
+        self.bus.driveASignal('HREADY', 1)
+        self.bus.driveASignal('HRDATA', 0)
         while True:
             await RisingEdge(self.dut.clk)
             await Timer(1, "ns")
             # process address phase from previous clock
-            if hsel and (htrans > 1) and hwrite:
+            if (htrans > 1) and hwrite:
                 hwdata = self.bus.HWDATA.value.integer
                 self.memory[haddr>>2] = hwdata
                 if self.debug:
                     self.dut._log.info(f"Main Memory Write - addr: {hex(haddr)}, data: {hwdata}" )
-            if hsel and (htrans > 1) and not hwrite:
+            if (htrans > 1) and not hwrite:
                 self.bus.driveASignal('HRDATA', self.memory[haddr>>2])
                 if self.debug:
                     self.dut._log.info(f"Main Memory Read - addr: {hex(haddr)}, data: {self.memory[haddr>>2]}" )
 
             # get the address phase
-            hsel   = self.bus.HSEL.value.integer
             htrans = self.bus.HTRANS.value.integer
             haddr  = self.bus.HADDR.value.integer
             hwrite = self.bus.HWRITE.value.integer

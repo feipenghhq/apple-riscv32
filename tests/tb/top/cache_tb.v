@@ -1,6 +1,6 @@
 module cache_tb ();
 
-  reg      [15:0]   io_cache_ahb_HADDR;
+  reg      [23:0]   io_cache_ahb_HADDR;
   reg               io_cache_ahb_HSEL;
   reg               io_cache_ahb_HREADY;
   reg               io_cache_ahb_HWRITE;
@@ -13,7 +13,7 @@ module cache_tb ();
   wire     [31:0]   io_cache_ahb_HRDATA;
   wire              io_cache_ahb_HREADYOUT;
   wire              io_cache_ahb_HRESP;
-  wire     [15:0]   io_mem_ahb_HADDR;
+  wire     [23:0]   io_mem_ahb_HADDR;
   wire              io_mem_ahb_HSEL;
   wire              io_mem_ahb_HREADY;
   wire              io_mem_ahb_HWRITE;

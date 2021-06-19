@@ -29,12 +29,24 @@ from CacheScoreboard import *
 
 class AHB3Signal(object):
     """ Signal of AHB3 """
-    signal = ['HSEL', 'HWRITE', 'HADDR', 'HWDATA', 'HRDATA', 'HSIZE',
-              'HTRANS', 'HPROT', 'HBURST', 'HMASTLOCK', 'HREADY', 'HREADYOUT']
+    common = ['HWRITE', 'HADDR', 'HWDATA', 'HRDATA', 'HSIZE',
+              'HTRANS', 'HPROT', 'HBURST', 'HMASTLOCK',]
+
+    ahb3SlaveSignal = common + ['HSEL',  'HREADYOUT']
+    ahb3MasterSignal = common + ['HREADY']
+    SLAVE  = 0
+    MASTER = 1
 
 class AHB3Bus(Bus):
-    def __init__(self, entity, name):
-        super().__init__(entity, name, AHB3Signal.signal)
+    def __init__(self, entity, name, type = AHB3Signal.SLAVE):
+        self.type = type
+        if type == AHB3Signal.SLAVE:
+            signal = AHB3Signal.ahb3SlaveSignal
+        elif type == AHB3Signal.MASTER:
+            signal = AHB3Signal.ahb3MasterSignal
+        else:
+            raise ValueError("No such AHB3Signal Type: " + type)
+        super().__init__(entity, name, signal)
 
     def driveASignal(self, name, value, bus_separator = '_'):
         signalName = self._name + bus_separator + name
@@ -60,6 +72,7 @@ class AHB3RespTrans(object):
     def __init__(self, addr, data):
         self.HADDR  = addr
         self.HRDATA = data
+        self.HREADYOUT = 1
 
     def __str__(self):
         return f"data: {self.HRDATA}, addr: {self.HADDR}"
@@ -80,7 +93,7 @@ class AHB3Generator(object):
         self.writeCount = 0
         self.driver     = driver
         self.scoreboard = scoreboard
-        self.wait       = 200
+        self.wait       = 100
         self.log        = cocotb.log
         self.debug      = debug
 
@@ -118,16 +131,21 @@ class AHB3Generator(object):
 
 class AHB3Driver(BusDriver):
     """ AHB Lite3 Driver """
-    _signals = AHB3Signal.signal
+
+    def __init__(self, entity, name, clock, reset=None, debug=False, type = AHB3Signal.SLAVE):
+        self.type = type
+        self._signals = AHB3Signal.ahb3SlaveSignal if (self.type == AHB3Signal.SLAVE) else AHB3Signal.ahb3MasterSignal
+        super().__init__(entity, name, clock)
+
 
 class AHB3Monitor(BusMonitor):
     """ AHB Lite3 BusMonitor """
-    _signals = AHB3Signal.signal
 
-    def __init__(self, entity, name, clock, reset=None, debug=False):
-        super().__init__(entity, name, clock, reset)
+    def __init__(self, entity, name, clock, reset=None, debug=False, type = AHB3Signal.SLAVE):
         self.debug = debug
-
+        self.type = type
+        self._signals = AHB3Signal.ahb3SlaveSignal if (self.type == AHB3Signal.SLAVE) else AHB3Signal.ahb3MasterSignal
+        super().__init__(entity, name, clock, reset)
 
     def readHSEL(self):
         try:
