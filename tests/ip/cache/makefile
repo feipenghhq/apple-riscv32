@@ -74,7 +74,7 @@ clean1:
 # -----------------------------------------
 
 basic:
-	$(MAKE) MODULE=randomTests DBG=$(DBG)
+	$(MAKE) MODULE=randomTests DBG=$(DBG) DUMP=$(DUMP)
 
 random:
-	$(MAKE) MODULE=randomTests DBG=$(DBG)
+	$(MAKE) MODULE=randomTests DBG=$(DBG) DUMP=$(DUMP)

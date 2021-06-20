@@ -85,7 +85,7 @@ case class SetLogicPort(cacheConfig: CacheConfig) extends Bundle with IMasterSla
 }
 
 /** Cache set logic */
-case class SetsLogic(cacheConfig: CacheConfig) extends Component {
+case class CacheSetLogic(cacheConfig: CacheConfig) extends Component {
 
   val io = master(SetLogicPort(cacheConfig))
 
@@ -150,9 +150,9 @@ case class SetsLogic(cacheConfig: CacheConfig) extends Component {
   }
 
   // NRU logic
-  val aaa = SInt(cacheConfig.setSize bits)
-  aaa := -1
-  nrus init aaa.asBits
+  val minusOne = SInt(cacheConfig.setSize bits)
+  minusOne := -1
+  nrus init minusOne.asBits
 
   when(io.clrnru) {
     nrus(io.rdIdx) := False
@@ -259,11 +259,12 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
   // ----------------------------------------
   // register the input information
   // ----------------------------------------
-  val request           = io.cache_ahb.HSEL & io.cache_ahb.HTRANS(1)  // new cache request
+  val request           = False
   val request_s1        = RegNext(request) init False
   val cacheTag_ff       = RegNextWhen(tag, request)
   val cacheSetIdx_ff    = RegNextWhen(setIdx, request) init 0
   val cacheLineAddr_ff  = RegNextWhen(cacheLineAddr, request)
+  val cacheLineAddr_vld = RegInit(False)
   val wordIdx_ff        = RegNextWhen(wordIdx, request) init 0
   val hprot_ff          = RegNextWhen(io.cache_ahb.HPROT, request)
   val hwrite_ff         = RegNextWhen(io.cache_ahb.HWRITE, request) init False
@@ -276,7 +277,7 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
   val cacheSets = ArrayBuffer[Component]()
   val setPorts  = Array.fill(cacheConfig.setNum)(SetLogicPort(cacheConfig))
   for (i <- 0 until cacheConfig.setNum) {
-    val set = SetsLogic(cacheConfig)
+    val set = CacheSetLogic(cacheConfig)
     set.io <> setPorts(i)
     set.setName("cacheSet" + i)
     cacheSets.append(set)
@@ -292,11 +293,12 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
     // ----------------------------------------
     // State
     // ----------------------------------------
-    val CACHE_IDLE  = new State with EntryPoint
-    val TAG_CHECK   = new State
-    val READ_MEMORY = new State
-    val WRITE_CACHE = new State
-    val FLUSH       = new State
+    val CACHE_IDLE    = new State with EntryPoint
+    val TAG_CHECK     = new State
+    val READ_MEMORY   = new State
+    val WRITE_CACHE   = new State
+    val FLUSH_CACHE   = new State
+    val WAIT_CONFILCT = new State
     //val READ_WAIT_MEMORY = new State
 
     // ----------------------------------------
@@ -312,10 +314,12 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
     val flushAddr      = cacheLineTag @@ cacheSetIdx_ff @@ word0Addr        // the address for flushing data to memory
     val noNru          = ~cacheNrus.orR                                     // No available NRUs, need to reset NRU
     val newSetDirty    = (newSetId & cacheDirtys).orR
+    val readAddrMatch  = (cacheLineAddr === cacheLineAddr_ff) & cacheLineAddr_vld & ~io.cache_ahb.HWRITE
+    val readAfterWrite = False
     val cacheWriteMask = Reg(Bits(cacheConfig.cacheLineSize bits))                // cache line mask for cache write, determine which word to write
     val addrInc        = Reg(UInt(cacheConfig.wordAddrRange.size+2 bits)) init 0  // address increment on base addr
     val memWordCnt     = Reg(UInt(cacheConfig.wordAddrRange.size+1 bits)) init 0  // number of access word from/to memory
-    val memWordCnt_s1  = Reg(UInt(cacheConfig.wordAddrRange.size+1 bits)) init 0  // delayed version of memWordCnt
+    val memWordCnt_s1  = RegNext(memWordCnt) init 0                               // delayed version of memWordCnt
     val rdataCapture   = Reg(Bool)                                                // capture the data from memory for the cache read data
     val rdata_ff       = Reg(Bits(cacheConfig.ahblite3Cfg.dataWidth bits))        // store the read data from memory to forward to the cache AHB
 
@@ -353,22 +357,33 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
       }
     }
 
-    /** group logic for new cache request */
-    def newRequest(): Unit = {
-      memWordCnt  := 0
-      addrInc     := 0
-      setPorts.foreach(_.tag := tag)
-      setPorts.foreach(_.rdIdx := setIdx)
-      // place the write mask to the correct location
-      cacheWriteMask := (io.cache_ahb.writeMask() << (wordIdx << 2)).resized
-      goto(TAG_CHECK)
+    /** logic for new cache request */
+    def requestOFL(writing: Bool): Unit = {
+      request := io.cache_ahb.HSEL & io.cache_ahb.HTRANS(1)
+      readAfterWrite := request & readAddrMatch & writing
+      io.cache_ahb.HREADYOUT := !readAfterWrite
+      when(readAfterWrite) {
+        goto(WAIT_CONFILCT)
+      }.elsewhen(request) {
+        goto(TAG_CHECK)
+        memWordCnt := 0
+        addrInc    := 0
+        cacheLineAddr_vld := True
+        setPorts.foreach(_.tag := tag)
+        setPorts.foreach(_.rdIdx := setIdx)
+        // place the write mask to the correct location for the potential write operation at next clock
+        cacheWriteMask := (io.cache_ahb.writeMask() << (wordIdx << 2)).resized
+      }.otherwise{
+        goto(CACHE_IDLE)
+      }
+
     }
 
     /**
-     * Functions to wrap around memory access operation
+     * Logic for memory access operation
      * We use NONSEQ instead of burst operation to simplify logic
      */
-    def memAccess(write: Bool, addrInc: UInt, flush: Bool): Unit = {
+    def memAccessOFL(write: Bool, addrInc: UInt, flush: Bool): Unit = {
       // The base address should be aligned to the first word of the cache line
       val cacheLineAddrWord0 = cacheLineAddr_ff @@ word0Addr
       // for flush operation, the address should come from cache tag
@@ -385,44 +400,30 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
     // ----------------------------------------
 
     CACHE_IDLE.whenIsActive {
-      io.cache_ahb.HREADYOUT := True
-      when(request) {
-        newRequest()
-      }
+      cacheLineAddr_vld := False
+      requestOFL(False)
     }
 
     TAG_CHECK.whenIsActive {
-      io.cache_ahb.HRDATA    := cacheLineToWord(cacheLineData)(wordIdx_ff) // If hit then data will be used
-      addrInc                := 4
-      memWordCnt             := 1
-      memWordCnt_s1          := memWordCnt
+      addrInc    := 4
+      memWordCnt := 1
+      io.cache_ahb.HRDATA := cacheLineToWord(cacheLineData)(wordIdx_ff) // If hit then data will be used
       setPorts.foreach(x => x.write := x.hit & hwrite_ff)
       // reset the cache line mask to the first word in preparation of grabbing the entire cache line from memory
-      cacheWriteMask         := B"4'hf".resized
+      cacheWriteMask := B"4'hf".resized
       // Cache Hit
       when(cacheHit) {
-        io.cache_ahb.HREADYOUT := True
-        when(request) {
-          newRequest()
-        }.otherwise{
-          goto(CACHE_IDLE)
-        }
+        requestOFL(hwrite_ff)
         // clr the nru bit as we just used this set
-        if (cacheConfig.replacement == "NRU") {for ((p, idx) <- setPorts.zipWithIndex) {p.clrnru := newSetId(idx)}}
+        if (cacheConfig.replacement == "NRU") {setPorts.foreach(x => x.clrnru := x.hit)}
       // Cache Miss - Grab the data from main memory
       }.otherwise{
-        when(io.mem_ahb.HREADY) {
-          // Flush the dirty cache line to Main Memory
-          when(newSetDirty) {
-            memAccess(True, addrInc, True)
-            goto(FLUSH)
-          // Nothing to send back, read the data from memory
-          }.otherwise {
-            memAccess(False, addrInc, False)
-            goto(READ_MEMORY)
-          }
-        }.otherwise{
-          //goto(READ_WAIT_MEMORY)
+        when(newSetDirty) { // Flush the dirty cache line to Main Memory
+          memAccessOFL(True, addrInc, True)
+          when(io.mem_ahb.HREADY) {goto(FLUSH_CACHE)}
+        }.otherwise {
+          memAccessOFL(False, addrInc, False)
+          when(io.mem_ahb.HREADY) {goto(READ_MEMORY)}
         }
         // If no NRU bit found, reset NRU
         if (cacheConfig.replacement == "NRU") {setPorts.foreach(_.setnru := noNru)}
@@ -430,10 +431,13 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
     }
 
     READ_MEMORY.whenIsActive {
+      when(memWordCnt =/= cacheConfig.wordCount) {
+        memAccessOFL(write = False, addrInc, False)
+      }
       when(io.mem_ahb.HREADY) {
         memWordCnt     := memWordCnt + 1
         addrInc        := addrInc + 4
-        cacheWriteMask := (B"4'hf" << (memWordCnt << 2)).resized
+        cacheWriteMask := (B"4'hf" << (memWordCnt << 2)).resized // assume read 4 byte each time
         for ((p, idx) <- setPorts.zipWithIndex) {
           p.fill  := newSetId(idx)
           p.wdata := wordToCacheLine(io.mem_ahb.HRDATA)
@@ -451,17 +455,10 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
             cacheWriteMask := (writeMask_ff << (wordIdx_ff << 2)).resized
             goto(WRITE_CACHE)
           }.otherwise{
-            io.cache_ahb.HREADYOUT := True
-            when(request) {
-              newRequest()
-            }.otherwise{
-              goto(CACHE_IDLE)
-            }
+            requestOFL(True)
           }
           // clr the nru bit as we just used this set
           if (cacheConfig.replacement == "NRU") {for ((p, idx) <- setPorts.zipWithIndex) {p.clrnru := newSetId(idx)}}
-        }.otherwise{
-          memAccess(write = False, addrInc, False)
         }
       }
     }
@@ -471,37 +468,35 @@ case class Ahblite3Cache(cacheConfig: CacheConfig) extends Component {
         p.write := newSetId(idx)
         p.wdata := wordToCacheLine(hwdata_ff)
       }
-      // If there is new request and the request is not to the same cache line, then we can check the cache line
-      when(request && (cacheLineAddr_ff =/= cacheLineAddr_ff)) {
-        io.cache_ahb.HREADYOUT := True
-        newRequest()
-      // If there is no new request, go to IDLE state
-      // If there is new request and the request is to the same cache line, then we need to wait for a cycle,
-      // this is because at this clock, we are writing the cache line and reading the same cache line may not return
-      // the new write data (depends read-on-write behavior of the ram)
-      }.otherwise{
-        goto(CACHE_IDLE)
-      }
+      requestOFL(True)
     }
 
-    FLUSH.whenIsActive {
-      memWordCnt_s1     := memWordCnt
+    FLUSH_CACHE.whenIsActive {
       // Need to use the value of memWordCnt from previous clock because the data is one clock delayed
       io.mem_ahb.HWDATA := cacheLineToWord(MuxOH(newSetId, setPorts.map(_.rdata)))(memWordCnt_s1(memWordCnt_s1.getBitsWidth-2 downto 0))
+      when(memWordCnt === cacheConfig.wordCount) {
+        // FLUSH_CACHE complete, Start reading the memory
+        memAccessOFL(False, 0, False)
+      }.otherwise {
+        // Write data to memory
+        memAccessOFL(True, addrInc, True)
+      }
       when(io.mem_ahb.HREADY) {
-        // FLUSH complete, Start reading the memory
+        // FLUSH_CACHE complete, Start reading the memory
         when(memWordCnt === cacheConfig.wordCount) {
           addrInc      := 4
           memWordCnt   := 1
           rdataCapture := (0 === wordIdx_ff)  // special case for rdataCapture
-          memAccess(False, 0, False)
           goto(READ_MEMORY)
         }.otherwise {
-          memAccess(True, addrInc, True)
           addrInc    := addrInc + 4
           memWordCnt := memWordCnt + 1
         }
       }
+    }
+
+    WAIT_CONFILCT.whenIsActive{
+      goto(CACHE_IDLE)
     }
   }
 }

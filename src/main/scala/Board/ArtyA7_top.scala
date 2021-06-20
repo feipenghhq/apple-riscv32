@@ -73,6 +73,7 @@ object ArtyA7_topMain{
     AppleRISCVCfg.USE_BPU     = true
     CsrCfg.USE_MHPMC3         = true
     CsrCfg.USE_MHPMC4         = true
+    SoCCfg.USE_CACHE          = true
     SpinalVerilog(InOutWrapper(ArtyA7_top()))
   }
 }

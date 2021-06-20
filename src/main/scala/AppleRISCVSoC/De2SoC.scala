@@ -29,11 +29,13 @@ import spinal.lib.io._
 case class De2SoC(
                    frequency: HertzNumber = 50 MHz
                  ) extends Component {
-
     // Parameter Override
     SoCAddrMapping.IMEM_TOP    = 0x20007FFFL   // 32KB Instruction ROM
     SoCAddrMapping.DMEM_TOP    = 0x8007FFFFL   // 512KB Data RAM
     SoCCfg.gpio0Width          = 32
+    SoCCfg.CACHE_RAM_TYPE      = "BLOCK"
+    SoCCfg.CACHE_LINE_SIZE     = 8
+    SoCCfg.CACHE_SET_SIZE      = 2
 
     val io = new Bundle {
         val clk         = in Bool
@@ -75,7 +77,14 @@ case class De2SoC(
         val ahblite3corssbar = Ahblite3crossbar(AhbLite3Cfg.ahblite3Cfg)
         ahblite3corssbar.io.dbg_ahb  <> uartdbg.io.ahblite3
         ahblite3corssbar.io.ibus_ahb <> cpu_rst_area.core.io.ibus_ahb
-        ahblite3corssbar.io.dbus_ahb <> cpu_rst_area.core.io.dbus_ahb
+        val cacheCtrl = if (SoCCfg.USE_CACHE) CacheCtrl(AppleRISCVCfg.dbusAhbCfg, SoCCfg.cacheCfg(AppleRISCVCfg.dbusAhbCfg),
+            mem_lo = AhbLite3Cfg.dmemAhblite3Cfg().wordRange.start, mem_hi = AhbLite3Cfg.dmemAhblite3Cfg().wordRange.end) else null
+        if (SoCCfg.USE_CACHE) {
+            cacheCtrl.io.in_ahb <> cpu_rst_area.core.io.dbus_ahb
+            ahblite3corssbar.io.dbus_ahb <> cacheCtrl.io.out_ahb
+        } else {
+            ahblite3corssbar.io.dbus_ahb <> cpu_rst_area.core.io.dbus_ahb
+        }
         imem.io.port1 <> ahblite3corssbar.io.imem_ahb.remapAddress(addr => addr.resize(imem.ahblite3Cfg.addressWidth))
         sramCtrlBridge.io.ahb_in <> ahblite3corssbar.io.dmem_ahb.remapAddress(addr => addr.resize(sramCtrl.ahblite3Cfg.addressWidth))
         sramCtrlBridge.io.ahb_out <> sramCtrl.io.ahblite3
@@ -109,6 +118,7 @@ object De2SoCMain{
         AppleRISCVCfg.USE_BPU      = false
         CsrCfg.USE_MHPMC3          = true
         CsrCfg.USE_MHPMC4          = true
+        SoCCfg.USE_CACHE           = true
         SpinalVerilog(InOutWrapper(De2SoC()))
     }
 }

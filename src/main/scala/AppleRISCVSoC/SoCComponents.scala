@@ -31,8 +31,16 @@ import scala.collection.mutable.ArrayBuffer
 object SoCCfg {
   var gpio0Width = 12
   def gpio0Cfg(): GpioCfg = GpioCfg(HI_INT = true, LO_INT = true, RISE_INT = true, FALL_INT = true, gpio0Width)
-
   var uartDbgBaudRate = 115200
+
+  var USE_CACHE = true
+  var CACHE_LINE_SIZE = 16
+  var CACHE_SET_NUM   = 4
+  var CACHE_SET_SIZE  = 128
+  var CACHE_RAM_TYPE  = "DISTRIBUTED"
+  var CACHE_REPLACE   = "NRU"
+  def cacheCfg(ahbLite3Cfg: AhbLite3Config): CacheConfig =
+    CacheConfig(ahbLite3Cfg, CACHE_LINE_SIZE, CACHE_SET_NUM, CACHE_SET_SIZE, CACHE_RAM_TYPE, CACHE_REPLACE)
 
   var USE_UART0 = true
   var USE_GPIO = true

@@ -28,6 +28,7 @@ def cmdParser():
     parser.add_argument('-soc', type=str, required=True, nargs='?', help='The FPGA board')
     parser.add_argument('-timeout', '-to', type=str, required=True, nargs='?', help='Timeout value')
     parser.add_argument('-test', '-t', type=str, required=True, nargs='?', help='The test you want to run')
+    parser.add_argument('-dump', '-d', type=str, required=True, nargs='?', help='Dump the waveform')
     return parser.parse_args()
 
 #####################################
@@ -35,9 +36,10 @@ def cmdParser():
 #####################################
 
 class AllTests:
-    def __init__(self, soc, timeout, f_get_all_tests):
+    def __init__(self, soc, timeout, dump, f_get_all_tests):
         self.soc = soc
         self.timeout = timeout
+        self.dump = dump
         self.cmds = {}
         self.results = {}
         self.failed_tests = []
@@ -54,7 +56,7 @@ class AllTests:
 
     def run_test(self, test, path):
         """ invoke makefile to run a test """
-        cmd = f'make TIMEOUT={self.timeout} TESTNAME={test} TESTPATH={path} SOC={self.soc} DUMP=0'
+        cmd = f'make TIMEOUT={self.timeout} TESTNAME={test} TESTPATH={path} SOC={self.soc} DUMP={self.dump}'
         self.cmds[test] = cmd
         os.system(cmd)
         self.results[test] = self.check_result()
@@ -107,6 +109,7 @@ if __name__ == '__main__':
     args = cmdParser()
     soc = args.soc
     to = args.timeout
+    dump = args.dump
     test = args.test
-    run = AllTests(soc, to, get_all_tests(test))
+    run = AllTests(soc, to, dump, get_all_tests(test))
     run.allTasks()

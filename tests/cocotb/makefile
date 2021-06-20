@@ -20,7 +20,7 @@ $(objects): clean
 	@cd output/$@ && ln -s ../../scripts/get_all_tests.py .
 	@cd output/$@ && ln -s ../../scripts/run_one_test.py .
 	@cd output/$@ && ln -s ../../scripts/makefile .
-	@cd output/$@ && python3 run_all_tests.py -soc $(SOC) -timeout $(TIMEOUT) -test "$@"
+	@cd output/$@ && python3 run_all_tests.py -soc $(SOC) -timeout $(TIMEOUT) -test "$@" -dump $(DUMP)
 
 all: $(objects)
 

@@ -4,7 +4,7 @@
 //
 // ~~~ Hardware in SpinalHDL ~~~
 //
-// Module Name: SibSramCtrl
+// Module Name: Ahblite3SramCtrl
 //
 // Author: Heqing Huang
 // Date Created: 05/14/2021
